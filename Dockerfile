@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package.json
 COPY yarn.lock yarn.lock
 
-RUN yarn install --production --ignore-scripts --prefer-offline --frozen-lockfile
+RUN yarn install --frozen-lockfile
 
 
 # Rebuild the source code only when needed
