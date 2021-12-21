@@ -1,7 +1,7 @@
 version: '3'
 services:
   tele:
-    image: ${CI_REGISTRY_IMAGE}/panel:${DOCKER_IMG_TAG}
+    image: ${CI_REGISTRY_IMAGE}/tele:${DOCKER_IMG_TAG}
     build:
       context: ./
       dockerfile: Dockerfile
@@ -14,7 +14,7 @@ services:
     networks:
       - caddy
     labels:
-      caddy: ${HOST}
+      caddy: ${HOST_DOMAIN}
       caddy.reverse_proxy: '{{upstreams ${PORT}}}'
 
 networks:
