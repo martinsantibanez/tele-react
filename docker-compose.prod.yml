@@ -14,7 +14,7 @@ services:
     networks:
       - caddy
     labels:
-      caddy: ${HOST}
+      caddy: ${DOMAIN}
       caddy.reverse_proxy: '{{upstreams ${PORT}}}'
 
 networks:
