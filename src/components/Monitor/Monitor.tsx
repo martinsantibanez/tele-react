@@ -39,7 +39,7 @@ export function Monitor({ source, size }: Props) {
         )}
       </div>
       <div className="BotonLapiz" onClick={() => setModalOpen((v) => !v)}>
-        <div className="BotonSeleccionarSeñales2" type="button" id="custom-btn">
+        <div className="BotonSeleccionarSeñales2" id="custom-btn">
           ㅤCAMBIAR SEÑALㅤ
         </div>
       </div>

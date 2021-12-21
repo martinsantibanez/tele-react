@@ -1,0 +1,45 @@
+image: creatiwww/docker-compose
+
+before_script:
+  - docker info
+
+stages:
+  - build
+  - deploy
+
+Build-prod-front:
+  stage: build
+  tags:
+    - docker
+  variables:
+    DOCKER_IMG_TAG: "latest"
+  script:
+    - cp $DOTENV_PROD $CI_PROJECT_DIR/.env
+    - echo DOCKER_IMG_TAG=$DOCKER_IMG_TAG >> .env
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY_IMAGE
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml build
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml push
+  only:
+    - main
+
+Deploy-prod-front:
+  stage: deploy
+  tags:
+    - docker
+  variables:
+    CONTAINER_NAME: $CI_PROJECT_NAME
+    DOCKER_IMG_TAG: "latest"
+  script:
+    - cp $DOTENV_PROD $CI_PROJECT_DIR/.env
+    - eval $(ssh-agent -s)
+    - chmod og= $ID_RSA_PROD
+    - ssh-add $ID_RSA_PROD
+    - docker login -u $CI_REGISTRY_USER -p $CI_BUILD_TOKEN $CI_REGISTRY_IMAGE
+    - docker info
+    - echo DOCKER_IMG_TAG=$DOCKER_IMG_TAG >> .env
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" down
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" pull
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" up -d
+    - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" logs
+  only:
+    - main
