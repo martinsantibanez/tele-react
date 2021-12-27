@@ -3,7 +3,7 @@ import Head from "next/head";
 import { ChangeEventHandler, CSSProperties, useState } from "react";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source } from "../../sources";
-import { tvNacionalSources } from "../../sources/all";
+import { especialesSources, tvNacionalSources } from "../../sources/all";
 
 const bigPlayer: CSSProperties = {
   width: "50%",
@@ -75,7 +75,7 @@ const MonitorPage: NextPage = () => {
     tvNacionalSources["24HTVN"],
     tvNacionalSources.T13_YT,
     tvNacionalSources.CHV_WEB_IFRAME,
-    tvNacionalSources.LARED,
+    especialesSources.MEDIABANCO_IFRAME,
   ]);
 
   return (
@@ -91,38 +91,6 @@ const MonitorPage: NextPage = () => {
         ))}
       </div>
 
-      {/* <div
-        style={bigPlayer}
-        className="embed-responsive embed-responsive-16by9"
-      >
-        <Monitor size={size} />
-      </div>
-      <div
-        style={bigPlayer}
-        className="embed-responsive embed-responsive-16by9"
-      >
-        <Monitor size={size} />
-      </div>
-      <div style={bottomContainer}>
-        <div
-          style={smallPlayer}
-          className="embed-responsive embed-responsive-16by9"
-        >
-          <Monitor size={size} />
-        </div>
-        <div
-          style={smallPlayer}
-          className="embed-responsive embed-responsive-16by9"
-        >
-          <Monitor size={size} />
-        </div>
-        <div
-          style={smallPlayer}
-          className="embed-responsive embed-responsive-16by9"
-        >
-          <Monitor size={size} />
-        </div>
-      </div> */}
       <div className="Botones" style={buttons}>
         <div className="SeleccionarStreamsPorFila waves-effect waves-light">
           <select
