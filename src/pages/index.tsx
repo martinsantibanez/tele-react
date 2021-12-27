@@ -14,7 +14,7 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <div className="row">
-          <Link href="/monitor" passHref>
+          <Link href="/layout" passHref>
             <a className="col-5 text-white border border-white pt-2">
               <h2>Layout</h2>
               <p>Programatically created layouts.</p>
@@ -22,7 +22,7 @@ const Home: NextPage = () => {
           </Link>
           <div className="col-2"></div>
 
-          <Link href="/layout" passHref>
+          <Link href="/monitor" passHref>
             <a className="col-5 text-white border border-white pt-2">
               <h2>Grid</h2>
               <p>Simple grid</p>
