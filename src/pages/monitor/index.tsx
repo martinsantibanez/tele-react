@@ -1,25 +1,13 @@
 import type { NextPage } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { ChangeEventHandler, CSSProperties, useState } from "react";
+import Fullscreen1 from "../../../public/ui_icons/PantallaCompleta_1.svg";
+import Fullscreen2 from "../../../public/ui_icons/PantallaCompleta_2.svg";
+import { ActionButton } from "../../components/ActionButton/ActionButton";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source } from "../../sources";
-import { especialesSources, tvNacionalSources } from "../../sources/all";
-
-const bigPlayer: CSSProperties = {
-  width: "50%",
-  float: "left",
-};
-
-const bottomContainer: CSSProperties = {
-  width: "100%",
-  height: "33.333333333%",
-  float: "left",
-  position: "relative",
-};
-const smallPlayer: CSSProperties = {
-  width: "33.3333333333%",
-  float: "left",
-};
+import { tvNacionalSources } from "../../sources/all";
 
 const buttons: CSSProperties = {
   position: "absolute",
@@ -75,7 +63,7 @@ const MonitorPage: NextPage = () => {
     tvNacionalSources["24HTVN"],
     tvNacionalSources.T13_YT,
     tvNacionalSources.CHV_WEB_IFRAME,
-    especialesSources.MEDIABANCO_IFRAME,
+    tvNacionalSources.MEGA,
   ]);
 
   return (
@@ -111,20 +99,12 @@ const MonitorPage: NextPage = () => {
             // type="button"
             className="Boton_PantallaCompleta waves-effect waves-light"
           >
-            ﾠ
-            {/* <img
-              style={{ height: "15px", width: "auto" }}
-              src="imagenes/PantallaCompleta_1.svg"
-            ></img> */}
-            ﾠ
+            <Fullscreen1 style={{ height: "15px", width: "auto" }} />
           </span>
         </a>
-
-        <a href="HomeAINM.html">
-          <span className="TEXTO_BotonIrAHome waves-effect waves-light">
-            ㅤIR A HOMEㅤ
-          </span>
-        </a>
+        <Link href="/" passHref>
+          <ActionButton>ㅤIR A HOMEㅤ</ActionButton>
+        </Link>
 
         <a onClick={() => cancelFullScreen()}>
           <span
@@ -132,11 +112,7 @@ const MonitorPage: NextPage = () => {
             className="Boton_PantallaCompleta waves-effect waves-light"
           >
             ﾠ
-            {/* <img
-              style={{ height: "15px", width: "auto" }}
-              src="imagenes/PantallaCompleta_2.svg"
-            ></img> */}
-            ﾠ
+            <Fullscreen2 style={{ height: "15px", width: "auto" }} />ﾠ
           </span>
         </a>
       </div>
