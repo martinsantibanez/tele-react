@@ -66,6 +66,15 @@ const MonitorPage: NextPage = () => {
     tvNacionalSources.MEGA,
   ]);
 
+  const handleSourceChange = (source: Source, idxToChange: number) => {
+    setSelectedSources((sources) => {
+      return sources.map((src, idx) => {
+        if (idxToChange === idx) return source;
+        else return src;
+      });
+    });
+  };
+
   return (
     <div>
       <Head>
@@ -75,7 +84,12 @@ const MonitorPage: NextPage = () => {
       </Head>
       <div className="row no-gutters row-canales" id="los-canales">
         {selectedSources.map((source, idx) => (
-          <Monitor size={size} source={source} key={`${source.slug}_${idx}`} />
+          <Monitor
+            size={size}
+            source={source}
+            key={`${source.slug}_${idx}`}
+            onChange={(newSource) => handleSourceChange(newSource, idx)}
+          />
         ))}
       </div>
 
