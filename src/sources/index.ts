@@ -1,13 +1,10 @@
-import {
-  aysenSources,
-  camarasSources,
-  especialesSources,
-  otrasSources,
-  radiosSources,
-  regionesSources,
-  relojesSources,
-  tvNacionalSources,
-} from "./all";
+import { camarasSources } from "./camaras";
+import { especialesSources } from "./especiales";
+import { otrasSources } from "./otras";
+import { radiosSources } from "./radios";
+import { aysenSources, regionesSources } from "./regiones";
+import { relojesSources } from "./relojes";
+import { tvNacionalSources } from "./tvNacional";
 
 export interface Source {
   slug: string;
