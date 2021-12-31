@@ -1,3 +1,4 @@
+import React from "react";
 import { camarasSources } from "./camaras";
 import { especialesSources } from "./especiales";
 import { otrasSources } from "./otras";
@@ -5,11 +6,13 @@ import { radiosSources } from "./radios";
 import { aysenSources, regionesSources } from "./regiones";
 import { relojesSources } from "./relojes";
 import { tvNacionalSources } from "./tvNacional";
+import { twitchSources } from "./twitch";
 
 export interface Source {
   slug: string;
   titleHtml: string;
-  codeHtml: string;
+  codeHtml?: string;
+  component?: React.ReactNode;
 }
 
 export type SourcesMap = {
@@ -36,6 +39,10 @@ export const sources: SourceGroup[] = [
   {
     name: "Camaras",
     sources: camarasSources,
+  },
+  {
+    name: "Twitch",
+    sources: twitchSources,
   },
   {
     name: "Uncategorized",

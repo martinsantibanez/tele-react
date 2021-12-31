@@ -1,4 +1,6 @@
-export const radiosSources = {
+import { SourcesMap } from ".";
+
+export const radiosSources: SourcesMap = {
   BIOBIO_CHILE_1: {
     slug: "BIOBIO_CHILE_1",
     titleHtml:

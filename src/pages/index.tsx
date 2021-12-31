@@ -3,6 +3,32 @@ import Head from "next/head";
 import Link from "next/link";
 import styles from "../styles/Home.module.css";
 
+function HomeElement({
+  description,
+  title,
+  href,
+  openInNewTab,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  openInNewTab?: boolean;
+}) {
+  return (
+    <div className="row mt-5 text-center">
+      <Link href={href} passHref>
+        <a
+          className="col-6 offset-3 text-white border border-white pt-2"
+          target={openInNewTab ? "_blank" : ""}
+        >
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </a>
+      </Link>
+    </div>
+  );
+}
+
 const Home: NextPage = () => {
   return (
     <div className={styles.container}>
@@ -12,22 +38,21 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <div className="row">
-          <Link href="/layout" passHref>
-            <a className="col-5 text-white border border-white pt-2">
-              <h2>Layout</h2>
-              <p>Programatically created layouts.</p>
-            </a>
-          </Link>
-          <div className="col-2"></div>
+      <main>
+        <div className="container">
+          <HomeElement
+            href="/layout"
+            title="Layout"
+            description="Programatically created layouts."
+          />
 
-          <Link href="/monitor" passHref>
-            <a className="col-5 text-white border border-white pt-2">
-              <h2>Grid</h2>
-              <p>Simple grid</p>
-            </a>
-          </Link>
+          <HomeElement href="/grid" title="Grid" description="Simple grid" />
+
+          <HomeElement
+            href="/promoted"
+            title="Monitor"
+            description="Watch featured source, selected from Grid or Layout (Open in a new tab)"
+          />
         </div>
       </main>
     </div>

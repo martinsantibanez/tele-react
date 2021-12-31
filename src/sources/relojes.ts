@@ -1,4 +1,6 @@
-export const relojesSources = {
+import { SourcesMap } from ".";
+
+export const relojesSources: SourcesMap = {
   RELOJES: {
     slug: "RELOJES",
     titleHtml:

@@ -1,6 +1,6 @@
+import { SourcesMap } from ".";
 
-
-export const otrasSources = {
+export const otrasSources: SourcesMap = {
   WAPP_TV: {
     slug: "WAPP_TV",
     titleHtml:
@@ -1347,27 +1347,6 @@ export const otrasSources = {
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_LABPADRE.svg"></img>ﾠSentinel Cam',
     codeHtml:
       '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="Senal/LabPadre/SentinelCam.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤSentinel Camㅤ</div></div></div>',
-  },
-  RDRONE_UY_Twitch: {
-    slug: "RDRONE_UY_Twitch",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_Twitch_Video_1.svg"></img>ﾠRDRONE UY',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://player.twitch.tv/?channel=rdroneuy&parent=ainmcl.github.io" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRDRONE UYㅤ</div></div></div>',
-  },
-  SPACEX_STORM_Twitch: {
-    slug: "SPACEX_STORM_Twitch",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_Twitch_Video_1.svg"></img>ﾠSPACEX STORM',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://player.twitch.tv/?channel=spacexstorm&parent=ainmcl.github.io" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤSPACEX STORMㅤ</div></div></div>',
-  },
-  COPANO_Twitch: {
-    slug: "COPANO_Twitch",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_Twitch_Video_1.svg"></img>ﾠCOPANO',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://player.twitch.tv/?channel=copano&parent=ainmcl.github.io" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤCOPANOㅤ</div></div></div>',
   },
   Copano_YT: {
     slug: "Copano_YT",

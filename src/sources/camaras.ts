@@ -1,4 +1,6 @@
-export const camarasSources = {
+import { SourcesMap } from ".";
+
+export const camarasSources: SourcesMap = {
   PLAZAITALIA_CIMA: {
     slug: "PLAZAITALIA_CIMA",
     titleHtml:

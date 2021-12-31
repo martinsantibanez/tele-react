@@ -1,4 +1,6 @@
-export const tvNacionalSources = {
+import { SourcesMap } from ".";
+
+export const tvNacionalSources: SourcesMap = {
   CANAL24HTVN: {
     slug: "CANAL24HTVN",
     titleHtml:

@@ -1,29 +1,40 @@
+import classnames from "classnames/bind";
 import React, { useState } from "react";
-import { Source, sources } from "../../sources";
+import { useFeaturedSource } from "../../hooks/useFeaturedSource";
+import { Source } from "../../sources";
 import { SelectSourceModal } from "./Modal";
+import styles from "./Monitor.module.scss";
+const cx = classnames.bind(styles);
 
 type Props = {
   source?: Source;
   size: number;
-  onChange: (source: Source) => void;
+  onChange?: (source: Source) => void;
 };
 export function Monitor({ source, size, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
+  const [, setFeaturedSource] = useFeaturedSource();
+
+  const handlePromote = () => {
+    setFeaturedSource(source);
+  };
+
   const handleSelectSource = (source: Source) => {
-    onChange(source);
+    if (onChange) onChange(source);
   };
 
   return (
     <div className={`stream col-${size}`}>
-      <div className="CAJABoton_SeleccionarSeñales">
-        {!!source && (
+      <div className="w-100 h-100">
+        {!!source && source.codeHtml && (
           <div
             dangerouslySetInnerHTML={{
               __html: source.codeHtml,
             }}
           />
         )}
+        {!!source && source.component}
         {modalOpen && (
           <SelectSourceModal
             onSelect={(source) => handleSelectSource(source)}
@@ -32,11 +43,19 @@ export function Monitor({ source, size, onChange }: Props) {
           />
         )}
       </div>
-      <div className="BotonLapiz" onClick={() => setModalOpen((v) => !v)}>
-        <div className="BotonSeleccionarSeñales2" id="custom-btn">
-          ㅤCAMBIAR SEÑALㅤ
+      {onChange && (
+        <div className={cx("actions-container")}>
+          <div
+            className={cx("action-button")}
+            onClick={() => setModalOpen((v) => !v)}
+          >
+            ㅤCAMBIAR SEÑALㅤ
+          </div>
+          <div className={cx("action-button")} onClick={handlePromote}>
+            ㅤDESTACARㅤ
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

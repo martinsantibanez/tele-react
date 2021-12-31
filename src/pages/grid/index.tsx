@@ -7,7 +7,7 @@ import Fullscreen2 from "../../../public/ui_icons/PantallaCompleta_2.svg";
 import { ActionButton } from "../../components/ActionButton/ActionButton";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source } from "../../sources";
-import { tvNacionalSources } from "../../sources/all";
+import { tvNacionalSources } from "../../sources/tvNacional";
 
 const buttons: CSSProperties = {
   position: "absolute",
@@ -55,7 +55,6 @@ const MonitorPage: NextPage = () => {
   const [size, setSize] = useState(6);
 
   const handleSizeChange: ChangeEventHandler<HTMLSelectElement> = (event) => {
-    console.log(event.target.value);
     setSize(Number(event.target.value));
   };
 

@@ -1,4 +1,6 @@
-export const regionesSources = {
+import { SourcesMap } from ".";
+
+export const regionesSources: SourcesMap = {
   ARICA_TV: {
     slug: "ARICA_TV",
     titleHtml:
