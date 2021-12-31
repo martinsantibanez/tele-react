@@ -1,4 +1,10 @@
 export const tvNacionalSources = {
+  CANAL24HTVN: {
+    slug: "CANAL24HTVN",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_CANAL24H.svg"></img>',
+    codeHtml: '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalCanal24HTVN.html" frameborder="0"></iframe><a href="Señal24HTVN.html" class="FondoTitulosMonitor1"><div class="TextoTitulosMonitor1 waves-effect waves-gris">ㅤCANAL 24 HORASㅤ</div></a></div>',
+  },
   "24HTVN_YT": {
     slug: "24HTVN_YT",
     titleHtml:

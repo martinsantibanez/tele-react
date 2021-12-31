@@ -5,28 +5,22 @@ import { SelectSourceModal } from "./Modal";
 type Props = {
   source?: Source;
   size: number;
+  onChange: (source: Source) => void;
 };
-export function Monitor({ source, size }: Props) {
+export function Monitor({ source, size, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSource, setSelectedSource] = useState<Source | undefined>(
-    source
-  );
 
   const handleSelectSource = (source: Source) => {
-    if (selectedSource?.slug === source.slug) {
-      setSelectedSource(undefined);
-    } else {
-      setSelectedSource(source);
-    }
+    onChange(source);
   };
 
   return (
     <div className={`stream col-${size}`}>
       <div className="CAJABoton_SeleccionarSeñales">
-        {!!selectedSource && (
+        {!!source && (
           <div
             dangerouslySetInnerHTML={{
-              __html: selectedSource.codeHtml,
+              __html: source.codeHtml,
             }}
           />
         )}
@@ -34,7 +28,7 @@ export function Monitor({ source, size }: Props) {
           <SelectSourceModal
             onSelect={(source) => handleSelectSource(source)}
             onClose={() => setModalOpen(false)}
-            selectedSource={selectedSource}
+            selectedSource={source}
           />
         )}
       </div>
