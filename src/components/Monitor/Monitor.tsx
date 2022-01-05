@@ -17,7 +17,7 @@ export function Monitor({ source, size, onChange }: Props) {
   const [, setFeaturedSource] = useFeaturedSource();
 
   const handlePromote = () => {
-    setFeaturedSource(source);
+    setFeaturedSource(source?.slug);
   };
 
   const handleSelectSource = (source: Source) => {

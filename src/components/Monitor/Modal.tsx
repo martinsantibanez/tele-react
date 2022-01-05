@@ -1,5 +1,5 @@
 import React from "react";
-import { Source, sources } from "../../sources";
+import { Source, sourcesCategories } from "../../sources";
 
 type Props = {
   onSelect: (source: Source) => void;
@@ -32,7 +32,7 @@ export function SelectSourceModal({
               style={{ maxHeight: "calc(90vh - 50px)" }}
               className="modal-body canales-body"
             >
-              {sources.map((sourceCategory) => (
+              {sourcesCategories.map((sourceCategory) => (
                 <div key={sourceCategory.name}>
                   {sourceCategory.name}
                   <div>

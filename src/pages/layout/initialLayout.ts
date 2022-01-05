@@ -10,7 +10,7 @@ export const initialLayout: Layout = {
         {
           size: 8,
           node: {
-            source: tvNacionalSources["24HTVN"],
+            sourceSlug: "24HTVN",
             uuid: uuidv4(),
           },
         },
@@ -22,7 +22,7 @@ export const initialLayout: Layout = {
                 {
                   node: {
                     uuid: uuidv4(),
-                    source: tvNacionalSources.CHV_WEB_IFRAME,
+                    sourceSlug: "CHV_WEB_IFRAME",
                   },
                 },
               ],
@@ -32,7 +32,7 @@ export const initialLayout: Layout = {
                 {
                   node: {
                     uuid: uuidv4(),
-                    source: tvNacionalSources.MEGA,
+                    sourceSlug: "MEGA",
                   },
                 },
               ],
@@ -45,15 +45,15 @@ export const initialLayout: Layout = {
       cols: [
         {
           size: 4,
-          node: { uuid: uuidv4(), source: tvNacionalSources.T13_ENVIVO },
+          node: { uuid: uuidv4(), sourceSlug: "T13_ENVIVO" },
         },
         {
           size: 4,
-          node: { uuid: uuidv4(), source: camarasSources.PLAZAITALIA_CIMA },
+          node: { uuid: uuidv4(), sourceSlug: "PLAZAITALIA_CIMA" },
         },
         {
           size: 4,
-          node: { uuid: uuidv4(), source: camarasSources.LEDRIUM_1 },
+          node: { uuid: uuidv4(), sourceSlug: "LEDRIUM_1" },
         },
       ],
     },

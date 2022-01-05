@@ -1,9 +1,10 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { clone } from "ramda";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { createLocalStorageStateHook } from "use-local-storage-state";
 import { Monitor } from "../../components/Monitor/Monitor";
+import { getSource } from "../../sources";
 import { initialLayout } from "./initialLayout";
 import { Col, Layout, Row, SourceNode } from "./types";
 
@@ -16,14 +17,22 @@ function Col({
 }) {
   const { rows, node } = col;
   const size = col.size || 12;
-  if (node?.source)
+  const source = useMemo(
+    () => (node?.sourceSlug ? getSource(node.sourceSlug) : null),
+    [node]
+  );
+
+  if (source) {
     return (
       <Monitor
         size={size}
-        source={node.source}
-        onChange={(source) => onSourceChange({ ...node, source })}
+        source={source}
+        onChange={(source) =>
+          onSourceChange({ ...node, sourceSlug: source.slug })
+        }
       />
     );
+  }
 
   return (
     <div className={`col-${size}`}>
@@ -96,7 +105,6 @@ const MonitorPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {layout && <Col col={layout} onSourceChange={handleSelectSource} />}
-      {/* <ReactTwitchEmbedVideo channel="seba_parrab" /> */}
     </div>
   );
 };

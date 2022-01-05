@@ -23,7 +23,7 @@ export interface SourceGroup {
   sources: SourcesMap;
 }
 
-export const sources: SourceGroup[] = [
+export const sourcesCategories: SourceGroup[] = [
   {
     name: "TV Nacional",
     sources: tvNacionalSources,
@@ -61,3 +61,9 @@ export const sources: SourceGroup[] = [
     sources: relojesSources,
   },
 ];
+
+export function getSource(slug: string) {
+  return sourcesCategories
+    .flatMap((category) => Object.values(category.sources))
+    .find((src) => src.slug === slug);
+}

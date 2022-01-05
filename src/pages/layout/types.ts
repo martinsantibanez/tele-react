@@ -1,7 +1,5 @@
-import { Source } from "../../sources";
-
 export type SourceNode = {
-  source: Source;
+  sourceSlug: string;
   uuid?: string;
 };
 
