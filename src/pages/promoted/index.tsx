@@ -7,10 +7,6 @@ import { getSource } from "../../sources";
 
 const MonitorPage: NextPage = () => {
   const [featuredSource] = useFeaturedSource();
-  const source = useMemo(
-    () => (featuredSource ? getSource(featuredSource) : null),
-    [featuredSource]
-  );
 
   return (
     <div>
@@ -18,7 +14,7 @@ const MonitorPage: NextPage = () => {
         <title>LIVE</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {source && <Monitor size={12} source={source} />}
+      <Monitor size={12} sourceSlug={featuredSource} />
     </div>
   );
 };

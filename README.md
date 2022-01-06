@@ -1,8 +1,10 @@
 # tele-react
 
-## Foreword
+Based on:
 
-Based on https://github.com/AINMcl/MonitorTV
+- https://github.com/AINMcl/MonitorTV
+- https://github.com/Alplox/tele
+- http://pslabs.cl/tele.html
 
 Built with React + NextJS
 

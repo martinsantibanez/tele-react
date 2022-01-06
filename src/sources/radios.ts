@@ -12,15 +12,17 @@ export const radiosSources: SourcesMap = {
     slug: "ADNRADIO",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Microfono1.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_ADNRADIO.svg"></img>ﾠ',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_ADN.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤADN RADIOㅤ</div></div></div>',
+    name: "ADN RADIO",
+    m3u8Url:
+      "https://unlimited1-cl-isp.dps.live/adntv/adntv.smil/playlist.m3u8",
   },
   COOPERATIVA: {
     slug: "COOPERATIVA",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Microfono1.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_Radio_Cooperativa.svg"></img>ﾠ',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_COOPERATIVA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤCOOPERATIVAㅤ</div></div></div>',
+    name: "COOPERATIVA",
+    m3u8Url:
+      "https://unlimited1-cl-isp.dps.live/coopetv/coopetv.smil/playlist.m3u8",
   },
   BIOBIOTV: {
     slug: "BIOBIOTV",

@@ -1,6 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import { camarasSources } from "../../sources/camaras";
-import { tvNacionalSources } from "../../sources/tvNacional";
 import { Layout } from "./types";
 
 export const initialLayout: Layout = {

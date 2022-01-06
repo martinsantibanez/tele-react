@@ -136,10 +136,11 @@ export const otrasSources: SourcesMap = {
     slug: "REUTERS",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠREUTERS',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalREUTERS.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤREUTERSㅤ</div></div></div>',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist-v/53443c472c6e89675103cc4c.m3u8",
   },
   TELEMUNDO: {
+    m3u8Url: "https://tlmdhd-lh.akamaihd.net/i/tlmd1_1@79627/master.m3u8",
     slug: "TELEMUNDO",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠTELEMUNDOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
@@ -374,8 +375,7 @@ export const otrasSources: SourcesMap = {
     slug: "TN",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠTODO NOTICIAS',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalTN.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤTNㅤ</div></div></div>',
+    iframeSrc: "https://www.youtube.com/embed/wHn1_QVoXGM?autoplay=true&mute=1",
   },
   CANAL_26_ARG: {
     slug: "CANAL_26_ARG",
@@ -416,8 +416,8 @@ export const otrasSources: SourcesMap = {
     slug: "FORO_TV",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/mx.svg"></img>ﾠFORO TV',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/live_stream?channel=UCUsm-fannqOY02PNN67C0KA&autoplay=true&mute=1" frameborder="0" allowfullscreen></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤFORO TVㅤ</div></div></div>',
+    iframeSrc:
+      "https://www.youtube.com/embed/live_stream?channel=UCUsm-fannqOY02PNN67C0KA&autoplay=true&mute=1",
   },
   SKY_NEWS: {
     slug: "SKY_NEWS",

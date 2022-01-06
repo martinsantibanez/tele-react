@@ -1,20 +1,25 @@
 import classnames from "classnames/bind";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useFeaturedSource } from "../../hooks/useFeaturedSource";
-import { Source } from "../../sources";
-import { SelectSourceModal } from "./Modal";
+import { getSource, Source } from "../../sources";
+import { SelectSourceModal } from "../SelectSource/SelectSourceModal";
 import styles from "./Monitor.module.scss";
+import { SourceOutput } from "./SourceOutput";
 const cx = classnames.bind(styles);
 
 type Props = {
-  source?: Source;
+  sourceSlug?: string;
   size: number;
   onChange?: (source: Source) => void;
 };
-export function Monitor({ source, size, onChange }: Props) {
+export function Monitor({ sourceSlug, size, onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [, setFeaturedSource] = useFeaturedSource();
+  const source = useMemo(
+    () => (sourceSlug ? getSource(sourceSlug) : null),
+    [sourceSlug]
+  );
 
   const handlePromote = () => {
     setFeaturedSource(source?.slug);
@@ -26,23 +31,18 @@ export function Monitor({ source, size, onChange }: Props) {
 
   return (
     <div className={`stream col-${size}`}>
-      <div className="w-100 h-100">
-        {!!source && source.codeHtml && (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: source.codeHtml,
-            }}
-          />
-        )}
-        {!!source && source.component}
-        {modalOpen && (
-          <SelectSourceModal
-            onSelect={(source) => handleSelectSource(source)}
-            onClose={() => setModalOpen(false)}
-            selectedSource={source}
-          />
-        )}
-      </div>
+      {source && (
+        <div className="w-100 h-100">
+          {!!source && <SourceOutput source={source} />}
+          {modalOpen && (
+            <SelectSourceModal
+              onSelect={(source) => handleSelectSource(source)}
+              onClose={() => setModalOpen(false)}
+              selectedSource={source}
+            />
+          )}
+        </div>
+      )}
       {onChange && (
         <div className={cx("actions-container")}>
           <div

@@ -5,19 +5,36 @@ import { otrasSources } from "./otras";
 import { radiosSources } from "./radios";
 import { aysenSources, regionesSources } from "./regiones";
 import { relojesSources } from "./relojes";
-import { tvNacionalSources } from "./tvNacional";
+import { tvNacionalSources, tvNacionalYoutubeSources } from "./tvNacional";
+import { tvNacionalDosSources } from "./tvNacionalDos";
 import { twitchSources } from "./twitch";
+
+export enum SourceType {
+  m3u8 = "m3u8",
+  iframe = "iframe",
+  html = "html",
+  component = "component",
+}
 
 export interface Source {
   slug: string;
+  name?: string;
   titleHtml: string;
+  titleIcons?: React.ReactNode[];
+  listTitle?: string;
   codeHtml?: string;
-  component?: React.ReactNode;
+  iframeSrc?: string;
+  m3u8Url?: string;
+  component?: React.ReactElement;
+  youtubeId?: string;
+
+  fuente?: string;
 }
 
 export type SourcesMap = {
   [sourceId: string]: Source;
 };
+
 export interface SourceGroup {
   name: string;
   sources: SourcesMap;
@@ -27,6 +44,14 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "TV Nacional",
     sources: tvNacionalSources,
+  },
+  {
+    name: "TV Nacional YT",
+    sources: tvNacionalYoutubeSources,
+  },
+  {
+    name: "TV Nacional - 2",
+    sources: tvNacionalDosSources,
   },
   {
     name: "Especiales",

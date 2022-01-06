@@ -8,4 +8,13 @@ module.exports = {
     });
     return config;
   },
+  async redirects() {
+    return [
+      {
+        source: "/monitor",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
 };

@@ -1,10 +1,9 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { clone } from "ramda";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { createLocalStorageStateHook } from "use-local-storage-state";
 import { Monitor } from "../../components/Monitor/Monitor";
-import { getSource } from "../../sources";
 import { initialLayout } from "./initialLayout";
 import { Col, Layout, Row, SourceNode } from "./types";
 
@@ -17,16 +16,12 @@ function Col({
 }) {
   const { rows, node } = col;
   const size = col.size || 12;
-  const source = useMemo(
-    () => (node?.sourceSlug ? getSource(node.sourceSlug) : null),
-    [node]
-  );
 
-  if (source) {
+  if (node?.sourceSlug) {
     return (
       <Monitor
         size={size}
-        source={source}
+        sourceSlug={node?.sourceSlug}
         onChange={(source) =>
           onSourceChange({ ...node, sourceSlug: source.slug })
         }
@@ -64,7 +59,7 @@ const useSavedLayout = createLocalStorageStateHook<Layout | undefined>(
   "__tele_layout__"
 );
 
-const MonitorPage: NextPage = () => {
+const LayoutPage: NextPage = () => {
   const [layout, setLayout] = useSavedLayout();
   useEffect(() => {
     if (!layout) setLayout(initialLayout);
@@ -109,4 +104,4 @@ const MonitorPage: NextPage = () => {
   );
 };
 
-export default MonitorPage;
+export default LayoutPage;

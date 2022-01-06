@@ -5,15 +5,8 @@ export const especialesSources: SourcesMap = {
     slug: "PRESIDENCIA",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_GOB.svg"></img>ﾠPRESIDENCIA',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalPRESIDENCIA2.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤPRESIDENCIAㅤ</div></div></div>',
-  },
-  SERVEL: {
-    slug: "SERVEL",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠSERVEL',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/live_stream?channel=UCB8s6rETjmWgXrp_BxyXqdg&autoplay=true&mute=1" frameborder="0" allowfullscreen></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤSERVELㅤ</div></div></div>',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist-v/5dc17f8944795108a2a52a49.m3u8",
   },
   MEDIABANCO_IFRAME: {
     slug: "MEDIABANCO_IFRAME",

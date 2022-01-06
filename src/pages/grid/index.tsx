@@ -1,13 +1,15 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { ChangeEventHandler, CSSProperties, useState } from "react";
+import { ChangeEventHandler, CSSProperties, useEffect, useState } from "react";
+import { createLocalStorageStateHook } from "use-local-storage-state";
 import Fullscreen1 from "../../../public/ui_icons/PantallaCompleta_1.svg";
 import Fullscreen2 from "../../../public/ui_icons/PantallaCompleta_2.svg";
 import { ActionButton } from "../../components/ActionButton/ActionButton";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source } from "../../sources";
-import { tvNacionalSources } from "../../sources/tvNacional";
+import { SourceNode } from "../layout/types";
+import { initialGrid } from "./initialGrid";
 
 const buttons: CSSProperties = {
   position: "absolute",
@@ -27,7 +29,9 @@ const reloadStyle: CSSProperties = {
   textAlign: "left",
 };
 
-const MonitorPage: NextPage = () => {
+const useSavedGrid = createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
+
+const GridPage: NextPage = () => {
   const launchFullScreen = () => {
     const element: any = document.documentElement;
     if (element.requestFullScreen) {
@@ -58,22 +62,21 @@ const MonitorPage: NextPage = () => {
     setSize(Number(event.target.value));
   };
 
-  const [selectedSources, setSelectedSources] = useState<Source[]>([
-    tvNacionalSources["24HTVN"],
-    tvNacionalSources.T13_YT,
-    tvNacionalSources.CHV_WEB_IFRAME,
-    tvNacionalSources.MEGA,
-  ]);
+  const [selectedSources, setSelectedSources] = useSavedGrid();
+
+  useEffect(() => {
+    if (!selectedSources) setSelectedSources(initialGrid);
+  }, [selectedSources, setSelectedSources]);
 
   const handleSourceChange = (source: Source, idxToChange: number) => {
     setSelectedSources((sources) => {
+      if (!sources) return;
       return sources.map((src, idx) => {
-        if (idxToChange === idx) return source;
+        if (idxToChange === idx) return { ...src, sourceSlug: source.slug };
         else return src;
       });
     });
   };
-
   return (
     <div>
       <Head>
@@ -82,14 +85,15 @@ const MonitorPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="row no-gutters row-canales" id="los-canales">
-        {selectedSources.map((source, idx) => (
-          <Monitor
-            size={size}
-            source={source}
-            key={`${source.slug}_${idx}`}
-            onChange={(newSource) => handleSourceChange(newSource, idx)}
-          />
-        ))}
+        {selectedSources &&
+          selectedSources.map((source, idx) => (
+            <Monitor
+              size={size}
+              sourceSlug={source.sourceSlug}
+              key={`${source.sourceSlug}_${idx}`}
+              onChange={(newSource) => handleSourceChange(newSource, idx)}
+            />
+          ))}
       </div>
 
       <div className="Botones" style={buttons}>
@@ -146,4 +150,4 @@ const MonitorPage: NextPage = () => {
   );
 };
 
-export default MonitorPage;
+export default GridPage;

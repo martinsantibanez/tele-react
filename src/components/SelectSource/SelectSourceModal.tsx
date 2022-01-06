@@ -3,7 +3,7 @@ import { Source, sourcesCategories } from "../../sources";
 
 type Props = {
   onSelect: (source: Source) => void;
-  onClose: () => void;
+  onClose?: () => void;
   selectedSource?: Source;
 };
 export function SelectSourceModal({
@@ -15,18 +15,20 @@ export function SelectSourceModal({
     <div className="modal" id="custom-modal" style={{ display: "block" }}>
       <div className="modal-dialog modal-xl">
         <div className="modal-content">
-          <div className="modal-footer FondoTitulo">
-            <a>
-              <span
-                className="BotonCierreMenuSeñales waves-effect waves-red"
-                id="custom-close"
-                data-dismiss="modal"
-                onClick={onClose}
-              >
-                CERRAR MENU
-              </span>
-            </a>
-          </div>
+          {onClose && (
+            <div className="modal-footer FondoTitulo">
+              <a>
+                <span
+                  className="BotonCierreMenuSeñales waves-effect waves-red"
+                  id="custom-close"
+                  data-dismiss="modal"
+                  onClick={onClose}
+                >
+                  CERRAR MENU
+                </span>
+              </a>
+            </div>
+          )}
           <div id="PorFiltrar">
             <div
               style={{ maxHeight: "calc(90vh - 50px)" }}
