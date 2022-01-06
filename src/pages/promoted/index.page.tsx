@@ -1,9 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { useMemo } from "react";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { useFeaturedSource } from "../../hooks/useFeaturedSource";
-import { getSource } from "../../sources";
 
 const MonitorPage: NextPage = () => {
   const [featuredSource] = useFeaturedSource();

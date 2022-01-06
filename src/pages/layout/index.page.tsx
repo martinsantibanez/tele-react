@@ -55,7 +55,7 @@ function Row({
   );
 }
 
-const useSavedLayout = createLocalStorageStateHook<Layout | undefined>(
+export const useSavedLayout = createLocalStorageStateHook<Layout | undefined>(
   "__tele_layout__"
 );
 

@@ -1,7 +1,11 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useFeaturedSource } from "../hooks/useFeaturedSource";
 import styles from "../styles/Home.module.css";
+import { useSavedGrid } from "./grid/index.page";
+import { useSavedLayout } from "./layout/index.page";
+import { useSavedSelectedItem } from "./list/index.page";
 
 function HomeElement({
   description,
@@ -30,6 +34,19 @@ function HomeElement({
 }
 
 const Home: NextPage = () => {
+  const [, setGrid] = useSavedGrid();
+  const [, setLayout] = useSavedLayout();
+  const [, setFeaturedSource] = useFeaturedSource();
+  const [, setSelectedItem] = useSavedSelectedItem();
+
+
+  const handleClearLocalStorage = () => {
+    setGrid(undefined);
+    setLayout(undefined);
+    setFeaturedSource(undefined)
+    setFeaturedSource(undefined)
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -59,6 +76,10 @@ const Home: NextPage = () => {
             title="List"
             description="Watch a single source, pick from a list"
           />
+
+          <button onClick={handleClearLocalStorage} className="btn btn-primary">
+            Clear local storage
+          </button>
         </div>
       </main>
     </div>

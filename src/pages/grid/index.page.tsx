@@ -29,7 +29,7 @@ const reloadStyle: CSSProperties = {
   textAlign: "left",
 };
 
-const useSavedGrid = createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
+export const useSavedGrid = createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
 
 const GridPage: NextPage = () => {
   const launchFullScreen = () => {

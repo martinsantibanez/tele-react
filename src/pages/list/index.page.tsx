@@ -4,7 +4,7 @@ import { createLocalStorageStateHook } from "use-local-storage-state";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source, sourcesCategories } from "../../sources";
 
-const useSavedSelectedItem = createLocalStorageStateHook<string | undefined>(
+export const useSavedSelectedItem = createLocalStorageStateHook<string | undefined>(
   "__tele_selected__"
 );
 
