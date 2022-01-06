@@ -1,4 +1,5 @@
 import React from "react";
+import { Accordion } from "react-bootstrap";
 import { Source, sourcesCategories } from "../../sources";
 
 type Props = {
@@ -34,28 +35,30 @@ export function SelectSourceModal({
               style={{ maxHeight: "calc(90vh - 50px)" }}
               className="modal-body canales-body"
             >
-              {sourcesCategories.map((sourceCategory) => (
-                <div key={sourceCategory.name}>
-                  {sourceCategory.name}
-                  <div>
-                    {Object.values(sourceCategory.sources).map((source) => (
-                      <button
-                        title={source.slug}
-                        key={source.slug}
-                        className={`btn ${
-                          source.slug === selectedSource?.slug
-                            ? "BotonTV_SeñalSeleccionada"
-                            : "BotonTV_Señales"
-                        }`}
-                        onClick={() => onSelect(source)}
-                        dangerouslySetInnerHTML={{
-                          __html: source.titleHtml,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <Accordion defaultActiveKey="0">
+                {sourcesCategories.map((sourceCategory, idx) => (
+                  <Accordion.Item eventKey={`${idx}`} key={sourceCategory.name}>
+                    <Accordion.Header>{sourceCategory.name}</Accordion.Header>
+                    <Accordion.Body>
+                      {Object.values(sourceCategory.sources).map((source) => (
+                        <button
+                          title={source.slug}
+                          key={source.slug}
+                          className={`btn ${
+                            source.slug === selectedSource?.slug
+                              ? "BotonTV_SeñalSeleccionada"
+                              : "BotonTV_Señales"
+                          }`}
+                          onClick={() => onSelect(source)}
+                          dangerouslySetInnerHTML={{
+                            __html: source.titleHtml,
+                          }}
+                        />
+                      ))}
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
             </div>
           </div>
         </div>

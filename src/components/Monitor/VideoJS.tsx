@@ -23,6 +23,7 @@ const VideoPlayer = ({ src }: Props) => {
       preload: "auto",
       autoplay: "any",
       controls: true,
+      muted: true,
       fluid: true,
       responsive: true,
       sources: [
@@ -46,11 +47,6 @@ const VideoPlayer = ({ src }: Props) => {
       if (player) player.dispose();
     };
   }, [player, src]);
-
-  useEffect(() => {
-    if (player?.hlsQualitySelector)
-      player.hlsQualitySelector({ displayCurrentQuality: true });
-  }, [player]);
 
   return (
     <div data-vjs-player>
