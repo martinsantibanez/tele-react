@@ -53,6 +53,12 @@ const Home: NextPage = () => {
             title="Monitor"
             description="Watch featured source, selected from Grid or Layout (Open in a new tab)"
           />
+
+          <HomeElement
+            href="/list"
+            title="List"
+            description="Watch a single seource, pick from a list"
+          />
         </div>
       </main>
     </div>
