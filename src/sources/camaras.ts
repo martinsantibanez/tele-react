@@ -1,6 +1,13 @@
 import { SourcesMap } from ".";
 
 export const camarasSources: SourcesMap = {
+  VALPARAISO: {
+    slug: "VALPARAISO",
+    name: "VALPARAISO",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠVALPARAISOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
+    youtubeChannelId: "UCqSSE82uHv1rkR3Tj9lTx1w",
+  },
   PLAZAITALIA_CIMA: {
     slug: "PLAZAITALIA_CIMA",
     titleHtml:
@@ -22,8 +29,7 @@ export const camarasSources: SourcesMap = {
     slug: "LEDRIUM_1",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPROVIDENCIA (Ledrium)',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/Señal_CAMARA_LEDRIUM_PROVIDENCIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤPROVIDENCIA LEDRIUMㅤ</div></div></div>',
+    youtubeVideoId: "mGxX5PfREPA",
   },
   OSORNO_1: {
     slug: "OSORNO_1",
@@ -116,13 +122,7 @@ export const camarasSources: SourcesMap = {
     codeHtml:
       '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="SeñalCAMARA_IQUIQUE_PLAYA_LA_PUNTA2.html" frameborder="0"></iframe><a href="https://www.glaseado.cl/surf-cams/la-punta-2/" class="FondoTitulosMonitor1"><div class="TextoTitulosMonitor1 waves-effect waves-gris">ㅤIQUIQUEㅤ</div></a></div>',
   },
-  VALPARAISO: {
-    slug: "VALPARAISO",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠVALPARAISOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="Señal_CAMARA_VALPARAISO.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤVALPARAISOㅤ</div></div></div>',
-  },
+
   CAPITOLIO_EEUU_1: {
     slug: "CAPITOLIO_EEUU_1",
     titleHtml:

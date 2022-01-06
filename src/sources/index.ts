@@ -26,7 +26,8 @@ export interface Source {
   iframeSrc?: string;
   m3u8Url?: string;
   component?: React.ReactElement;
-  youtubeId?: string;
+  youtubeChannelId?: string;
+  youtubeVideoId?: string;
 
   fuente?: string;
 }
@@ -48,10 +49,6 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "TV Nacional YT",
     sources: tvNacionalYoutubeSources,
-  },
-  {
-    name: "TV Nacional - 2",
-    sources: tvNacionalDosSources,
   },
   {
     name: "Especiales",
@@ -84,6 +81,10 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "Relojes",
     sources: relojesSources,
+  },
+  {
+    name: "TV Nacional - 2",
+    sources: tvNacionalDosSources,
   },
 ];
 

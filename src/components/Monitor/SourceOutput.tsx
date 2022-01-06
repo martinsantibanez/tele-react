@@ -43,11 +43,18 @@ export function SourceOutput({ source }: Props) {
   } else if (source.m3u8Url && typeof window !== "undefined") {
     // return <VideoM3u8Source src={source.m3u8Url} />;
     return <VideoPlayer src={source.m3u8Url} />;
-  } else if (source.youtubeId) {
+  } else if (source.youtubeChannelId) {
     return (
       <IframeOutput
         name={source.name}
-        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${source.youtubeId}&autoplay=1&mute=1&modestbranding=1&showinfo=0`}
+        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${source.youtubeChannelId}&autoplay=1&mute=1&modestbranding=1&showinfo=0`}
+      />
+    );
+  } else if (source.youtubeVideoId) {
+    return (
+      <IframeOutput
+        name={source.name}
+        src={`https://www.youtube-nocookie.com/embed/${source.youtubeVideoId}?autoplay=1&mute=1&modestbranding=1&showinfo=0`}
       />
     );
   }

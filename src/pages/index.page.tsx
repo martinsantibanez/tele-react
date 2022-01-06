@@ -57,7 +57,7 @@ const Home: NextPage = () => {
           <HomeElement
             href="/list"
             title="List"
-            description="Watch a single seource, pick from a list"
+            description="Watch a single source, pick from a list"
           />
         </div>
       </main>

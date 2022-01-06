@@ -6,7 +6,7 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     name: "Canal 24 horas",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_24HORAS.svg"></img>',
-    youtubeId: "UCTXNz3gjAypWp3EhlIATEJQ",
+    youtubeChannelId: "UCTXNz3gjAypWp3EhlIATEJQ",
   },
 
   T13_YT: {
@@ -14,7 +14,7 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_T13.svg"></img>',
     name: "T13 MOVIL",
-    youtubeId: "UCsRnhjcUCR78Q3Ud6OXCTNg",
+    youtubeChannelId: "UCsRnhjcUCR78Q3Ud6OXCTNg",
   },
 
   // ocasionales:
@@ -22,20 +22,20 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     slug: "CNN_CHILE_YT",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_CNNCHILE2.svg"></img>',
-    youtubeId: "UCpOAcjJNAp0Y0fhznRrXIJQ",
+    youtubeChannelId: "UCpOAcjJNAp0Y0fhznRrXIJQ",
   },
   TVN_YT: {
     slug: "TVN_YT",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_TVN.svg"></img>',
     name: "TVN",
-    youtubeId: "UCaVaCaiG6qRzDiJDuEGKOhQ",
+    youtubeChannelId: "UCaVaCaiG6qRzDiJDuEGKOhQ",
   },
   MEGANOTICIAS_YT: {
     slug: "MEGANOTICIAS_YT",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGANOTICIAS.svg"></img>',
-    youtubeId: "UCkccyEbqhhM3uKOI6Shm",
+    youtubeChannelId: "UCkccyEbqhhM3uKOI6Shm",
     fuente: "https://www.youtube.com/channel/UCkccyEbqhhM3uKOI6Shm-4Q",
   },
   CHV_NOTICIAS_YT: {
@@ -50,20 +50,20 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     name: "Canal 13",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_Canal13.svg"></img>',
-    youtubeId: "UCd4D3LfXC_9MY2zSv_3gMgw",
+    youtubeChannelId: "UCd4D3LfXC_9MY2zSv_3gMgw",
   },
   CHV_YT: {
     slug: "CHV_YT",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_CHV.svg"></img>',
-    youtubeId: "UC8EdTmyUaFIfZvVttJ9lgIA",
+    youtubeChannelId: "UC8EdTmyUaFIfZvVttJ9lgIA",
     name: "CHV",
   },
   MEGA_YT: {
     slug: "MEGA_YT",
     titleHtml:
       '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGA.svg"></img>',
-    youtubeId: "UCEpId-jtRABuZyX6D2z6FZQ",
+    youtubeChannelId: "UCEpId-jtRABuZyX6D2z6FZQ",
   },
 };
 
@@ -134,8 +134,7 @@ export const tvNacionalSources: SourcesMap = {
     slug: "CNN_CHILE",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_CNNCHILE2.svg"></img>',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalCNNCHILE.html" frameborder="0"></iframe><a href="SeñalCNNCHILE.html" class="FondoTitulosMonitor1"><div class="TextoTitulosMonitor1 waves-effect waves-gris">ㅤCNN CHILEㅤ</div></a></div>',
+    m3u8Url: "https://unlimited2-cl-isp.dps.live/cnn/cnn.smil/playlist.m3u8",
   },
   MEGANOTICIAS: {
     slug: "MEGANOTICIAS",

@@ -39,11 +39,6 @@ export const tvNacionalDosSources: SourcesMap = {
       "https://unlimited2-cl-isp.dps.live/lared/lared.smil/playlist.m3u8",
     fuente: "https://www.lared.cl/senal-online",
   },
-  CNNCHILE: {
-    slug: "CNNCHILE",
-    titleHtml: "CNN CHILE",
-    m3u8Url: "https://unlimited1-cl-isp.dps.live/cnn/cnn.smil/playlist.m3u8",
-  },
   "MEGANOTICIAS 1": {
     slug: "MEGANOTICIAS 1",
     titleHtml: "MEGANOTICIAS 1",
@@ -485,7 +480,7 @@ export const tvNacionalDosSources: SourcesMap = {
     name: 'DOCUMENTACION TVN',
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_24HTVN.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="imagenes/Logo_TVN.svg"></img> DOC TVN',
-    youtubeId: "UCeKSSTjG4r-Qvcpjnwgo0VQ",
+    youtubeChannelId: "UCeKSSTjG4r-Qvcpjnwgo0VQ",
   },
   Señal_Interna_CNNCHILE_1: {
     slug: "Señal_Interna_CNNCHILE_1",
