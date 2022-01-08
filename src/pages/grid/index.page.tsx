@@ -8,6 +8,7 @@ import Fullscreen2 from "../../../public/ui_icons/PantallaCompleta_2.svg";
 import { ActionButton } from "../../components/ActionButton/ActionButton";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { Source } from "../../sources";
+import { uuid } from "../../utils/uuid";
 import { SourceNode } from "../layout/types";
 import { initialGrid } from "./initialGrid";
 
@@ -29,7 +30,8 @@ const reloadStyle: CSSProperties = {
   textAlign: "left",
 };
 
-export const useSavedGrid = createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
+export const useSavedGrid =
+  createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
 
 const GridPage: NextPage = () => {
   const launchFullScreen = () => {
@@ -77,6 +79,24 @@ const GridPage: NextPage = () => {
       });
     });
   };
+
+  const handleSourceAdd = () => {
+    setSelectedSources((sources) => [
+      ...(sources || []),
+      {
+        sourceSlug: "Barras",
+        uuid: uuid(),
+      },
+    ]);
+  };
+
+  const handleSourceRemove = (idx: number) => {
+    setSelectedSources((sources) => {
+      if (!sources) return;
+      return sources.filter((src, index) => index !== idx);
+    });
+  };
+
   return (
     <div>
       <Head>
@@ -92,6 +112,7 @@ const GridPage: NextPage = () => {
               sourceSlug={source.sourceSlug}
               key={`${source.sourceSlug}_${idx}`}
               onChange={(newSource) => handleSourceChange(newSource, idx)}
+              onRemove={() => handleSourceRemove(idx)}
             />
           ))}
       </div>
@@ -122,6 +143,7 @@ const GridPage: NextPage = () => {
         <Link href="/" passHref>
           <ActionButton>ㅤIR A HOMEㅤ</ActionButton>
         </Link>
+        <ActionButton onClick={handleSourceAdd}>Agregar</ActionButton>
 
         <a onClick={() => cancelFullScreen()}>
           <span

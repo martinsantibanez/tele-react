@@ -1,3 +1,4 @@
+import { SourceMap } from "module";
 import { SourcesMap } from ".";
 
 export const otrasSources: SourcesMap = {
@@ -1355,67 +1356,21 @@ export const otrasSources: SourcesMap = {
     codeHtml:
       '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/live_stream?channel=UCoMBIlBDtaxuqUfTLzV6PDQ&autoplay=true&mute=1" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤCOPANOㅤ</div></div></div>',
   },
-  PantallaVacia1: {
-    slug: "PantallaVacia1",
+};
+
+export const placeHolderSources: SourcesMap = {
+  Vacio: {
+    slug: "Vacio",
     titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠVACIO 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="" frameborder="0"></iframe></div>',
+      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠVACIO',
+    name: "VACIO",
+    codeHtml: "",
   },
-  PantallaVacia2: {
-    slug: "PantallaVacia2",
+  Barras: {
+    slug: "Barras",
     titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠVACIO 2',
+      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>dBARRAS',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="" frameborder="0"></iframe></div>',
-  },
-  PantallaVacia3: {
-    slug: "PantallaVacia3",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠVACIO 3',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="" frameborder="0"></iframe></div>',
-  },
-  Barras_1: {
-    slug: "Barras_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
-  },
-  Barras_2: {
-    slug: "Barras_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
-  },
-  Barras_3: {
-    slug: "Barras_3",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
-  },
-  Barras_4: {
-    slug: "Barras_4",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
-  },
-  Barras_5: {
-    slug: "Barras_5",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
-  },
-  Barras_6: {
-    slug: "Barras_6",
-    titleHtml:
-      '<img style="height: 20px; width:auto;" src="imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="imagenes/SinSeñal.png" frameborder="0"></img></div>',
+      '<img class="embed-responsive-item w-100 h-100" src="imagenes/SinSeñal.png" frameborder="0"></img>',
   },
 };

@@ -3,11 +3,15 @@ import classnames from "classnames/bind";
 import styles from "./styles.module.scss";
 
 const cx = classnames.bind(styles);
-type Props = {};
-export function ActionButton({ children }: PropsWithChildren<Props>) {
+type Props = {
+  href?: string
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+};
+
+export function ActionButton({ children, href, onClick }: PropsWithChildren<Props>) {
   return (
-    <a>
+    <button className="btn" onClick={onClick}>
       <span className={cx("button-content")}>{children}</span>
-    </a>
+    </button>
   );
 }

@@ -11,8 +11,9 @@ type Props = {
   sourceSlug?: string;
   size: number;
   onChange?: (source: Source) => void;
+  onRemove?: () => void;
 };
-export function Monitor({ sourceSlug, size, onChange }: Props) {
+export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [, setFeaturedSource] = useFeaturedSource();
@@ -43,19 +44,26 @@ export function Monitor({ sourceSlug, size, onChange }: Props) {
           )}
         </div>
       )}
-      {onChange && (
-        <div className={cx("actions-container")}>
-          <div
-            className={cx("action-button")}
-            onClick={() => setModalOpen((v) => !v)}
-          >
-            ㅤCAMBIAR SEÑALㅤ
+      <div className={cx("actions-container")}>
+        {onChange && (
+          <>
+            <div
+              className={cx("action-button")}
+              onClick={() => setModalOpen((v) => !v)}
+            >
+              CAMBIAR SEÑAL
+            </div>
+            <div className={cx("action-button")} onClick={handlePromote}>
+              DESTACAR
+            </div>
+          </>
+        )}
+        {onRemove && (
+          <div className={cx("action-button")} onClick={onRemove}>
+            QUITAR
           </div>
-          <div className={cx("action-button")} onClick={handlePromote}>
-            ㅤDESTACARㅤ
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
