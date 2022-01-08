@@ -13,8 +13,8 @@ import { SourceNode } from "../layout/types";
 import { initialGrid } from "./initialGrid";
 
 const buttons: CSSProperties = {
-  position: "absolute",
-  bottom: "0.5em",
+  position: "sticky",
+  bottom: "2em",
   width: "100%",
   height: "20px",
   lineHeight: "20px",
