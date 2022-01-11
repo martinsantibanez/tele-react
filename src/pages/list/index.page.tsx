@@ -34,11 +34,7 @@ const ListPage: NextPage = () => {
           />
         </div>
         <div className="col-8">
-          <Monitor
-            size={12}
-            onChange={handleSelectSource}
-            sourceSlug={sourceSlug}
-          />
+          <Monitor size={12} sourceSlug={sourceSlug} />
         </div>
       </div>
     </MainLayout>

@@ -11,11 +11,10 @@ const cx = classnames.bind(styles);
 type Props = {
   sourceSlug?: string;
   size: number;
-  onChange?: (source: Source) => void;
+  onChangeClick?: () => void;
   onRemove?: () => void;
 };
-export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
-  const [modalOpen, setModalOpen] = useState(false);
+export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   const { isEditing } = useTeleContext();
 
   const [, setFeaturedSource] = useFeaturedSource();
@@ -28,8 +27,8 @@ export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
     setFeaturedSource(source?.slug);
   };
 
-  const handleSelectSource = (source: Source) => {
-    if (onChange) onChange(source);
+  const handleChangeClick = () => {
+    if (onChangeClick) onChangeClick();
   };
 
   return (
@@ -37,23 +36,13 @@ export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
       {source && (
         <div className="w-100 h-100">
           {!!source && <SourceOutput source={source} />}
-          {modalOpen && (
-            <SelectSourceModal
-              onSelect={(source) => handleSelectSource(source)}
-              onClose={() => setModalOpen(false)}
-              selectedSourceSlug={source.slug}
-            />
-          )}
         </div>
       )}
       {isEditing && (
         <div className={cx("actions-container")}>
-          {onChange && (
+          {onChangeClick && (
             <>
-              <div
-                className={cx("action-button")}
-                onClick={() => setModalOpen((v) => !v)}
-              >
+              <div className={cx("action-button")} onClick={handleChangeClick}>
                 CAMBIAR
               </div>
               <div className={cx("action-button")} onClick={handlePromote}>

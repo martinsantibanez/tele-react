@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { createLocalStorageStateHook } from "use-local-storage-state";
 import { Monitor } from "../../components/Monitor/Monitor";
 import { MainLayout } from "../../layout/MainLayout";
+import { useSavedGrid } from "../grid/index.page";
 import { initialLayout } from "./initialLayout";
 import { Col, Layout, Row, SourceNode } from "./types";
 
@@ -23,9 +24,9 @@ function Col({
       <Monitor
         size={size}
         sourceSlug={node?.sourceSlug}
-        onChange={(source) =>
-          onSourceChange({ ...node, sourceSlug: source.slug })
-        }
+        // onChangeClick={(source) =>
+        //   onSourceChange({ ...node, sourceSlug: source.slug })
+        // }
       />
     );
   }
@@ -61,6 +62,7 @@ export const useSavedLayout = createLocalStorageStateHook<Layout | undefined>(
 );
 
 const LayoutPage: NextPage = () => {
+  const [selectedSources, setSelectedSources] = useSavedGrid();
   const [layout, setLayout] = useSavedLayout();
   useEffect(() => {
     if (!layout) setLayout(initialLayout);
