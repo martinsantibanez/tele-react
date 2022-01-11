@@ -1,6 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useState } from "react";
 import { useFeaturedSource } from "../hooks/useFeaturedSource";
 import styles from "../styles/Home.module.css";
 import { useSavedGrid } from "./grid/index.page";
@@ -14,7 +15,7 @@ function HomeElement({
   openInNewTab,
 }: {
   title: string;
-  description: string;
+  description?: string;
   href: string;
   openInNewTab?: boolean;
 }) {
@@ -25,8 +26,8 @@ function HomeElement({
           className="col-6 offset-3 text-white border border-white pt-2"
           target={openInNewTab ? "_blank" : ""}
         >
-          <h2>{title}</h2>
-          <p>{description}</p>
+          <h3>{title}</h3>
+          {description && <p>{description}</p>}
         </a>
       </Link>
     </div>
@@ -34,52 +35,62 @@ function HomeElement({
 }
 
 const Home: NextPage = () => {
-  const [, setGrid] = useSavedGrid();
-  const [, setLayout] = useSavedLayout();
-  const [, setFeaturedSource] = useFeaturedSource();
-  const [, setSelectedItem] = useSavedSelectedItem();
+  const [, , gridStorage] = useSavedGrid();
+  const [, , layoutStorage] = useSavedLayout();
+  const [, , featuredStorage] = useFeaturedSource();
+  const [, , selectedItemStorage] = useSavedSelectedItem();
 
-
+  const [clearedState, setClearedState] = useState(false);
   const handleClearLocalStorage = () => {
-    setGrid(undefined);
-    setLayout(undefined);
-    setFeaturedSource(undefined)
-    setFeaturedSource(undefined)
+    if (clearedState) {
+      setClearedState(false);
+      return;
+    }
+    gridStorage.removeItem();
+    layoutStorage.removeItem();
+    selectedItemStorage.removeItem();
+
+    setClearedState(true);
+    featuredStorage.removeItem();
   };
 
   return (
     <div className={styles.container}>
       <Head>
-        <title>Tele</title>
+        <title>Ver Tele</title>
         <meta name="description" content="Visor de canales de TV chilena" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
-        <div className="container">
-          <HomeElement
+        <div className="container text-center text-white pt-3">
+          <h1>Ver Tele</h1>
+          <HomeElement href="/grid" title="Cuadrícula" />
+
+          {/* <HomeElement
             href="/layout"
-            title="Layout"
-            description="Programatically created layouts."
-          />
-
-          <HomeElement href="/grid" title="Grid" description="Simple grid" />
-
+            title="Layouts"
+            description="Elige un layout"
+          /> */}
           <HomeElement
             href="/promoted"
-            title="Monitor"
-            description="Watch featured source, selected from Grid or Layout (Open in a new tab)"
+            title="Señal Destacada"
+            description="Abrelo en otra ventana, y destaca una señal desde la cuadrícula."
           />
 
           <HomeElement
             href="/list"
-            title="List"
-            description="Watch a single source, pick from a list"
+            title="Lista"
+            description="Elige solo un canal de la lista."
           />
-
-          <button onClick={handleClearLocalStorage} className="btn btn-primary">
-            Clear local storage
-          </button>
+          <div className="row mt-5 text-center">
+            <button
+              onClick={handleClearLocalStorage}
+              className="btn btn-outline-light col-6 offset-3"
+            >
+              {clearedState ? "✅ Borrado" : "Borrar datos locales"}
+            </button>
+          </div>
         </div>
       </main>
     </div>

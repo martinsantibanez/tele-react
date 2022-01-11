@@ -1,5 +1,6 @@
 import classnames from "classnames/bind";
 import React, { useMemo, useState } from "react";
+import { useTeleContext } from "../../context/TeleContext";
 import { useFeaturedSource } from "../../hooks/useFeaturedSource";
 import { getSource, Source } from "../../sources";
 import { SelectSourceModal } from "../SelectSource/SelectSourceModal";
@@ -15,6 +16,7 @@ type Props = {
 };
 export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const { isEditing } = useTeleContext();
 
   const [, setFeaturedSource] = useFeaturedSource();
   const source = useMemo(
@@ -39,31 +41,36 @@ export function Monitor({ sourceSlug, size, onChange, onRemove }: Props) {
             <SelectSourceModal
               onSelect={(source) => handleSelectSource(source)}
               onClose={() => setModalOpen(false)}
-              selectedSource={source}
+              selectedSourceSlug={source.slug}
             />
           )}
         </div>
       )}
-      <div className={cx("actions-container")}>
-        {onChange && (
-          <>
+      {isEditing && (
+        <div className={cx("actions-container")}>
+          {onChange && (
+            <>
+              <div
+                className={cx("action-button")}
+                onClick={() => setModalOpen((v) => !v)}
+              >
+                CAMBIAR
+              </div>
+              <div className={cx("action-button")} onClick={handlePromote}>
+                DESTACAR
+              </div>
+            </>
+          )}
+          {onRemove && (
             <div
-              className={cx("action-button")}
-              onClick={() => setModalOpen((v) => !v)}
+              className={cx("action-button", "color-red")}
+              onClick={onRemove}
             >
-              CAMBIAR SEÑAL
+              QUITAR
             </div>
-            <div className={cx("action-button")} onClick={handlePromote}>
-              DESTACAR
-            </div>
-          </>
-        )}
-        {onRemove && (
-          <div className={cx("action-button")} onClick={onRemove}>
-            QUITAR
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

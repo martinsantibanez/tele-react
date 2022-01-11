@@ -8,8 +8,14 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   text-align: justify;
-  height: 100vh;
   background-color: #000000 !important;
+  overflow-x: hidden;
+  width: 100vw;
+  height: 100vh;
+  max-height: fit-content;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 a {
@@ -3385,53 +3391,6 @@ section#RelojesMonitor2 {
   top: 1%;
   text-align: center;
   right: 1%;
-}
-
-.TextoBotonAbrirEnOtraPestaña {
-  background: rgb(0, 38, 255);
-  backdrop-filter: blur(3px);
-  margin: 0 auto;
-  width: auto;
-  height: auto;
-  border-radius: 3px;
-  position: relative;
-  font-family: "Assistant", sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-  text-align: center;
-  color: white;
-  display: inline-table;
-  cursor: pointer;
-  transition: all 0.5s;
-}
-
-.TextoBotonAbrirEnOtraPestaña:hover {
-  background: #ff0000;
-  color: rgb(255, 255, 255);
-}
-
-.BotonIrASeñales {
-  background-color: #ff0000;
-  border: 1px solid #ff0000;
-  margin: 0px;
-  width: auto;
-  height: 22px;
-  font-size: 12px;
-  border-radius: 4px;
-  font-weight: bold;
-  justify-content: center;
-  align-items: center;
-  line-height: 22px;
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.6s;
-}
-
-.BotonIrASeñales:hover {
-  color: #ff0000;
-  background-color: #ffffff;
-  border: 1px solid #ff0000;
-  box-shadow: 0px 0px 10px #ff0000;
 }
 
 .BotonCardHome {

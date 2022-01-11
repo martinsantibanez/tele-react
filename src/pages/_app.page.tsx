@@ -1,12 +1,11 @@
-import "../styles/globals.css";
-import type { AppProps } from "next/app";
-import Head from "next/head";
-import Script from "next/script";
 import "bootstrap/dist/css/bootstrap.min.css";
+import type { AppProps } from "next/app";
+import { TeleProvider } from "../context/TeleContext";
+import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <>
+    <TeleProvider>
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
@@ -14,7 +13,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         crossOrigin="anonymous"
       />
       <Component {...pageProps} />
-    </>
+    </TeleProvider>
   );
 }
 

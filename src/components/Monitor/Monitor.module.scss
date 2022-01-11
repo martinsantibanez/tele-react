@@ -5,22 +5,28 @@
   line-height: 20px;
   text-align: center;
   display: flex;
-  opacity: 0;
+  justify-content: flex-end;
+  width: 100%;
+  opacity: 1;
   z-index: 2;
-  &:hover {
-    opacity: 1;
-  }
 }
 
 .action-button {
   &:hover {
     background-color: #ff5e00;
   }
-  background: #ff5e0011;
+  &.color {
+    &-red {
+      background-color: #ff000033;
+      &:hover {
+        background-color: #ff0000;
+      }
+    }
+  }
+  background-color: #ff5e0033;
   color: #fff;
   left: 1%;
-  margin: 0px;
-  margin-left: 6px;
+  margin: 0 6px;
   width: auto;
   height: 20px;
   line-height: 20px;
