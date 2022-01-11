@@ -6,63 +6,63 @@ export const espacioSources: SourcesMap = {
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA TV PUBLIC',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATVPUBLIC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV PUBLICㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATVPUBLIC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV PUBLICㅤ</div></div></div>',
   },
   NASA_TV_MEDIA: {
     slug: "NASA_TV_MEDIA",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA TV MEDIA',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATVMEDIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV MEDIAㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATVMEDIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV MEDIAㅤ</div></div></div>',
   },
   NASA_CSBF_Operations: {
     slug: "NASA_CSBF_Operations",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA CSBF OPERATIONS',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_CSBF.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA CSBF Operationsㅤㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_CSBF.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA CSBF Operationsㅤㅤ</div></div></div>',
   },
   NASA_LaRC: {
     slug: "NASA_LaRC",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA LaRC',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_LaRC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA LaRCㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_LaRC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA LaRCㅤ</div></div></div>',
   },
   NASA_Wallops: {
     slug: "NASA_Wallops",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA WALLOPS',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_Wallops.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA WALLOPSㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_Wallops.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA WALLOPSㅤ</div></div></div>',
   },
   ISS_SD: {
     slug: "ISS_SD",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠISS CAM SD',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../Señal_ISS_SD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS SDㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/Señal_ISS_SD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS SDㅤ</div></div></div>',
   },
   ISS_HD: {
     slug: "ISS_HD",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠISS CAM HD',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../Señal_ISS_HD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS HDㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/Señal_ISS_HD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS HDㅤ</div></div></div>',
   },
   ISS_TRACKER: {
     slug: "ISS_TRACKER",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠISS TRACKER',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../Señal_ISS_TRACKER.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS TRACKERㅤ</div></div></div>',
+    iframeSrc:
+      "https://www.heavens-above.com/orbitdisplay.aspx?icon=iss&width=600&height=300&mode=M&satid=25544",
   },
   NASA_NE02: {
     slug: "NASA_NE02",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA NE02',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_NE02.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA NE02ㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_NE02.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA NE02ㅤ</div></div></div>',
   },
   NASA_VIDEO: {
     slug: "NASA_VIDEO",
@@ -76,35 +76,35 @@ export const espacioSources: SourcesMap = {
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA TV PUBLIC',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_PUBLIC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV PUBLICㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_PUBLIC.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV PUBLICㅤ</div></div></div>',
   },
   NASA_TV_MEDIA2: {
     slug: "NASA_TV_MEDIA2",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠNASA TV MEDIA',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_MEDIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV MEDIAㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_MEDIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤNASA TV MEDIAㅤ</div></div></div>',
   },
   ISS_SD2: {
     slug: "ISS_SD2",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠISS CAM SD',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_ISSSD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS SDㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_ISSSD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS SDㅤ</div></div></div>',
   },
   ISS_HD2: {
     slug: "ISS_HD2",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_NASA.svg"></img>ﾠISS CAM HD',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalNASATV_ISSHD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS HDㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalNASATV_ISSHD.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤISS HDㅤ</div></div></div>',
   },
   ESA_1: {
     slug: "ESA_1",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="../../imagenes/Logo_ESA.svg"></img>ﾠESA WEB TV 1',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="../../SeñalESATV_1.html" frameborder="0" allowfullscreen></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤESA WEB TV 1ㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalESATV_1.html" frameborder="0" allowfullscreen></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤESA WEB TV 1ㅤ</div></div></div>',
   },
   ROSCOSMOS: {
     slug: "ROSCOSMOS",
@@ -318,5 +318,20 @@ export const espacioSources: SourcesMap = {
     codeHtml:
       "https://www.youtube.com/embed/live_stream?channel=UCE_z1X3v8ZdBNHn9IFHBfNw&autoplay=true&mute=1",
     name: "ㅤSPACEX MISSIONSㅤ",
+  },
+  ESPACIO_RASTREO_ISS: {
+    titleHtml:
+      '<img style="height: 30px; width:auto:" src="imagenes/Icono_Ubicacion.svg"></img>ﾠISS TRACKER MAP 2',
+    slug: "ESPACIO_RASTREO_ISS",
+  },
+  ESPACIO_RASTREO_ISS_2_2: {
+    titleHtml:
+      '<img style="height: 30px; width:auto:" src="imagenes/Icono_Ubicacion.svg"></img>ﾠISS TRACKER MAP 3',
+    slug: "ESPACIO_RASTREO_ISS_2_2",
+  },
+  ESPACIO_RASTREO_ISS_3: {
+    titleHtml:
+      '<img style="height: 30px; width:auto:" src="imagenes/Icono_Ubicacion.svg"></img>ﾠISS TRACKER MAP 4',
+    slug: "ESPACIO_RASTREO_ISS_3",
   },
 };

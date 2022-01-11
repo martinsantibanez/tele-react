@@ -49,7 +49,7 @@ export const sourcesCategories: SourceGroup[] = [
     sources: tvNacionalSources,
   },
   {
-    name: "TV Nacional YT",
+    name: "TV Nacional YouTube",
     sources: tvNacionalYoutubeSources,
   },
   {
