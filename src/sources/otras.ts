@@ -1049,20 +1049,7 @@ export const otrasSources: SourcesMap = {
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/es.svg"></img>ﾠVOLCAN LA PALMAﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
     codeHtml: "/Monitores/SEÑAL_RTVC_1.html",
     name: "VOLCAN LA PALMAㅤ",
-  },
-  EARLY_EST_DETEC: {
-    slug: "EARLY_EST_DETEC",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_ALOMAX.svg"></img>ﾠDETECTOR SISMOS',
-    codeHtml:
-      'MonitorEARLY-EST_DETECTOR.html" frameborder="0" scrolling="no"></iframe></div>',
-  },
-  EARLY_EST_SIS: {
-    slug: "EARLY_EST_SIS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_ALOMAX.svg"></img>ﾠULTIMOS SISMOS',
-    codeHtml: 'MonitorEARLY-EST_SISMOS.html" frameborder="0"></iframe></div>',
-  },
+  }
 };
 
 export const placeHolderSources: SourcesMap = {

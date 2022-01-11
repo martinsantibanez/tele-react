@@ -1,5 +1,6 @@
 import React from "react";
 import { camarasSources } from "./camaras";
+import { datosSources } from "./datos";
 import { espacioSources } from "./espacio";
 import { especialesSources } from "./especiales";
 import { otrasSources, placeHolderSources } from "./otras";
@@ -68,7 +69,7 @@ export const sourcesCategories: SourceGroup[] = [
     sources: twitchSources,
   },
   {
-    name: "Uncategorized",
+    name: "Sin Categoria",
     sources: otrasSources,
   },
   {
@@ -89,11 +90,15 @@ export const sourcesCategories: SourceGroup[] = [
   },
   {
     name: "Espacio",
-    sources: espacioSources
+    sources: espacioSources,
   },
   {
-    name: "Placeholder",
+    name: "Vacio",
     sources: placeHolderSources,
+  },
+  {
+    name: "Datos",
+    sources: datosSources,
   },
 ];
 

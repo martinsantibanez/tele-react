@@ -1,13 +1,6 @@
 import { SourcesMap } from ".";
 
 export const camarasSources: SourcesMap = {
-  VALPARAISO: {
-    slug: "VALPARAISO",
-    name: "VALPARAISO",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠVALPARAISOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    youtubeChannelId: "UCqSSE82uHv1rkR3Tj9lTx1w",
-  },
   PLAZAITALIA_CIMA: {
     slug: "PLAZAITALIA_CIMA",
     titleHtml:
@@ -21,66 +14,25 @@ export const camarasSources: SourcesMap = {
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPROVIDENCIA (Ledrium)',
     youtubeVideoId: "mGxX5PfREPA",
   },
-  OSORNO_1: {
-    slug: "OSORNO_1",
+  OSORNO: {
+    slug: "OSORNO",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠOSORNO PLAZA ARMAS',
     name: "OSORNO PLAZA ARMAS",
-    m3u8Url:
-      "https://hd.chileservidores.cl:1936/osorno1/live/chunklist_w1307137388.m3u8",
+    youtubeChannelId: "UCD7sqegDNyZxmdnCj6xqH6g",
   },
-  COYHAIQUE: {
-    slug: "COYHAIQUE",
+  VALPARAISO: {
+    slug: "VALPARAISO",
+    name: "VALPARAISO",
     titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠCOYHAIQUE (Radio)ﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    m3u8Url:
-      "https://v2.tustreaming.cl:19360/canalsurpatagoniatv/canalsurpatagoniatv.m3u8",
-    name: "COYHAIQUE",
-  },
-  CNN1: {
-    slug: "CNN1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠOcasional - CNN 1',
-    m3u8Url:
-      "https://unlimited2-cl-isp.dps.live/cnnprensa/cnnprensa.smil/playlist.m3u8",
-  },
-  "PARQUEMET CUMBRE": {
-    slug: "PARQUEMET CUMBRE",
-    titleHtml: "PARQUEMET CUMBRE",
-    m3u8Url: "https://s13.ipcamlive.com/streams/0doevpfldsmsx32tx/stream.m3u8",
-  },
-  "PARQUEMET TERRAZA": {
-    slug: "PARQUEMET TERRAZA",
-    titleHtml: "PARQUEMET TERRAZA",
-    m3u8Url: "https://s12.ipcamlive.com/streams/0cbuqz3kfhg1t4sed/stream.m3u8",
-  },
-  PARQUEMET_CUMBRE: {
-    slug: "PARQUEMET_CUMBRE",
-    name: "PARQUEMET CUMBRE",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPARQUEMET CUMBRE',
-    m3u8Url: "https://s13.ipcamlive.com/streams/0ds4sx7hgmpolbpzt/stream.m3u8",
-  },
-  PARQUEMET_TERRAZA: {
-    slug: "PARQUEMET_TERRAZA",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPARQUEMET TERRAZA',
-    m3u8Url:
-      "https://g1.ipcamlive.com/player/player.php?alias=5a7085fe914c0&autoplay=true",
-  },
-  Times_Square_4_1560_BROADWAY: {
-    slug: "Times_Square_4_1560_BROADWAY",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠTIMES SQUARE 4',
-    youtubeVideoId: "rZjblGbbCmE",
-    name: "TIMES SQUARE: 1540 BROADWAY",
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠVALPARAISOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
+    youtubeChannelId: "UCqSSE82uHv1rkR3Tj9lTx1w",
   },
   IQUIQUE_1: {
     slug: "IQUIQUE_1",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠIQUIQUE PLAYA CAVANCHA',
-    m3u8Url:
-      "https://g3.ipcamlive.com/player/player.php?alias=lapunta&autoplay=true",
+    m3u8Url: "https://s20.ipcamlive.com/streams/14nke3idvqrw2waqb/stream.m3u8",
     name: "IQUIQUE",
   },
   IQUIQUE_2: {
@@ -91,6 +43,35 @@ export const camarasSources: SourcesMap = {
       "https://g3.ipcamlive.com/player/player.php?alias=huayquique&autoplay=true",
     name: "IQUIQUE",
   },
+
+  PARQUEMET_CUMBRE: {
+    slug: "PARQUEMET_CUMBRE",
+    name: "PARQUEMET CUMBRE",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPARQUEMET CUMBRE',
+    m3u8Url: "https://s13.ipcamlive.com/streams/0du4ap2gbyr0xdsmk/stream.m3u8",
+  },
+  PARQUEMET_TERRAZA: {
+    slug: "PARQUEMET_TERRAZA",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/cl.svg"></img>ﾠPARQUEMET TERRAZA',
+    m3u8Url: "https://s12.ipcamlive.com/streams/0c7esvvabpbjkuqxj/stream.m3u8",
+  },
+  Times_Square_4_1560_BROADWAY: {
+    slug: "Times_Square_4_1560_BROADWAY",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠTIMES SQUARE 4',
+    youtubeVideoId: "rZjblGbbCmE",
+    name: "TIMES SQUARE: 1540 BROADWAY",
+  },
+  CNN1: {
+    slug: "CNN1",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠOcasional - CNN 1',
+    m3u8Url:
+      "https://unlimited2-cl-isp.dps.live/cnnprensa/cnnprensa.smil/playlist.m3u8",
+  },
+
   IQUIQUE_3: {
     slug: "IQUIQUE_3",
     titleHtml:
