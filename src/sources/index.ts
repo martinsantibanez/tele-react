@@ -1,5 +1,6 @@
 import React from "react";
 import { camarasSources } from "./camaras";
+import { espacioSources } from "./espacio";
 import { especialesSources } from "./especiales";
 import { otrasSources, placeHolderSources } from "./otras";
 import { radiosSources } from "./radios";
@@ -85,6 +86,10 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "TV Nacional - 2",
     sources: tvNacionalDosSources,
+  },
+  {
+    name: "Espacio",
+    sources: espacioSources
   },
   {
     name: "Placeholder",

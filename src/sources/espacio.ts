@@ -295,25 +295,28 @@ export const espacioSources: SourcesMap = {
     codeHtml:
       '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://player.twitch.tv/?channel=spacexstorm&parent=ainmcl.github.io" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤSPACEX STORMㅤ</div></div></div>',
   },
-  SPACEX_STORM_Twitch_CHAT: {
-    slug: "SPACEX_STORM_Twitch_CHAT",
+  ComoSapiens: {
+    slug: "ComoSapiens",
     titleHtml:
-      '<img style="height: 20px; width:auto;" src="../../imagenes/Logo_Twitch.svg"></img>ﾠSPACEX STORM CHAT',
+      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠCOSMOSAPIENS ',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="https://www.twitch.tv/embed/spacexstorm/chat?parent=ainmcl.github.io" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤSPACEX STORMㅤ</div></div></div>',
+      "https://www.youtube.com/embed/live_stream?channel=UC3ZODI-xZfdPanPP6tKUg9g&autoplay=true&mute=1",
+    name: "ㅤCOSMOSAPIENSㅤ",
   },
-  PantallaVacia_1: {
-    slug: "PantallaVacia_1",
+  InfiniteSpace: {
+    slug: "InfiniteSpace",
     titleHtml:
-      '<img style="height: 20px; width:auto;" src="../../imagenes/Icono_TV.svg"></img>ﾠVACIO 3',
+      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠINFINITE SPACE ',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="" frameborder="0"></iframe></div>',
+      "https://www.youtube.com/embed/live_stream?channel=UCn8SmzG1xXx_inu-XADxcMg&autoplay=true&mute=1",
+    name: "ㅤINFINITE SPACEㅤ",
   },
-  Barras_1: {
-    slug: "Barras_1",
+  SpaceXMissions: {
+    slug: "SpaceXMissions",
     titleHtml:
-      '<img style="height: 20px; width:auto;" src="../../imagenes/Icono_TV.svg"></img>ﾠBARRAS 1',
+      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠSPACEX MISSIONS ',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <img class="embed-responsive-item" src="../../imagenes/SinSeñal.png" frameborder="0"></img></div>',
+      "https://www.youtube.com/embed/live_stream?channel=UCE_z1X3v8ZdBNHn9IFHBfNw&autoplay=true&mute=1",
+    name: "ㅤSPACEX MISSIONSㅤ",
   },
 };

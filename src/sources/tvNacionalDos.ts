@@ -1,6 +1,53 @@
 import { SourcesMap } from ".";
 
 export const tvNacionalDosSources: SourcesMap = {
+  WAPP_TV: {
+    slug: "WAPP_TV",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/LogoTV_WappTV.svg"></img>',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist-v/6046495ddf98b007fa2fe807.m3u8",
+    name: "WAPP TVㅤ",
+  },
+  NTV: {
+    slug: "NTV",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_NTV.svg"></img>',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist/5aaabe9e2c56420918184c6d.m3u8",
+    name: "NTVㅤ",
+  },
+  TV_CHILE: {
+    slug: "TV_CHILE",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVCHILE.svg"></img>',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist/533adcc949386ce765657d7c.m3u8",
+    name: "TV CHILEㅤ",
+  },
+  "13E": {
+    slug: "13E",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_Canal13E.svg"></img>ﾠE',
+    m3u8Url: "https://unlimited1-cl-isp.dps.live/13e/13e.smil/playlist.m3u8",
+    name: "CANAL 13Eㅤ",
+  },
+  MEGANOTICIAS_1: {
+    slug: "MEGANOTICIAS_1",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGANOTICIAS2.svg"></img>ﾠSEÑAL 1',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist-v/561430ae330428c223687e1e.m3u8",
+    name: "MEGANOTICIAS 1ㅤ",
+  },
+  MEGANOTICIAS_2: {
+    slug: "MEGANOTICIAS_2",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGANOTICIAS2.svg"></img>ﾠSEÑAL 2',
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist-v/5ddfebf14bee0054b9b3fd14.m3u8",
+    name: "MEGANOTICIAS 2ㅤ",
+  },
   "tvn-2": {
     slug: "tvn-2",
     titleHtml: "TVN 2",
@@ -477,7 +524,7 @@ export const tvNacionalDosSources: SourcesMap = {
   },
   DocumentacionTVN: {
     slug: "DocumentacionTVN",
-    name: 'DOCUMENTACION TVN',
+    name: "DOCUMENTACION TVN",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_24HTVN.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="imagenes/Logo_TVN.svg"></img> DOC TVN',
     youtubeChannelId: "UCeKSSTjG4r-Qvcpjnwgo0VQ",
