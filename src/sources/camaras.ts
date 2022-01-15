@@ -123,4 +123,11 @@ export const camarasSources: SourcesMap = {
     youtubeChannelId: "6dtpPYTQaSQ",
     name: "TIMES SQUARE: EXPRESS VIEW",
   },
+  Casa_Blanca: {
+    slug: "Casa_Blanca",
+    youtubeChannelId: "GGsBUm8uar0",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img> CASA BLANCA',
+    name: "CASA BLANCA",
+  },
 };
