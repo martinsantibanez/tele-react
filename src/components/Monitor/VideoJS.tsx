@@ -29,6 +29,8 @@ const VideoPlayer = ({ src }: Props) => {
       sources: [
         {
           src: src,
+          type: "application/vnd.apple.mpegurl"
+          // type: "application/x-mpegURL",
         },
       ],
     };
