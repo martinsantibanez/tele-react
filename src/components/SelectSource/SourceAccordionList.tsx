@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Accordion } from "react-bootstrap";
-import { Source, SourceGroup, sourcesCategories } from "../../sources";
+import { useCustomSources } from "../../pages/grid/index.page";
+import { Source, sourcesCategories } from "../../sources";
 import { SourceButton } from "./SourceButton";
 
 type Props = {
@@ -8,10 +9,42 @@ type Props = {
   onSelect?: (source: Source) => void;
 };
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
+  const [customTwitchValue, setCustomTwitchValue] = useState<string>("");
+  const [customSources, setCustomSources] = useCustomSources();
+  const handleCreateSource = () => {
+    const newSource: Source = {
+      slug: `custom_${customTwitchValue}`,
+      titleHtml: customTwitchValue,
+      twitchAccount: customTwitchValue,
+    };
+    setCustomSources((v) => [...(v || []), newSource]);
+  };
   return (
     <Accordion defaultActiveKey="0" className="w-100">
+      <Accordion.Item eventKey={`0`}>
+        <Accordion.Header>Mis canales de twitch</Accordion.Header>
+        <Accordion.Body>
+          {customSources?.map((source) => (
+            <SourceButton
+              onSelect={onSelect}
+              source={source}
+              isSelected={source.slug === selectedSourceSlug}
+              key={source.slug}
+            />
+          ))}
+          <input
+            type="text"
+            value={customTwitchValue}
+            placeholder="Introduce el nombre"
+            onChange={(e) => setCustomTwitchValue(e.target.value)}
+          />
+          <button onClick={handleCreateSource} className="btn btn-primary">
+            Agregar
+          </button>
+        </Accordion.Body>
+      </Accordion.Item>
       {sourcesCategories.map((sourceCategory, idx) => (
-        <Accordion.Item eventKey={`${idx}`} key={sourceCategory.name}>
+        <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
           <Accordion.Header>{sourceCategory.name}</Accordion.Header>
           <Accordion.Body>
             {Object.values(sourceCategory.sources).map((source) => (

@@ -2,6 +2,7 @@ import classnames from "classnames/bind";
 import React, { useMemo, useState } from "react";
 import { useTeleContext } from "../../context/TeleContext";
 import { useFeaturedSource } from "../../hooks/useFeaturedSource";
+import { useCustomSources } from "../../pages/grid/index.page";
 import { getSource, Source } from "../../sources";
 import { SelectSourceModal } from "../SelectSource/SelectSourceModal";
 import styles from "./Monitor.module.scss";
@@ -18,10 +19,17 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   const { isEditing } = useTeleContext();
 
   const [, setFeaturedSource] = useFeaturedSource();
-  const source = useMemo(
-    () => (sourceSlug ? getSource(sourceSlug) : null),
-    [sourceSlug]
-  );
+  const [customSources] = useCustomSources();
+  const source = useMemo(() => {
+    if (sourceSlug) {
+      if (sourceSlug.startsWith("custom_")) {
+        return customSources?.find((src) => src.slug === sourceSlug);
+      } else {
+        return getSource(sourceSlug);
+      }
+    }
+    return null;
+  }, [customSources, sourceSlug]);
 
   const handlePromote = () => {
     setFeaturedSource(source?.slug);

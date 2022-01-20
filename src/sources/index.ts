@@ -29,6 +29,7 @@ export interface SourceInput {
   youtubeVideoId?: string;
   youtubeChatVideoId?: string;
   twitterAcount?: string;
+  twitchAccount?: string;
 }
 
 export interface Source extends SourceInput {

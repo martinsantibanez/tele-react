@@ -347,7 +347,7 @@ export const espacioSources: SourcesMap = {
   ESPACIO_RASTREO_ISS_6: {
     titleHtml:
       '<img style="height: 30px; width:auto:" src="imagenes/Icono_Ubicacion.svg"></img>ﾠISS TRACKER MAP 6',
-    slug: "ESPACIO_RASTREO_ISS_4",
+    slug: "ESPACIO_RASTREO_ISS_6",
     iframeSrc:
       "https://www.heavens-above.com/orbitdisplay.aspx?icon=iss&width=300&height=300&mode=A&satid=48274",
   },
