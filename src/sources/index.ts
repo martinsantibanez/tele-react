@@ -1,11 +1,13 @@
 import React from "react";
 import { camarasSources } from "./camaras";
+import { congresoSources } from "./congreso";
 import { datosSources } from "./datos";
 import { espacioSources } from "./espacio";
 import { especialesSources } from "./especiales";
-import { otrasSources, placeHolderSources } from "./otras";
+import { internacionalSources } from "./internacional";
+import { convencionSources, otrasSources, placeHolderSources } from "./otras";
 import { radiosSources } from "./radios";
-import { aysenSources, regionesSources } from "./regiones";
+import { regionesSources } from "./regiones";
 import { relojesSources } from "./relojes";
 import { tvNacionalSources, tvNacionalYoutubeSources } from "./tvNacional";
 import { tvNacionalDosSources } from "./tvNacionalDos";
@@ -18,18 +20,27 @@ export enum SourceType {
   component = "component",
 }
 
-export interface Source {
-  slug: string;
-  name?: string;
-  titleHtml: string;
-  titleIcons?: React.ReactNode[];
-  listTitle?: string;
+export interface SourceInput {
   codeHtml?: string;
   iframeSrc?: string;
   m3u8Url?: string;
   component?: React.ReactElement;
   youtubeChannelId?: string;
   youtubeVideoId?: string;
+  youtubeChatVideoId?: string;
+  twitterAcount?: string;
+  twitchAccount?: string;
+}
+
+export interface Source extends SourceInput {
+  slug: string;
+  name?: string;
+  titleHtml: string;
+  titleIcons?: React.ReactNode[];
+  listTitle?: string;
+
+  // TODO
+  // inputs?: SourceInput[];
 
   fuente?: string;
 }
@@ -69,6 +80,18 @@ export const sourcesCategories: SourceGroup[] = [
     sources: twitchSources,
   },
   {
+    name: "Convencion Constitucional",
+    sources: convencionSources,
+  },
+  {
+    name: "Congreso Nacional",
+    sources: congresoSources,
+  },
+  {
+    name: "TV Internacional",
+    sources: internacionalSources,
+  },
+  {
     name: "Sin Categoria",
     sources: otrasSources,
   },
@@ -76,14 +99,7 @@ export const sourcesCategories: SourceGroup[] = [
     name: "Regiones",
     sources: regionesSources,
   },
-  {
-    name: "Regiones | Aysen",
-    sources: aysenSources,
-  },
-  {
-    name: "Relojes",
-    sources: relojesSources,
-  },
+
   {
     name: "TV Nacional - 2",
     sources: tvNacionalDosSources,
@@ -91,6 +107,10 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "Espacio",
     sources: espacioSources,
+  },
+  {
+    name: "Relojes",
+    sources: relojesSources,
   },
   {
     name: "Vacio",

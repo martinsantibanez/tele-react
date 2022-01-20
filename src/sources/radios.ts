@@ -5,8 +5,15 @@ export const radiosSources: SourcesMap = {
     slug: "BIOBIO_CHILE_1",
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>ﾠSEÑAL 1',
+    m3u8Url:
+      "https://unlimited1-cl-isp.dps.live/bbclccp/bbclccp.smil/playlist.m3u8",
+  },
+  BIOBIOTV: {
+    slug: "BIOBIOTV",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Microfono1.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>ﾠBIOBIO TV',
     codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalBIOBIOCHILE_1.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤBIOBIO CHILE 1ㅤ</div></div></div>',
+      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_BIOBIOTV.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤBIOBIO TVㅤ</div></div></div>',
   },
   ADNRADIO: {
     slug: "ADNRADIO",
@@ -23,13 +30,6 @@ export const radiosSources: SourcesMap = {
     name: "COOPERATIVA",
     m3u8Url:
       "https://unlimited1-cl-isp.dps.live/coopetv/coopetv.smil/playlist.m3u8",
-  },
-  BIOBIOTV: {
-    slug: "BIOBIOTV",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Microfono1.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>ﾠBIOBIO TV',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_BIOBIOTV.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤBIOBIO TVㅤ</div></div></div>',
   },
   T13RADIO: {
     slug: "T13RADIO",

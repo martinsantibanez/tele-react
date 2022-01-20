@@ -130,4 +130,54 @@ export const camarasSources: SourcesMap = {
       '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img> CASA BLANCA',
     name: "CASA BLANCA",
   },
+  WHITE_HOUSE_1: {
+    slug: "WHITE_HOUSE_1",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠWHITE HOUSE',
+    codeHtml:
+      "https://www.youtube.com/embed/T5zRi2J0uYg?autoplay=true&mute=1ㅤWHITE HOUSEㅤ",
+  },
+  Times_Square_2: {
+    slug: "Times_Square_2",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠTIMES SQUARE: EXPRESS VIEW',
+    youtubeVideoId: "OBmXqlPxtAQ",
+  },
+  Times_Square_3: {
+    slug: "Times_Square_3",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠTIMES SQUARE: 1560 BROADWAY',
+    youtubeVideoId: "4qyZLflp-sI",
+  },
+  LasVegas_1: {
+    slug: "LasVegas_1",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠLAS VEGAS',
+    youtubeChannelId: "oy3tQ5Hacm8",
+  },
+  Four_Seasons_Hotel_Buenos_Aires: {
+    slug: "Four_Seasons_Hotel_Buenos_Aires",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠFOUR SEASONS HOTEL BS.As',
+    youtubeChannelId: "if91GyWP3zQ",
+  },
+  Ushuaia: {
+    slug: "Ushuaia",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠUSHUAIA',
+    iframeSrc: "/Monitores/Señal_CAMARA_USHUAIA.html",
+  },
+  Tokio_1: {
+    slug: "Tokio_1",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/jp.svg"></img>ﾠTOKYO',
+    youtubeChannelId: "QOjmvL3e7Lc",
+  },
+  VolcanLaPalma: {
+    slug: "VolcanLaPalma",
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Camara.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/es.svg"></img>ﾠVOLCAN LA PALMAﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
+    iframeSrc: "/Monitores/SEÑAL_RTVC_1.html",
+    name: "VOLCAN LA PALMAㅤ",
+  },
 };

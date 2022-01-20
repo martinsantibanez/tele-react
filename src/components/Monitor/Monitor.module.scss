@@ -42,3 +42,8 @@
   cursor: pointer;
   transition: all 0.5s;
 }
+
+.stream {
+  max-height: 100vh;
+  overflow-y: scroll;
+}

@@ -24,6 +24,8 @@ const reloadStyle: CSSProperties = {
 
 export const useSavedGrid =
   createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
+export const useCustomSources =
+  createLocalStorageStateHook<Source[]>("__tele_custom_source__");
 
 const GridPage: NextPage = () => {
   const [size, setSize] = useState(6);

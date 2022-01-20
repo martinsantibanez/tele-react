@@ -7,6 +7,7 @@ export const twitchSources = twitchChannels.reduce(
     const slug = `${channel}_twitch`;
     obj[slug] = {
       slug,
+      twitchAccount: channel,
       name: `${channel} - Twitch`,
       component: <TwitchSource channel={channel} />,
       titleHtml: `<img style="height: 20px; width:auto;" src="imagenes/Icono_Twitch_Video_1.svg"></img>ﾠ${channel}`,

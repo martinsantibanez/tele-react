@@ -225,8 +225,6 @@ export const regionesSources: SourcesMap = {
     codeHtml:
       '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="Senal/REGIONALES/PINGUINO_TV.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤMAGALLANES - PINGUINO TVㅤ</div></div></div>',
   },
-};
-export const aysenSources = {
   VIVE_EL_DEPORTE: {
     slug: "VIVE_EL_DEPORTE",
     titleHtml:

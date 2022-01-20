@@ -1,5 +1,5 @@
 export type SourceNode = {
-  sourceSlug: string;
+  sourceSlug?: string;
   uuid?: string;
 };
 

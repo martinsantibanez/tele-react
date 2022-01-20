@@ -1,7 +1,8 @@
 import React from "react";
 import { Source } from "../../sources";
+import { TwitchSource } from "../SourceType/TwitchSource";
+import { TwitterTimeline } from "./SourceOutput/TwitterTimeline";
 import VideoPlayer from "./VideoJS";
-import { VideoM3u8Source } from "./VideoM3u8Source";
 
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
@@ -57,6 +58,10 @@ export function SourceOutput({ source }: Props) {
         src={`https://www.youtube-nocookie.com/embed/${source.youtubeVideoId}?autoplay=1&mute=1&modestbranding=1&showinfo=0`}
       />
     );
+  } else if (source.twitterAcount) {
+    return <TwitterTimeline account={source.twitterAcount} />;
+  } else if (source.twitchAccount) {
+    return <TwitchSource channel={source.twitchAccount} />;
   }
 
   return null;
