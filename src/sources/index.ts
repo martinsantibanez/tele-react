@@ -5,13 +5,14 @@ import { datosSources } from "./datos";
 import { espacioSources } from "./espacio";
 import { especialesSources } from "./especiales";
 import { internacionalSources } from "./internacional";
-import { convencionSources, otrasSources, placeHolderSources } from "./otras";
+import { otrasSources, placeHolderSources } from "./otras";
 import { radiosSources } from "./radios";
 import { regionesSources } from "./regiones";
 import { relojesSources } from "./relojes";
 import { tvNacionalSources, tvNacionalYoutubeSources } from "./tvNacional";
 import { tvNacionalDosSources } from "./tvNacionalDos";
 import { twitchSources } from "./twitch";
+import { convencionSources } from "./convencion";
 
 export enum SourceType {
   m3u8 = "m3u8",
@@ -35,7 +36,8 @@ export interface SourceInput {
 export interface Source extends SourceInput {
   slug: string;
   name?: string;
-  titleHtml: string;
+  flag?: string;
+  titleHtml?: string;
   titleIcons?: React.ReactNode[];
   listTitle?: string;
 

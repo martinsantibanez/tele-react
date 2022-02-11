@@ -1,3 +1,4 @@
+import { BsTwitch } from "react-icons/bs";
 import { SourcesMap } from ".";
 import { TwitchSource } from "../components/SourceType/TwitchSource";
 
@@ -8,9 +9,12 @@ export const twitchSources = twitchChannels.reduce(
     obj[slug] = {
       slug,
       twitchAccount: channel,
+      titleIcons: [
+        <BsTwitch key="twitch" />
+      ],
       name: `${channel} - Twitch`,
       component: <TwitchSource channel={channel} />,
-      titleHtml: `<img style="height: 20px; width:auto;" src="imagenes/Icono_Twitch_Video_1.svg"></img>ﾠ${channel}`,
+      titleHtml: `ﾠ${channel}`,
     };
     return obj;
   },
