@@ -1,538 +1,550 @@
 import { SourcesMap } from ".";
 
-export const internacionalSources: SourcesMap = {
-  REUTERS: {
-    slug: "REUTERS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠREUTERS',
+const argentinaSources: SourcesMap = {
+  tn: {
+    slug: "tn",
+    listTitle: "Todonoticias",
+    youtubeChannelId: "UCj6PcyLvpnIRT_2W_mwa9Aw",
+    flag: "ar",
+  },
+  c5n: {
+    slug: "c5n",
+    listTitle: "C5N",
+    youtubeChannelId: "UCFgk2Q2mVO1BklRQhSv6p0w",
+    flag: "ar",
+  },
+  "america-tv": {
+    slug: "america-tv",
+    listTitle: "América TV",
+    youtubeChannelId: "UC6NVDkuzY2exMOVFw4i9oHw",
+    flag: "ar",
+  },
+  "net-tv": {
+    slug: "net-tv",
+    listTitle: "Net TV",
+    iframeSrc: "https://rudo.video/live/nettv?volume=0&mute=1",
+    fuente: "https://www.canalnet.tv/page/senal-en-vivo",
+    flag: "ar",
+  },
+  "tv-publica-arg": {
+    slug: "tv-publica-arg",
+    listTitle: "Televisión Pública",
+    youtubeChannelId: "UCs231K71Bnu5295_x0MB5Pg",
+    flag: "ar",
+  },
+  "cronica-tv": {
+    slug: "cronica-tv",
+    listTitle: "Crónica TV",
+    youtubeChannelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
+    flag: "ar",
+  },
+  "el-siete-tv": {
+    slug: "el-siete-tv",
+    listTitle: "El Siete TV",
+    youtubeChannelId: "UC64ZNqX0FQHabP8iIkmnR3A",
+    flag: "ar",
+  },
+  a24: {
+    slug: "a24",
+    listTitle: "A24",
+    youtubeChannelId: "UCR9120YBAqMfntqgRTKmkjQ",
+    flag: "ar",
+  },
+  "la-nacion": {
+    slug: "la-nacion",
+    listTitle: "LA NACION",
+    youtubeChannelId: "UCba3hpU7EFBSk817y9qZkiA",
+    flag: "ar",
+  },
+  "ip-digital": {
+    slug: "ip-digital",
+    listTitle: "Información Periodistica",
     m3u8Url:
-      "https://mdstrm.com/live-stream-playlist-v/53443c472c6e89675103cc4c.m3u8",
+      "https://d1nmqgphjn0y4.cloudfront.net/live/ip/live.isml/5ee6e167-1167-4a85-9d8d-e08a3f55cff3.m3u8",
+    fuente: "https://ip.digital/vivo",
+    flag: "ar",
   },
-  TELEMUNDO: {
-    m3u8Url: "https://tlmdhd-lh.akamaihd.net/i/tlmd1_1@79627/master.m3u8",
-    slug: "TELEMUNDO",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠTELEMUNDOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    name: "TELEMUNDO",
+  "ip-digital-2": {
+    slug: "ip-digital-2",
+    listTitle: "IP Noticias",
+    youtubeChannelId: "UC1bBjOZieJWHbsFA0LwjjJA",
+    flag: "ar",
   },
-  VOA: {
-    slug: "VOA",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠVOA TV ESPAÑOL',
-    iframeSrc: "/Monitores/SeñalVOA_ESPANOL.html",
-    name: "VOA TV ESPAÑOL",
+};
+
+const colombiaSources: SourcesMap = {
+  "el-tiempo": {
+    slug: "el-tiempo",
+    listTitle: "EL TIEMPO",
+    youtubeChannelId: "UCe5-b0fCK3eQCpwS6MT0aNw",
+    flag: "co",
   },
-  SKY_NEWS_EXTRA_1: {
-    slug: "SKY_NEWS_EXTRA_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠSKY NEWS EXTRA 1',
-    iframeSrc: "/Monitores/SEÑAL_SKY_NEWS_EXTRA_1.html",
-    name: "SKY NEWS EXTRA 1",
+  "noti-caracol": {
+    slug: "noti-caracol",
+    listTitle: "Noticias Caracol",
+    youtubeChannelId: "UC2Xq2PK-got3Rtz9ZJ32hLQ",
+    flag: "co",
   },
-  SKY_NEWS_EXTRA_2: {
-    slug: "SKY_NEWS_EXTRA_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠSKY NEWS EXTRA 2',
-    iframeSrc: "/Monitores/SEÑAL_SKY_NEWS_EXTRA_2.html",
-    name: "SKY NEWS EXTRA 2",
+  "red-mas-noticias": {
+    slug: "red-mas-noticias",
+    listTitle: "RED MÁS Noticias",
+    youtubeChannelId: "UCpcvsK0UAI3MIHsjjj3CgMg",
+    flag: "co",
   },
-  SKY_NEWS_EXTRA_3: {
-    slug: "SKY_NEWS_EXTRA_3",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠSKY NEWS EXTRA 3',
-    iframeSrc: "/Monitores/SEÑAL_SKY_NEWS_EXTRA_3.html",
-    name: "SKY NEWS EXTRA 3",
+};
+
+const peruSources: SourcesMap = {
+  "tv-peru": {
+    slug: "tv-peru",
+    listTitle: "TVPerú Noticias",
+    youtubeChannelId: "UCkZCoc42IipR1ucqJmIehsA",
+    flag: "pe",
   },
-  SeñalBloombergTV_LIVE_EVENT_1: {
-    slug: "SeñalBloombergTV_LIVE_EVENT_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠBLOOMBERG TV LIVE EVENT 1',
-    iframeSrc: "/Monitores/SeñalBloombergTV_LIVE_EVENT_1.html",
-    name: "BLOOMBERG TV LIVE EVENT 1",
-  },
-  SeñalBloombergTV_LIVE_POLITICS: {
-    slug: "SeñalBloombergTV_LIVE_POLITICS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠBLOOMBERG TV LIVE POLITICS',
-    iframeSrc: "/Monitores/SeñalBloombergTV_LIVE_POLITICS.html",
-    name: "BLOOMBERG TV LIVE POLITICS",
-  },
-  NBC_NEWS_NOW_EVENT_1: {
-    slug: "NBC_NEWS_NOW_EVENT_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠNBC NEWS LIVE EVENT 1',
-    iframeSrc: "/Monitores/SEÑAL_NBC_LIVE_1.html",
-    name: "NBC NEWS LIVE EVENT 1",
-  },
-  NBC_NEWS_NOW_EVENT_2: {
-    slug: "NBC_NEWS_NOW_EVENT_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠNBC NEWS LIVE EVENT 2',
-    iframeSrc: "/Monitores/SEÑAL_NBC_LIVE_2.html",
-    name: "NBC NEWS LIVE EVENT 2",
-  },
-  NBC_NEWS_NOW_EVENT_3: {
-    slug: "NBC_NEWS_NOW_EVENT_3",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠNBC NEWS LIVE EVENT 3',
-    iframeSrc: "/Monitores/SEÑAL_NBC_LIVE_3.html",
-    name: "NBC NEWS LIVE EVENT 3",
-  },
-  NBC_NEWS_NOW_EVENT_4: {
-    slug: "NBC_NEWS_NOW_EVENT_4",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠNBC NEWS LIVE EVENT 4',
-    iframeSrc: "/Monitores/SEÑAL_NBC_LIVE_4.html",
-    name: "NBC NEWS LIVE EVENT 4",
-  },
-  Señal_CBS46_WGCL_TV: {
-    slug: "Señal_CBS46_WGCL_TV",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠCBS46 WGCL TV',
-    m3u8Url: "https://live.field59.com/wgcl/ngrp:wgcl1_all/playlist.m3u8",
-  },
-  WYYK_1: {
-    slug: "WYYK_1",
-    name: "WYYK 1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠWKYC 1ﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
+  "nacional-tv": {
+    slug: "nacional-tv",
+    listTitle: "Nacional TV",
     m3u8Url:
-      "https://livevideo01.wkyc.com/hls/live/2015504/go-live/stream-1.m3u8",
+      "https://stmv.panel.grupolimalive.com/nacionaltv/nacionaltv/playlist.m3u8",
+    fuente: "https://ntvperu.pe/senal-en-vivo/",
+    flag: "pe",
   },
-  WYYK_2: {
-    slug: "WYYK_2",
-    name: "WYYK 2",
-    titleHtml: "WYYK 2",
-    m3u8Url:
-      "https://livevideo01.wkyc.com/hls/live/2015504/go-live/stream-2.m3u8",
-  },
-  KHOU_1: {
-    slug: "KHOU_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠKHOU 1ﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    iframeSrc: "/Monitores/SEÑAL_KHOU_1.html",
-    name: "KHOU 1",
-  },
-  KHOU_2: {
-    slug: "KHOU_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠKHOU 2ﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    iframeSrc: "/Monitores/SEÑAL_KHOU_2.html",
-    name: "KHOU 2",
-  },
-  KHOU_3: {
-    slug: "KHOU_3",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠKHOU 3ﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    iframeSrc: "/Monitores/SEÑAL_KHOU_3.html",
-    name: "KHOU 3",
-  },
-  TEGNADIGITAL_1: {
-    slug: "TEGNADIGITAL_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠWHITE HOUSE VIDEOﾠ<img style="height: 15px; width:auto:" src="imagenes/Icono_SeñalOcasional.svg"></img>',
-    iframeSrc: "/Monitores/SEÑAL_TEGNADIGITAL_1.html",
-    name: "TEGNADIGITAL 1",
-  },
-  "CCTV+1": {
-    slug: "CCTV+1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠCCTV+ 1',
-    iframeSrc: "/Monitores/SEÑAL_CCTVPLUS_1.html",
-    name: "CCTV+ 1",
-  },
-  "CCTV+2": {
-    slug: "CCTV+2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠCCTV+ 2',
-    iframeSrc: "/Monitores/SEÑAL_CCTVPLUS_2.html",
-    name: "CCTV+ 2",
-  },
-  TELEMUNDO_YT: {
-    slug: "TELEMUNDO_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠTELEMUNDO',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCRwA1NUcUnwsly35ikGhp0A&autoplay=true&mute=1",
-    name: "TELEMUNDO",
-  },
-  VOA_YT: {
-    slug: "VOA_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠVOA ESP',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCJ46VgZgCMLFUvOT671AOJw&autoplay=true&mute=1",
-    name: "VOA ESP",
-  },
-  REUTERS_YT: {
-    slug: "REUTERS_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠREUTERS',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UChqUTb7kYRX8-EiaN3XFrSQ&autoplay=true&mute=1",
-    name: "REUTERS",
-  },
-  RUPTLY: {
-    slug: "RUPTLY",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠRUPTLY',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UC5aeU5hk31cLzq_sAExLVWg&autoplay=true&mute=1",
-    name: "RUPTLY",
-  },
-  SPUTNIK: {
-    slug: "SPUTNIK",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg"></img>ﾠSPUTNIK',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCI4lx9retCL7_cBmmceEQ8g&autoplay=true&mute=1",
-    name: "SPUTNIK",
-  },
-  ELPAIS: {
-    slug: "ELPAIS",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠEL PAIS',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCnsvJeZO4RigQ898WdDNoBw&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">EL PAIS',
-  },
-  MARCA: {
-    slug: "MARCA",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠMARCA',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCop57Z1sYHrtCyxCpE2z2Bg&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">MARCA',
-  },
-  LA_VANGUARDIA: {
-    slug: "LA_VANGUARDIA",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠLA VANGUARDIA',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UClLLRs_mFTsNT5U-DqTYAGg&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">LA VANGUARDIA',
-  },
-  THE_SUN: {
-    slug: "THE_SUN",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠTHE SUN',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCIzXayRP7-P0ANpq-nD-h5g&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">THE SUN',
-  },
-  "WKYC_Channel 3": {
-    slug: "WKYC_Channel 3",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_Antena2.svg">ﾠWKYC Channel 3',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCNBmxc6FvKyxtCpUygcdINA&autoplay=true&mute=1",
-    name: "WKYC Channel 3",
-  },
-  EURONEWS_ESP_2: {
-    slug: "EURONEWS_ESP_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/eu.svg"></img>ﾠEURONEWS ESPAÑOL',
-    iframeSrc: "/Monitores/Señal_EURONEWS_ESPAÑOL.html",
-    name: "EURONEWS ESPAÑOL",
-  },
-  FRANCE24ESP: {
-    slug: "FRANCE24ESP",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/fr.svg"></img>ﾠFRANCE 24 ESPAÑOL',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCUdOoVWuWmgo1wByzcsyKDQ&autoplay=true&mute=1",
-    name: "FRANCE24",
-  },
-  "24HTVE": {
-    slug: "24HTVE",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/es.svg"></img>ﾠCANAL 24 HORAS TVE',
-    iframeSrc: "/Monitores/Señal24HORASTVE.html",
-    name: "24H TVE",
-  },
-  TN: {
-    slug: "TN",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠTODO NOTICIAS',
-    iframeSrc: "https://www.youtube.com/embed/wHn1_QVoXGM?autoplay=true&mute=1",
-  },
-  CANAL_26_ARG: {
-    slug: "CANAL_26_ARG",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠCANAL 26',
-    iframeSrc: "/Monitores/SeñalCANAL_26_ARG.html",
-    name: "CANAL 26",
-  },
-  DWESP: {
-    slug: "DWESP",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/de.svg"></img>ﾠDW ESPAÑOL',
-    iframeSrc: "/Monitores/Señal_DW_ESPAÑOL.html",
-    name: "DW ESPAÑOL",
-  },
-  DW: {
-    slug: "DW",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/de.svg"></img>ﾠDW DEUTSCH',
-    iframeSrc: "/Monitores/Señal_DW_DEUTSCH.html",
-    name: "DW DEUTSCH",
-  },
-  RT_ESP: {
-    slug: "RT_ESP",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ru.svg"></img>ﾠRT ESPAÑOL',
-    codeHtml: "https://www.youtube.com/embed/9DXGrOU5wKQ?autoplay=true&mute=1",
-    name: "RT ESPAÑOL",
-  },
-  TELESUR: {
-    slug: "TELESUR",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ve.svg"></img>ﾠTELESUR',
-    iframeSrc: "/Monitores/SeñalTELESUR.html",
-    name: "TELESUR",
-  },
-  FORO_TV: {
-    slug: "FORO_TV",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/mx.svg"></img>ﾠFORO TV',
+  "panamericana-tv": {
+    slug: "panamericana-tv",
+    listTitle: "Panamericana TV",
     iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCUsm-fannqOY02PNN67C0KA&autoplay=true&mute=1",
+      "https://geo.dailymotion.com/player/x5poh.html?video=x774s7s&autoplay=true&volume=0",
+    fuente: "https://panamericana.pe/tvenvivo",
+    flag: "pe",
   },
-  SKY_NEWS: {
-    slug: "SKY_NEWS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠSKY NEWS',
-    iframeSrc: "/Monitores/Señal_SKY_NEWS.html",
-    name: "SPUTNIK",
+  "onda-digital-tv": {
+    slug: "onda-digital-tv",
+    listTitle: "Onda Digital TV",
+    m3u8Url: "https://ed1ov.live.opencaster.com/CwCfFGFdtebB/index.m3u8",
+    fuente: "https://ondadigitaltv.com",
+    flag: "pe",
   },
-  AL_JAZEERA_ENG: {
-    slug: "AL_JAZEERA_ENG",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠAL JAZEERA ENG',
-    codeHtml: "https://www.youtube.com/embed/-upyPouRrB8?autoplay=true&mute=1",
-    name: "AL JAZEERA",
+  uci: {
+    slug: "uci",
+    listTitle: "UCI",
+    m3u8Url: "https://mediastreamm.com:3449/live/mlecaroslive.m3u8",
+    fuente: "https://uci.pe/envivo",
+    flag: "pe",
   },
-  AL_JAZEERA_ARABIC: {
-    slug: "AL_JAZEERA_ARABIC",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/qa.svg"></img>ﾠAL JAZEERA ARABIC',
-    codeHtml: "https://www.youtube.com/embed/EeCn9FN94RU?autoplay=true&mute=1",
-    name: "AL JAZEERA",
+  "uci-2": {
+    slug: "uci-2",
+    listTitle: "UCI 2",
+    youtubeChannelId: "UCdl1ygFwPa6lUdNYPLjoAGg",
+    flag: "pe",
   },
-  NHK: {
-    slug: "NHK",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/jp.svg"></img>ﾠNHK WORLD',
-    codeHtml:
-      '/Monitores/SeñalNHK.html" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">NHK WORLD',
+  "cable-vision-peru": {
+    slug: "cable-vision-peru",
+    listTitle: "Cable Visión Perú",
+    m3u8Url:
+      "https://5ee0faac3bbae.streamlock.net/visionnoticias/visionnoticias/playlist.m3u8",
+    fuente: "https://www.cablevisionperu.pe/?page_id=1938",
+    flag: "pe",
   },
-  CSPAN: {
-    slug: "CSPAN",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠCSPAN',
-    codeHtml: "SeñaCSPAN.html",
-    name: "CSPAN",
+  atv: {
+    slug: "atv",
+    listTitle: "ATV",
+    m3u8Url:
+      "https://d2tr4gdfol9ja.cloudfront.net/atv/smil:atv.smil/playlist.m3u8",
+    fuente: "https://www.atv.pe/envivo-atv",
+    flag: "pe",
   },
-  NBC_NEWS: {
-    slug: "NBC_NEWS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠNBC NEWS',
-    iframeSrc: "/Monitores/SeñalNBCNEWS.html",
-    name: "NBC NEWS",
+  "atv-mas": {
+    slug: "atv-mas",
+    listTitle: "ATV Más",
+    m3u8Url:
+      "https://d2tr4gdfol9ja.cloudfront.net/atv/smil:atv-mas.smil/playlist.m3u8",
+    fuente: "https://www.atv.pe/envivo-atvmas",
+    flag: "pe",
   },
-  CBS_NEWS: {
-    slug: "CBS_NEWS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠCBS NEWS',
-    iframeSrc: "/Monitores/Señal_CBSNEWS.html",
-    name: "CBS NEWS",
+  "la-republica": {
+    slug: "la-republica",
+    listTitle: "La República",
+    youtubeChannelId: "UC-B7Xv56uNRDkj0vC3QW8Cg",
+    flag: "pe",
   },
-  FOX_NEWS: {
-    slug: "FOX_NEWS",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠﾠFOX NEWS',
-    iframeSrc: "/Monitores/SeñalFOX_NEWS.html",
-    name: "FOX NEWS",
+  willax: {
+    slug: "willax",
+    listTitle: "Willax",
+    iframeSrc:
+      "https://geo.dailymotion.com/player/x5poh.html?video=x7x4dgx&autoplay=true&volume=0",
+    fuente: "https://willax.tv/en-vivo/",
+    flag: "pe",
   },
-  CNN: {
-    slug: "CNN",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠCNN',
-    iframeSrc: "/Monitores/SeñalCNN.html",
-    name: "CNN",
+  "latina-noticias": {
+    slug: "latina-noticias",
+    listTitle: "Latina Noticias",
+    youtubeChannelId: "UCpSJ5fGhmAME9Kx2D3ZvN3Q",
+    flag: "pe",
   },
-  CNN_INTERNACIONAL: {
-    slug: "CNN_INTERNACIONAL",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠCNN INTERNATIONAL',
-    iframeSrc: "/Monitores/SeñalCNNINTERNACIONAL.html",
-    name: "CNN INTERNATIONAL",
+  "ovacion-tv": {
+    slug: "ovacion-tv",
+    listTitle: "📻 Ovación TV",
+    m3u8Url:
+      "https://5c3fb01839654.streamlock.net:1963/iptvovacion1/liveovacion1tv/playlist.m3u8",
+    fuente: "https://ovacion.pe/radio",
+    flag: "pe",
   },
-  CNN_ESP1: {
-    slug: "CNN_ESP1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠCNN ESPAÑOL',
-    iframeSrc: "/Monitores/SeñalCNNESPANOL.html",
-    name: "CNN ESPAÑOL",
+  "pbo-radio": {
+    slug: "pbo-radio",
+    listTitle: "📻 PBO",
+    youtubeChannelId: "UCgR0st4ZLABi-LQcWNu3wnQ",
+    flag: "pe",
   },
-  CNN_INDONESIA: {
-    slug: "CNN_INDONESIA",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/id.svg"></img>ﾠCNN INDONESIA',
-    iframeSrc: "/Monitores/SeñalCNNINDONESIA.html",
-    name: "CNN INDONESIA",
+  "santa-rosa": {
+    slug: "santa-rosa",
+    listTitle: "📻 Radio Santa Rosa",
+    youtubeChannelId: "UCIGV0oiNkdK2-tnf10DNp2A",
+    flag: "pe",
   },
-  CNN_PHILIPPINES: {
-    slug: "CNN_PHILIPPINES",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg">ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ph.svg"></img>ﾠCNN PHILIPPINES',
-    iframeSrc: "/Monitores/SeñalCNN_PHILIPPINES.html",
-    name: "CNN PHILIPPINES",
+  "san-borja": {
+    slug: "san-borja",
+    listTitle: "📻 Radio San Borja Tv",
+    m3u8Url:
+      "https://5c3fb01839654.streamlock.net:1963/iptvsanborja/livesanborjatv/playlist.m3u8",
+    fuente: "https://radiosanborjatv.com/",
+    flag: "pe",
   },
-  CNN_BRASIL: {
-    slug: "CNN_BRASIL",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/br.svg"></img>ﾠCNN BRASIL',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCvdwhh_fDyWccR42-rReZLw&autoplay=true&mute=1",
-    name: "CNN BRASIL",
+  "radio-onda-digital": {
+    slug: "radio-onda-digital",
+    listTitle: "📻 Radio Onda Digital",
+    m3u8Url: "https://tv.ondadigital.pe:1936/ondatv2/ondatv2/playlist.m3u8",
+    fuente: "https://www.ondadigital.pe/",
+    flag: "pe",
   },
-  NBCNEWS_YT: {
-    slug: "NBCNEWS_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠﾠNBC NEWS',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCeY0bbntWzzVIaj2z3QigXg&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">NBC NEWS',
+  "radio-tropical": {
+    slug: "radio-tropical",
+    listTitle: "📻 Radio Tropical",
+    m3u8Url:
+      "https://5ee0faac3bbae.streamlock.net/raditropical/raditropical/playlist.m3u8",
+    fuente: "https://radiotropical.pe/",
+    flag: "pe",
   },
-  ABCNEWS_YT: {
-    slug: "ABCNEWS_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠﾠABC NEWS',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCBi2mrWuNuyYy4gbM6fU18Q&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ABC NEWS',
+  "radio-uno": {
+    slug: "radio-uno",
+    listTitle: "📻 Radio Uno",
+    youtubeChannelId: "UCK0lpuL9PQb3I5CDcu7Y7bA",
+    flag: "pe",
   },
-  DW_YT: {
-    slug: "DW_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/de.svg"></img>ﾠDW NEWS',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCknLrEdhRCp1aegoMqRaCZg&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">DW NEWS',
+};
+
+const venezuelaSources: SourcesMap = {
+  globovision: {
+    slug: "globovision",
+    listTitle: "Globovisión En Vivo",
+    youtubeChannelId: "UCfJtBtmhnIyfUB6RqXeImMw",
+    flag: "ve",
   },
-  DWESP_YT: {
-    slug: "DWESP_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/de.svg"></img>ﾠDW ESPAÑOL',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCT4Jg8h03dD0iN3Pb5L0PMA&autoplay=true&mute=1",
-    name: "DW ESPAÑOL",
+  vpitv: {
+    slug: "vpitv",
+    listTitle: "VPItv",
+    youtubeChannelId: "UCVFiIRuxJ2GmJLUkHmlmj4w",
+    flag: "ve",
   },
-  EURONEWS_ESP_YT: {
-    slug: "EURONEWS_ESP_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/eu.svg"></img>ﾠEURONEWS ESPAÑOL',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCyoGb3SMlTlB8CLGVH4c8Rw&autoplay=true&mute=1",
-    name: "EURONEWS",
+  "telesur-tv": {
+    slug: "telesur-tv",
+    listTitle: "teleSUR tv",
+    youtubeChannelId: "UCbHFKMtqLYkIBRiPHJwxu_w",
+    flag: "ve",
   },
-  "24HTVE_YT": {
-    slug: "24HTVE_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/es.svg"></img>ﾠCANAL 24 HORAS TVE',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UC7QZIf0dta-XPXsp9Hv4dTw&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">24H TVE',
+};
+const mexicoSources: SourcesMap = {
+  MILENIO: {
+    slug: "MILENIO",
+    listTitle: "MILENIO",
+    youtubeChannelId: "UCFxHplbcoJK9m70c4VyTIxg",
+    flag: "mx",
   },
-  RT_ENVIVO_YT: {
-    slug: "RT_ENVIVO_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ru.svg"></img>ﾠRT EN VIVO',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCEIhICHOQOonjE6V0SLdrHQ&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">RT EN VIVO',
+};
+const hondurasSources: SourcesMap = {
+  "hch-vivo": {
+    slug: "hch-vivo",
+    listTitle: "HCH En Vivo",
+    youtubeChannelId: "UCIs6fmAXOI1K2jgkoBdWveg",
+    flag: "ho",
   },
-  TVPERU_NOTICIAS: {
-    slug: "TVPERU_NOTICIAS",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/pe.svg"></img>ﾠTVPERU NOTICIAS',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCkZCoc42IipR1ucqJmIehsA&autoplay=true&mute=1",
-    name: "TVPERU NOTICIAS",
+};
+const espanaSources: SourcesMap = {
+  rtve: {
+    slug: "rtve",
+    listTitle: "RTVE Noticias",
+    youtubeChannelId: "UC7QZIf0dta-XPXsp9Hv4dTw",
+    flag: "es",
   },
-  AMERICA_TV_ARG: {
-    slug: "AMERICA_TV_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠAMERICA TV',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UC6NVDkuzY2exMOVFw4i9oHw&autoplay=true&mute=1",
-    name: "AMERICA TV",
+  "cnn-español": {
+    slug: "cnn-español",
+    listTitle: "CNN en Español",
+    youtubeChannelId: "UC_lEiu6917IJz03TnntWUaQ",
+    flag: "es",
   },
-  A24_ARG: {
-    slug: "A24_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠA24',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCR9120YBAqMfntqgRTKmkjQ&autoplay=true&mute=1",
-    name: "A24",
+};
+const brasilSources: SourcesMap = {
+  "cnn-brasil": {
+    slug: "cnn-brasil",
+    listTitle: "CNN Brasil",
+    youtubeChannelId: "UCvdwhh_fDyWccR42-rReZLw",
+    flag: "br",
   },
-  IP_ARG: {
-    slug: "IP_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠIP NOTICIAS',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UC1bBjOZieJWHbsFA0LwjjJA&autoplay=true&mute=1",
-    name: "IP NOTICIAS",
+};
+const usaSources: SourcesMap = {
+  "cnn-us": {
+    slug: "cnn-us",
+    listTitle: "CNN US",
+    m3u8Url:
+      "https://cnn-cnninternational-1-de.samsung.wurl.com/manifest/playlist.m3u8",
+    fuente: "https://us.cnn.com",
+    flag: "us",
   },
-  TV_PUBLICA_ARG: {
-    slug: "TV_PUBLICA_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠTV PUBLICA',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCs231K71Bnu5295_x0MB5Pg&autoplay=true&mute=1",
-    name: "TV PUBLICA",
+  telemundo: {
+    slug: "telemundo",
+    listTitle: "Noticias Telemundo",
+    youtubeChannelId: "UCRwA1NUcUnwsly35ikGhp0A",
+    flag: "us",
   },
-  C5N_ARG: {
-    slug: "C5N_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠC5N',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCFgk2Q2mVO1BklRQhSv6p0w&autoplay=true&mute=1",
-    name: "C5N",
+  "sky-news": {
+    slug: "sky-news",
+    listTitle: "Sky News",
+    youtubeChannelId: "UCoMdktPbSTixAyNGwb-UYkQ",
+    flag: "us",
   },
-  LA_NACION_ARG: {
-    slug: "LA_NACION_ARG",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/ar.svg"></img>ﾠLA NACION',
-    codeHtml:
-      "https://www.youtube.com/embed/live_stream?channel=UCba3hpU7EFBSk817y9qZkiA&autoplay=true&mute=1",
-    name: "LA NACION",
+  newsmax: {
+    slug: "newsmax",
+    listTitle: "Newsmax",
+    youtubeChannelId: "UCx6h-dWzJ5NpAlja1YsApdg",
+    flag: "us",
   },
-  SKY_NEWS_YT: {
-    slug: "SKY_NEWS_YT",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠSKY NEWS',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCoMdktPbSTixAyNGwb-UYkQ&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">SKY NEWS',
+  "fox-news-now": {
+    slug: "fox-news-now",
+    listTitle: "NewsNOW from FOX",
+    youtubeChannelId: "UCJg9wBPyKMNA5sRDnvzmkdg",
+    flag: "us",
   },
-  FOX35ORLANDO: {
-    slug: "FOX35ORLANDO",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠFOX 35 ORLANDO',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCuXT13wiqK56NR7QSfDWpvg&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">FOX 35 ORLANDO',
+  abc7: {
+    slug: "abc7",
+    listTitle: "ABC7",
+    youtubeChannelId: "UCVxBA3Cbu3pm8w8gEIoMEog",
+    flag: "us",
   },
-  FOX5_WDC: {
-    slug: "FOX5_WDC",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠFOX 5 WASHINGTON DC',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCHLyP4MuA-JAFBCwxXOEDdA&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">FOX 5 WASHINGTON DC',
+  "abc7-swfl": {
+    slug: "abc7-swfl",
+    listTitle: "ABC7 SWFL",
+    youtubeChannelId: "UCq9e_hCv2jvgck8WowW1NXg",
+    flag: "us",
   },
-  WCNC: {
-    slug: "WCNC",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠWCNC',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UC-RxXi2Xws6Uk22vp-sLbGA&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">WCNC',
+  nbcla: {
+    slug: "nbcla",
+    listTitle: "NBCLA",
+    youtubeChannelId: "UCSWoppsVL0TLxFQ2qP_DLqQ",
+    flag: "us",
   },
-  "11ALIVE": {
-    slug: "11ALIVE",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 15px; width:auto:" src="https://flagcdn.com/us.svg"></img>ﾠ11 ALIVE',
-    codeHtml:
-      'https://www.youtube.com/embed/live_stream?channel=UCzF4Ryn8TKn64md77gS5Q5Q&autoplay=true&mute=1" frameborder="0"></iframe></div><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">11ALIVE',
+  "nbc-news": {
+    slug: "nbc-news",
+    listTitle: "NBC News",
+    youtubeChannelId: "UCeY0bbntWzzVIaj2z3QigXg",
+    flag: "us",
   },
-}
+  "record-news": {
+    slug: "record-news",
+    listTitle: "Record News",
+    youtubeChannelId: "UCuiLR4p6wQ3xLEm15pEn1Xw",
+    flag: "us",
+  },
+  "abc-news": {
+    slug: "abc-news",
+    listTitle: "ABC News",
+    m3u8Url:
+      " https://content.uplynk.com/channel/3324f2467c414329b3b0cc5cd987b6be.m3u8",
+    fuente: "https://abcnews.go.com/Live",
+    flag: "us",
+  },
+};
+const franciaSources: SourcesMap = {
+  "euronews-esp": {
+    slug: "euronews-esp",
+    listTitle: "euronews (Español)",
+    youtubeChannelId: "UCyoGb3SMlTlB8CLGVH4c8Rw",
+    flag: "fr",
+  },
+  "euronews-eng": {
+    slug: "euronews-eng",
+    listTitle: "euronews (English)",
+    youtubeChannelId: "UCSrZ3UV4jOidv8ppoVuvW9Q",
+    flag: "fr",
+  },
+  "euronews-rus": {
+    slug: "euronews-rus",
+    listTitle: "euronews Русский",
+    youtubeChannelId: "UCFzJjgVicCtFxJ5B0P_ei8A",
+    flag: "fr",
+  },
+  "euronews-hun": {
+    slug: "euronews-hun",
+    listTitle: "euronews (magyarul)",
+    youtubeChannelId: "UC4Ct8gIf9f0n4mdyGsFiZRA",
+    flag: "fr",
+  },
+  "france-24-esp": {
+    slug: "france-24-esp",
+    listTitle: "FRANCE 24 Español",
+    youtubeChannelId: "UCUdOoVWuWmgo1wByzcsyKDQ",
+    flag: "fr",
+  },
+  "france-24-eng": {
+    slug: "france-24-eng",
+    listTitle: "FRANCE 24 English",
+    youtubeChannelId: "UCQfwfsi5VrQ8yKZ-UWmAEFg",
+    flag: "fr",
+  },
+  "france-24-fra": {
+    slug: "france-24-fra",
+    listTitle: "FRANCE 24 French",
+    m3u8Url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+    fuente: "https://www.france24.com/fr/direct",
+    flag: "fr",
+  },
+  "france-info": {
+    slug: "france-info",
+    listTitle: "franceinfo",
+    youtubeChannelId: "UCO6K_kkdP-lnSCiO3tPx7WA",
+    flag: "fr",
+  },
+  lci: {
+    slug: "lci",
+    listTitle: "LCI",
+    m3u8Url: "https://lci-hls-live-ssl.tf1.fr/lci/1/hls/live_2328.m3u8",
+    fuente: "https://www.tf1info.fr/direct/",
+    flag: "fr",
+  },
+};
+const rusiaSources: SourcesMap = {
+  "RT-español": {
+    slug: "RT-español",
+    listTitle: "RT en Español",
+    youtubeChannelId: "UC2mtXUpAYLYJIZ2deSPhlqw",
+    flag: "ru",
+  },
+  "RT-vivo": {
+    slug: "RT-vivo",
+    listTitle: "RT en vivo",
+    youtubeChannelId: "UCEIhICHOQOonjE6V0SLdrHQ",
+    flag: "ru",
+  },
+  "RT-News": {
+    slug: "RT-News",
+    listTitle: "RT News",
+    youtubeChannelId: "UCpwvZwUam-URkxB7g4USKpg",
+    flag: "ru",
+  },
+  "RT-america": {
+    slug: "RT-america",
+    listTitle: "RT America",
+    youtubeChannelId: "UCczrL-2b-gYK3l4yDld4XlQ",
+    flag: "ru",
+  },
+};
+const chinaSources: SourcesMap = {
+  "live-chino": {
+    slug: "live-chino",
+    listTitle: "民視直播 FTVN Live 53",
+    youtubeChannelId: "UClIfopQZlkkSpM1VgCFLRJA",
+    flag: "cn",
+  },
+  "live-chino-2": {
+    slug: "live-chino-2",
+    listTitle: "三立LIVE新聞",
+    youtubeChannelId: "UC2TuODJhC03pLgd6MpWP0iw",
+    flag: "cn",
+  },
+  "live-chino-3": {
+    slug: "live-chino-3",
+    listTitle: "三立iNEWS",
+    youtubeChannelId: "UCoNYj9OFHZn3ACmmeRCPwbA",
+    flag: "cn",
+  },
+  "live-chino-4": {
+    slug: "live-chino-4",
+    listTitle: "中視新聞 HD直播頻道",
+    youtubeChannelId: "UCmH4q-YjeazayYCVHHkGAMA",
+    flag: "cn",
+  },
+  "live-chino-5": {
+    slug: "live-chino-5",
+    listTitle: "華視新聞 CH52",
+    youtubeChannelId: "UCDCJyLpbfgeVE9iZiEam-Kg",
+    flag: "cn",
+  },
+  "live-chino-6": {
+    slug: "live-chino-6",
+    listTitle: "中天電視",
+    youtubeChannelId: "UC5l1Yto5oOIgRXlI4p4VKbw",
+    flag: "cn",
+  },
+};
+const variosSources: SourcesMap = {
+  dw: {
+    slug: "dw",
+    listTitle: "DW Español",
+    youtubeChannelId: "UCT4Jg8h03dD0iN3Pb5L0PMA",
+  },
+  "trt-world": {
+    slug: "trt-world",
+    listTitle: "TRT World",
+    youtubeChannelId: "UC7fWeaHhqgM4Ry-RMpM2YYw",
+  },
+  "al-jazeera": {
+    slug: "al-jazeera",
+    listTitle: "Al Jazeera English",
+    youtubeChannelId: "UCNye-wNBqNL5ZzHSJj3l8Bg",
+  },
+  "al-jazeera-arabe": {
+    slug: "al-jazeera-arabe",
+    listTitle: "AlJazeera Channel قناة الجزيرة",
+    youtubeChannelId: "UCfiwzLy-8yKzIbsmZTzxDgw",
+  },
+  cna: {
+    slug: "cna",
+    listTitle: "CNA",
+    youtubeChannelId: "UC83jt4dlz1Gjl58fzQrrKZg",
+  },
+  "news-nigeria": {
+    slug: "news-nigeria",
+    listTitle: "TVC News Nigeria",
+    youtubeChannelId: "UCgp4A6I8LCWrhUzn-5SbKvA",
+  },
+  "HK-apple-daily": {
+    slug: "HK-apple-daily",
+    listTitle: "HK Apple Daily",
+    youtubeChannelId: "UCeqUUXaM75wrK5Aalo6UorQ",
+  },
+  "live-japones": {
+    slug: "live-japones",
+    listTitle: "ANNnewsCH",
+    youtubeChannelId: "UCGCZAYq5Xxojl_tSXcVJhiQ",
+  },
+  "abc-news-au": {
+    slug: "abc-news-au",
+    listTitle: "ABC News AU",
+    m3u8Url:
+      " https://abc-iview-mediapackagestreams-2.akamaized.net/out/v1/6e1cc6d25ec0480ea099a5399d73bc4b/index.m3u8",
+    fuente: "https://www.abc.net.au/news/",
+  },
+};
+
+export const internacionalSources: SourcesMap = {
+  ...argentinaSources,
+  ...colombiaSources,
+  ...peruSources,
+  ...venezuelaSources,
+  ...mexicoSources,
+  ...hondurasSources,
+  ...espanaSources,
+  ...brasilSources,
+  ...usaSources,
+  ...franciaSources,
+  ...rusiaSources,
+  ...chinaSources,
+  ...variosSources,
+};
