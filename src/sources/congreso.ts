@@ -8,148 +8,100 @@ export const congresoSources: SourcesMap = {
     iframeSrc: "/Monitores/SeñalSENADO_TV.html",
     name: "SENADO TVㅤ",
   },
-  DIPUTADOS_TV: {
-    slug: "DIPUTADOS_TV",
-    titleHtml: "DIPUTADOS TVﾠ",
-    iframeSrc: "/Monitores/Señal_CDTV.html",
-    name: "DIPUTADOS TVㅤ",
+  "tv-senado": {
+    slug: "tv-senado",
+    listTitle: "🏛️ TV Senado",
+    iframeSrc: "https://janus-tv.senado.cl/embed.php",
+    fuente: "https://tv.senado.cl/",
   },
-
-  TC_YouTube: {
-    slug: "TC_YouTube",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠT. CONTITUCIONAL',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCZaI-1N1oaGb-U8K2VNztjg&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOSㅤ",
+  "tv-senado-2": {
+    slug: "tv-senado-2",
+    listTitle: "🏛️ TV Senado 2",
+    m3u8Url: "https://janus-tv-ply.senado.cl/playlist/playlist.m3u8",
+    fuente: "https://tv.senado.cl/",
   },
-  SENADO_YouTube: {
-    slug: "SENADO_YouTube",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠTV SENADO',
-    iframeSrc:
-      'https://www.youtube.com/embed/live_stream?channel=UC4GJ43VNn4AYfiYa0RBCHQg&autoplay=true&mute=1"frameborder="0" allowfullscreen></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤT. Constitucionalㅤ',
+  "tv-senado-3": {
+    slug: "tv-senado-3",
+    listTitle: "🏛️ TV Senado 3",
+    youtubeChannelId: "UC4GJ43VNn4AYfiYa0RBCHQg",
   },
-  DIPUTADOS_YouTube: {
-    slug: "DIPUTADOS_YouTube",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠTV DIPUTADOS',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCYd5k2TyOyOmUJNx0SH17KA&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOSㅤ",
+  "tribunal-consti": {
+    slug: "tribunal-consti",
+    listTitle: "🏛️ Tribunal Constitucional",
+    youtubeChannelId: "UCZaI-1N1oaGb-U8K2VNztjg",
   },
-  TV_SENADO_1: {
-    slug: "TV_SENADO_1",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 1ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_1.html",
-    name: "ㅤTV SENADO 2ㅤ",
+  "poder-judicial": {
+    slug: "poder-judicial",
+    listTitle: "🏛️ Poder Judicial",
+    youtubeChannelId: "UCo0C1-ocUG9a0Yb3iO0V-xg",
   },
-  TV_SENADO_2: {
-    slug: "TV_SENADO_2",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 2ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_2.html",
-    name: "ㅤTV SENADO 2ㅤ",
+  "cam-dipu-1": {
+    slug: "cam-dipu-1",
+    listTitle: "🏛️ Cámara Diputados",
+    m3u8Url: "https://camara.03.cl.cdnz.cl/camara19/live/playlist.m3u8",
+    fuente: "http://www.cdtv.cl/",
   },
-  TV_SENADO_3: {
-    slug: "TV_SENADO_3",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 3ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_3.html",
-    name: "ㅤTV SENADO 3ㅤ",
+  "cam-dipu-2": {
+    slug: "cam-dipu-2",
+    listTitle: "🏛️ Cámara Diputados 2",
+    m3u8Url: "https://camara.02.cl.cdnz.cl/cdndvr/live/playlist.m3u8?DVR",
+    fuente: "http://webtv.camara.cl/",
   },
-  TV_SENADO_4: {
-    slug: "TV_SENADO_4",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 4ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_4.html",
-    name: "ㅤTV SENADO 4ㅤ",
+  "cam-dipu-3": {
+    slug: "cam-dipu-3",
+    listTitle: "🏛️ Cámara Diputados 3",
+    m3u8Url: "https://tls-cl.cdnz.cl/camara/live/playlist.m3u8",
+    fuente: "http://webtv.camara.cl/",
   },
-  TV_SENADO_5: {
-    slug: "TV_SENADO_5",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 5ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_5.html",
-    name: "ㅤTV SENADO 5ㅤ",
+  // CANALES ALTERNATIVOS CAM DIPUTADOS
+  "cam-dipu": {
+    slug: "cam-dipu",
+    listTitle: "🏛️ Cámara Diputados YT",
+    youtubeChannelId: "UCYd5k2TyOyOmUJNx0SH17KA",
   },
-  TV_SENADO_6: {
-    slug: "TV_SENADO_6",
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg">ﾠSEÑAL 6ﾠ',
-    iframeSrc: "/Monitores/Señal_TVSENADO_6.html",
-    name: "ㅤTV SENADO 6ㅤ",
+  "cam-dipu-01": {
+    slug: "cam-dipu-01",
+    listTitle: "🏛️ Cámara Diputados YT 01",
+    youtubeChannelId: "UCcULnWuDzgQG9yF0Dv3DIgg",
   },
-  DIPUTADOS_YouTube_1: {
-    slug: "DIPUTADOS_YouTube_1",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 1',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCcULnWuDzgQG9yF0Dv3DIgg&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 1ㅤ",
+  "cam-dipu-03": {
+    slug: "cam-dipu-03",
+    listTitle: "🏛️ Cámara Diputados YT 03",
+    youtubeChannelId: "UCF6KgLfQqQzekn8U1DwVs9g",
   },
-  DIPUTADOS_YouTube_3: {
-    slug: "DIPUTADOS_YouTube_3",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 3',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCF6KgLfQqQzekn8U1DwVs9g&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 3ㅤ",
+  "cam-dipu-05": {
+    slug: "cam-dipu-05",
+    listTitle: "🏛️ Cámara Diputados YT 05",
+    youtubeChannelId: "UC0QKtI8NpeMObauDylsSUDA",
   },
-  DIPUTADOS_YouTube_5: {
-    slug: "DIPUTADOS_YouTube_5",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 5',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UC0QKtI8NpeMObauDylsSUDA&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 5ㅤ",
+  "cam-dipu-06": {
+    slug: "cam-dipu-06",
+    listTitle: "🏛️ Cámara Diputados YT 06",
+    youtubeChannelId: "UCspWzpGflwb6A8PZqWw49CQ",
   },
-  DIPUTADOS_YouTube_6: {
-    slug: "DIPUTADOS_YouTube_6",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 6',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCspWzpGflwb6A8PZqWw49CQ&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 6ㅤ",
+  "cam-dipu-07": {
+    slug: "cam-dipu-07",
+    listTitle: "🏛️ Cámara Diputados YT 07",
+    youtubeChannelId: "UCyVjDDBZGDywVGrpGBvGEsw",
   },
-  DIPUTADOS_YouTube_7: {
-    slug: "DIPUTADOS_YouTube_7",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 7',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCyVjDDBZGDywVGrpGBvGEsw&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 7ㅤ",
+  "cam-dipu-08": {
+    slug: "cam-dipu-08",
+    listTitle: "🏛️ Cámara Diputados YT 08",
+    youtubeChannelId: "UCCtDbZzh63vgU_BWHRGsbug",
   },
-  DIPUTADOS_YouTube_8: {
-    slug: "DIPUTADOS_YouTube_8",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 8',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCyVjDDBZGDywVGrpGBvGEsw&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 8ㅤ",
+  "cam-dipu-11": {
+    slug: "cam-dipu-11",
+    listTitle: "🏛️ Cámara Diputados YT 11",
+    youtubeChannelId: "UCYPKjGKq2yLbAnmth5rFZmQ",
   },
-  DIPUTADOS_YouTube_11: {
-    slug: "DIPUTADOS_YouTube_11",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 11',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCYPKjGKq2yLbAnmth5rFZmQ&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 11ㅤ",
+  "cam-dipu-12": {
+    slug: "cam-dipu-12",
+    listTitle: "🏛️ Cámara Diputados YT 12",
+    youtubeChannelId: "UCVOWFY-sgbDglBsfOap9okg",
   },
-  DIPUTADOS_YouTube_12: {
-    slug: "DIPUTADOS_YouTube_12",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 12',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UCVOWFY-sgbDglBsfOap9okg&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 12ㅤ",
-  },
-  DIPUTADOS_YouTube_13: {
-    slug: "DIPUTADOS_YouTube_13",
-    titleHtml:
-      '<img style="height: 15px; width:auto:" src="imagenes/Logo_YT.svg"></img>ﾠDIPUTADOS 13',
-    iframeSrc:
-      "https://www.youtube.com/embed/live_stream?channel=UC33MG3YdoQ16a8a3wODh6lw&autoplay=true&mute=1",
-    name: "ㅤDIPUTADOS 13ㅤ",
+  "cam-dipu-13": {
+    slug: "cam-dipu-13",
+    listTitle: "🏛️ Cámara Diputados YT 13",
+    youtubeChannelId: "UC33MG3YdoQ16a8a3wODh6lw",
   },
 };

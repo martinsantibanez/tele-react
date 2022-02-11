@@ -23,7 +23,7 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
   return (
     <Accordion defaultActiveKey="0" className="w-100">
       <Accordion.Item eventKey={`0`}>
-        <Accordion.Header>Mis canales de twitch</Accordion.Header>
+        <Accordion.Header>Twitch</Accordion.Header>
         <Accordion.Body>
           {customSources?.map((source) => (
             <SourceButton
@@ -38,7 +38,7 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
             <input
               type="text"
               value={customTwitchValue}
-              placeholder="Introduce el nombre"
+              placeholder="Canal de Twitch"
               onChange={(e) => setCustomTwitchValue(e.target.value)}
             />
           </div>

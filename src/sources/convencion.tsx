@@ -9,6 +9,22 @@ const LogoConvencion = (
 );
 
 export const convencionSources: SourcesMap = {
+  "convencion-tv": {
+    slug: "convencion-tv",
+    listTitle: "🏛️ Convención TV",
+    iframeSrc:
+      "https://mdstrm.com/live-stream/60d476c14157440829d03cd7?autoplay=true&volume=0",
+    fuente: "https://www.convencion.tv/",
+    titleIcons: [LogoConvencion],
+  },
+  "convencion-tv-2": {
+    slug: "convencion-tv-2",
+    listTitle: "🏛️ Convención TV 2",
+    m3u8Url:
+      "https://mdstrm.com/live-stream-playlist/60d1f10fdacfa008348d71d2.m3u8",
+    fuente: "https://www.convencion.tv/",
+    titleIcons: [LogoConvencion],
+  },
   CONVENCION_CONSTITUCIONAL_1: {
     slug: "CONVENCION_CONSTITUCIONAL_1 ",
     titleIcons: [LogoConvencion],

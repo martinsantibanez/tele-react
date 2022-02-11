@@ -9,10 +9,13 @@ import { otrasSources, placeHolderSources } from "./otras";
 import { radiosSources } from "./radios";
 import { regionesSources } from "./regiones";
 import { relojesSources } from "./relojes";
-import { tvNacionalSources, tvNacionalYoutubeSources } from "./tvNacional";
-import { tvNacionalDosSources } from "./tvNacionalDos";
-import { twitchSources } from "./twitch";
+import {
+  tvNacionalSources,
+  tvNacionalYoutubeSources,
+  tvNacionalDosSources,
+} from "./tvNacional";
 import { convencionSources } from "./convencion";
+import { musicaSources } from "./musica";
 
 export enum SourceType {
   m3u8 = "m3u8",
@@ -62,6 +65,10 @@ export const sourcesCategories: SourceGroup[] = [
     sources: tvNacionalSources,
   },
   {
+    name: "TV Nacional - 2",
+    sources: tvNacionalDosSources,
+  },
+  {
     name: "TV Nacional YouTube",
     sources: tvNacionalYoutubeSources,
   },
@@ -74,12 +81,12 @@ export const sourcesCategories: SourceGroup[] = [
     sources: radiosSources,
   },
   {
-    name: "Camaras",
-    sources: camarasSources,
+    name: "Musica 24/7",
+    sources: musicaSources,
   },
   {
-    name: "Twitch",
-    sources: twitchSources,
+    name: "Camaras",
+    sources: camarasSources,
   },
   {
     name: "Convencion Constitucional",
@@ -100,11 +107,6 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: "Regiones",
     sources: regionesSources,
-  },
-
-  {
-    name: "TV Nacional - 2",
-    sources: tvNacionalDosSources,
   },
   {
     name: "Espacio",
