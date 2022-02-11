@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import type { AppProps } from "next/app";
 import { TeleProvider } from "../context/TeleContext";
-import "../styles/globals.css";
+import "../styles/globals.scss";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (

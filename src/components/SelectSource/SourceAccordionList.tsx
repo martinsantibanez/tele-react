@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Accordion } from "react-bootstrap";
+import { BsTwitch } from "react-icons/bs";
 import { useCustomSources } from "../../pages/grid/index.page";
 import { Source, sourcesCategories } from "../../sources";
-import { SourceButton } from "./SourceButton";
+import { SourceButton } from "./SourceButton/SourceButton";
 
 type Props = {
   selectedSourceSlug?: string;
@@ -27,17 +28,20 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
           {customSources?.map((source) => (
             <SourceButton
               onSelect={onSelect}
-              source={source}
+              source={{ ...source, titleIcons: [<BsTwitch key="twitch" />] }}
               isSelected={source.slug === selectedSourceSlug}
               key={source.slug}
             />
           ))}
-          <input
-            type="text"
-            value={customTwitchValue}
-            placeholder="Introduce el nombre"
-            onChange={(e) => setCustomTwitchValue(e.target.value)}
-          />
+          <div className="mb-2">
+            <BsTwitch size={24} className="mr-1" />
+            <input
+              type="text"
+              value={customTwitchValue}
+              placeholder="Introduce el nombre"
+              onChange={(e) => setCustomTwitchValue(e.target.value)}
+            />
+          </div>
           <button onClick={handleCreateSource} className="btn btn-primary">
             Agregar
           </button>

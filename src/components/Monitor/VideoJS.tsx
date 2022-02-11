@@ -26,10 +26,12 @@ const VideoPlayer = ({ src }: Props) => {
       muted: true,
       fluid: true,
       responsive: true,
+      aspectRatio: "16:9", 
+      poster: '/imagenes/SinSenal.png',
       sources: [
         {
           src: src,
-          type: "application/vnd.apple.mpegurl"
+          type: "application/vnd.apple.mpegurl",
           // type: "application/x-mpegURL",
         },
       ],

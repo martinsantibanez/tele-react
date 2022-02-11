@@ -24,8 +24,10 @@ const reloadStyle: CSSProperties = {
 
 export const useSavedGrid =
   createLocalStorageStateHook<SourceNode[]>("__tele_grid__");
+
 export const useCustomSources = createLocalStorageStateHook<Source[]>(
-  "__tele_custom_source__"
+  "__tele_custom_source__",
+  []
 );
 
 const GridPage: NextPage = () => {
@@ -71,6 +73,11 @@ const GridPage: NextPage = () => {
   };
 
   const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
+  const displaySourcePicker =
+    editingSourceIdx !== undefined &&
+    editingSourceIdx !== null &&
+    selectedSources &&
+    selectedSources[editingSourceIdx];
   return (
     <MainLayout>
       <Head>
@@ -79,35 +86,30 @@ const GridPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="row">
-        <div className={!!editingSourceIdx ? "col-8" : "col-12"}>
+        <div className={isEditing ? "col-8" : "col-12"}>
           <div className="row no-gutters row-canales">
             {selectedSources &&
               selectedSources.map((source, idx) => (
                 <Monitor
                   size={size}
                   sourceSlug={source.sourceSlug}
-                  key={`${source.sourceSlug}_${idx}`}
+                  key={`${source.uuid}`}
                   onChangeClick={() => setEditingSourceIdx(idx)}
                   onRemove={() => handleSourceRemove(idx)}
                 />
               ))}
           </div>
         </div>
-        {editingSourceIdx !== undefined &&
-          editingSourceIdx !== null &&
-          selectedSources &&
-          selectedSources[editingSourceIdx] && (
-            <div className="col-4">
-              <SourceAccordionList
-                onSelect={(source: Source) =>
-                  handleSourceChange(source, editingSourceIdx)
-                }
-                selectedSourceSlug={
-                  selectedSources[editingSourceIdx].sourceSlug
-                }
-              />
-            </div>
-          )}
+        {displaySourcePicker && (
+          <div className="col-4 pr-4">
+            <SourceAccordionList
+              onSelect={(source: Source) =>
+                handleSourceChange(source, editingSourceIdx)
+              }
+              selectedSourceSlug={selectedSources[editingSourceIdx].sourceSlug}
+            />
+          </div>
+        )}
         {isEditing && (
           <ScreenOptions
             onSizeChange={handleSizeChange}
