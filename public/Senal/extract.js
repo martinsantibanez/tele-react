@@ -1,26 +1,37 @@
-const fs = require("fs");
-
-const filenames = ["Senal1.html"];
-
-const CATEGORY_TITLE = "CONVENCION CONSTITUCIONAL";
-const CATEGORY_SLUG = "CONVENCION_CONSTITUCIONAL";
-
+const fs = require('fs');
+const path = require('path');
+const args = process.argv;
+console.log('args', args);
+const dir = args[2];
+if (!dir) throw new Error('Usage: node extract.js <dir>');
+const resolvedPath = path.resolve(dir);
+const files = fs.readdirSync(resolvedPath);
 const matches = [];
-for (let i = 1; i <= 13; i++) {
-  const filename = `Senal${i}.html`;
-  const file = fs.readFileSync(`./${filename}`, "utf8");
+console.log('files', files);
+const notMatched = [];
+
+for (const filename of files) {
+  const filepath = path.join(resolvedPath, filename);
+  const file = fs.readFileSync(filepath, 'utf8');
   const match = file.match(/file:\"(.*)\",/);
+  if (!match) {
+    notMatched.push(filename);
+    continue
+  }
   const m3u8Url = match[1];
-  const elementTitle = `${i}`;
-  const elementSlug = `${i}`;
-  const newSlug = `${CATEGORY_SLUG}_${elementSlug}`;
+  const elementTitle = `${filename.replace('_', ' ')}`;
+  const newSlug = filename.replace('.html', '');
   matches.push(`${newSlug} : {
     slug: "${newSlug} ",
-    titleIcons: ['<img style="height: 20px; width:auto:" src="imagenes/Logo_CC.svg"></img>'],
-    listTitle: "${CATEGORY_TITLE} ${elementTitle}",
+    listTitle: "${elementTitle}",
     m3u8Url: "${m3u8Url}"
   },`);
 }
+fs.writeFileSync(`${dir}.js`, matches.join('\n'));
+
 for (const match of matches) {
   console.log(match);
 }
+
+console.log('-----');
+console.log('notMatched', notMatched);

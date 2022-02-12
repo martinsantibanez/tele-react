@@ -1,31 +1,35 @@
-import React, { useState } from "react";
-import { Accordion } from "react-bootstrap";
-import { BsTwitch } from "react-icons/bs";
-import { useCustomSources } from "../../pages/grid/index.page";
-import { Source, sourcesCategories } from "../../sources";
-import { SourceButton } from "./SourceButton/SourceButton";
+import React, { useState } from 'react';
+import { Accordion } from 'react-bootstrap';
+import { BsTwitch } from 'react-icons/bs';
+import { useCustomSources } from '../../pages/grid/index.page';
+import { Source, sourcesCategories } from '../../sources';
+import { SourceButton } from './SourceButton/SourceButton';
 
 type Props = {
   selectedSourceSlug?: string;
   onSelect?: (source: Source) => void;
 };
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
-  const [customTwitchValue, setCustomTwitchValue] = useState<string>("");
+  const [customTwitchValue, setCustomTwitchValue] = useState<string>('');
   const [customSources, setCustomSources] = useCustomSources();
   const handleCreateSource = () => {
     const newSource: Source = {
       slug: `custom_${customTwitchValue}`,
       titleHtml: customTwitchValue,
-      twitchAccount: customTwitchValue,
+      twitchAccount: customTwitchValue
     };
-    setCustomSources((v) => [...(v || []), newSource]);
+    setCustomSources(v => [...(v || []), newSource]);
   };
   return (
-    <Accordion defaultActiveKey="0" className="w-100">
+    <Accordion
+      defaultActiveKey="0"
+      className="w-100"
+      style={{ maxHeight: '90vh', overflowY: 'scroll' }}
+    >
       <Accordion.Item eventKey={`0`}>
         <Accordion.Header>Twitch</Accordion.Header>
         <Accordion.Body>
-          {customSources?.map((source) => (
+          {customSources?.map(source => (
             <SourceButton
               onSelect={onSelect}
               source={{ ...source, titleIcons: [<BsTwitch key="twitch" />] }}
@@ -39,7 +43,7 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
               type="text"
               value={customTwitchValue}
               placeholder="Canal de Twitch"
-              onChange={(e) => setCustomTwitchValue(e.target.value)}
+              onChange={e => setCustomTwitchValue(e.target.value)}
             />
           </div>
           <button onClick={handleCreateSource} className="btn btn-primary">
@@ -51,7 +55,7 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
         <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
           <Accordion.Header>{sourceCategory.name}</Accordion.Header>
           <Accordion.Body>
-            {Object.values(sourceCategory.sources).map((source) => (
+            {Object.values(sourceCategory.sources).map(source => (
               <SourceButton
                 onSelect={onSelect}
                 source={source}

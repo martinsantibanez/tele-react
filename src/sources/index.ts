@@ -1,27 +1,23 @@
-import React from "react";
-import { camarasSources } from "./camaras";
-import { congresoSources } from "./congreso";
-import { datosSources } from "./datos";
-import { espacioSources } from "./espacio";
-import { especialesSources } from "./especiales";
-import { internacionalSources } from "./internacional";
-import { otrasSources, placeHolderSources } from "./otras";
-import { radiosSources } from "./radios";
-import { regionesSources } from "./regiones";
-import { relojesSources } from "./relojes";
-import {
-  tvNacionalSources,
-  tvNacionalYoutubeSources,
-  tvNacionalDosSources,
-} from "./tvNacional";
-import { convencionSources } from "./convencion";
-import { musicaSources } from "./musica";
+import React from 'react';
+import { camarasSources } from './camaras';
+import { chileSources } from './chile';
+import { convencionSources } from './convencion';
+import { datosSources } from './datos';
+import { espacioSources } from './espacio';
+import { especialesSources } from './especiales';
+import { internacionalSources } from './internacional';
+import { musicaSources } from './musica';
+import { otrasSources, placeHolderSources } from './otras';
+import { radiosSources } from './radios';
+import { regionesSources } from './regiones';
+import { relojesSources } from './relojes';
+import { tvNacionalSources, tvNacionalYoutubeSources } from './tvNacional';
 
 export enum SourceType {
-  m3u8 = "m3u8",
-  iframe = "iframe",
-  html = "html",
-  component = "component",
+  m3u8 = 'm3u8',
+  iframe = 'iframe',
+  html = 'html',
+  component = 'component'
 }
 
 export interface SourceInput {
@@ -42,7 +38,6 @@ export interface Source extends SourceInput {
   flag?: string;
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
-  listTitle?: string;
 
   // TODO
   // inputs?: SourceInput[];
@@ -61,73 +56,74 @@ export interface SourceGroup {
 
 export const sourcesCategories: SourceGroup[] = [
   {
-    name: "TV Nacional",
-    sources: tvNacionalSources,
+    name: 'TV Nacional',
+    sources: tvNacionalSources
   },
   {
-    name: "TV Nacional - 2",
-    sources: tvNacionalDosSources,
+    name: 'Regiones',
+    sources: regionesSources
   },
   {
-    name: "TV Nacional YouTube",
-    sources: tvNacionalYoutubeSources,
+    name: 'TV Nacional YouTube',
+    sources: tvNacionalYoutubeSources
   },
   {
-    name: "Especiales",
-    sources: especialesSources,
+    name: 'Radios',
+    sources: radiosSources
   },
   {
-    name: "Radios",
-    sources: radiosSources,
+    name: 'Musica 24/7',
+    sources: musicaSources
   },
   {
-    name: "Musica 24/7",
-    sources: musicaSources,
+    name: 'Camaras',
+    sources: camarasSources
   },
   {
-    name: "Camaras",
-    sources: camarasSources,
+    name: 'Convencion Constitucional',
+    sources: convencionSources
   },
   {
-    name: "Convencion Constitucional",
-    sources: convencionSources,
+    name: 'Instituciones Chile',
+    sources: chileSources
   },
   {
-    name: "Congreso Nacional",
-    sources: congresoSources,
+    name: 'TV Internacional',
+    sources: internacionalSources
   },
   {
-    name: "TV Internacional",
-    sources: internacionalSources,
+    name: 'Sin Categoria',
+    sources: otrasSources
   },
   {
-    name: "Sin Categoria",
-    sources: otrasSources,
+    name: 'Espacio',
+    sources: espacioSources
   },
   {
-    name: "Regiones",
-    sources: regionesSources,
+    name: 'Relojes',
+    sources: relojesSources
   },
   {
-    name: "Espacio",
-    sources: espacioSources,
+    name: 'Vacio',
+    sources: placeHolderSources
   },
   {
-    name: "Relojes",
-    sources: relojesSources,
-  },
-  {
-    name: "Vacio",
-    sources: placeHolderSources,
-  },
-  {
-    name: "Datos",
-    sources: datosSources,
-  },
+    name: 'Datos',
+    sources: datosSources
+  }
 ];
 
+if (
+  typeof window !== 'undefined' &&
+  window.localStorage.getItem('show_all') === 'true'
+) {
+  sourcesCategories.push({
+    name: 'Especiales',
+    sources: especialesSources
+  });
+}
 export function getSource(slug: string) {
   return sourcesCategories
-    .flatMap((category) => Object.values(category.sources))
-    .find((src) => src.slug === slug);
+    .flatMap(category => Object.values(category.sources))
+    .find(src => src.slug === slug);
 }

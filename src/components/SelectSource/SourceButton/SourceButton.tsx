@@ -25,8 +25,8 @@ export function SourceButton({ source, onSelect, isSelected }: Props) {
           <img src={`https://flagcdn.com/${source.flag}.svg`}></img>
         </span>
       )}
-      {source.listTitle ? (
-        source.listTitle
+      {source.name ? (
+        source.name
       ) : (
         <span
           dangerouslySetInnerHTML={{

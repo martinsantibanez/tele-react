@@ -1,15 +1,15 @@
-import type { NextPage } from "next";
-import Head from "next/head";
-import { useState } from "react";
-import { createLocalStorageStateHook } from "use-local-storage-state";
-import { Monitor } from "../../components/Monitor/Monitor";
-import { SourceAccordionList } from "../../components/SelectSource/SourceAccordionList";
-import { MainLayout } from "../../layout/MainLayout";
-import { Source } from "../../sources";
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import { useState } from 'react';
+import { createLocalStorageStateHook } from 'use-local-storage-state';
+import { Monitor } from '../../components/Monitor/Monitor';
+import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
+import { MainLayout } from '../../layout/MainLayout';
+import { Source } from '../../sources';
 
 export const useSavedSelectedItem = createLocalStorageStateHook<
   string | undefined
->("__tele_selected__");
+>('__tele_selected__');
 
 const ListPage: NextPage = () => {
   const [sourceSlug, setSourceSlug] = useState<string>();
@@ -27,14 +27,14 @@ const ListPage: NextPage = () => {
       </Head>
 
       <div className="row w-100 mw-100">
+        <div className="col-8">
+          <Monitor size={12} sourceSlug={sourceSlug} />
+        </div>
         <div className="col-4">
           <SourceAccordionList
             onSelect={handleSelectSource}
             selectedSourceSlug={sourceSlug}
           />
-        </div>
-        <div className="col-8">
-          <Monitor size={12} sourceSlug={sourceSlug} />
         </div>
       </div>
     </MainLayout>
