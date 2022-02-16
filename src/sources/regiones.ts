@@ -191,9 +191,8 @@ export const regionesDosSources: SourcesMap = {
     titleHtml: 'Stgo TV',
     iframeSrc: 'https://stv.janus.cl/front/embed.html',
     fuente: 'https://www.santiagotelevision.cl/'
-  },
+  }
 };
-
 
 export const regionesSources: SourcesMap = {
   ...regionesDosSources,
@@ -382,27 +381,6 @@ export const regionesSources: SourcesMap = {
     m3u8Url:
       'https://mdstrm.com/live-stream-playlist-v/555c9a91eb4886825b07ee7b.m3u8'
   },
-  Señal_Interna_24HTVN_1: {
-    slug: 'Señal_Interna_24HTVN_1',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_24HTVN.svg"></img>ﾠSEÑAL 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalInterna24H_1.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤ24HORAS 1ㅤ</div></div></div>'
-  },
-  Señal_Interna_24HTVN_2: {
-    slug: 'Señal_Interna_24HTVN_2',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_24HTVN.svg"></img>ﾠSEÑAL 2',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalInterna24H_2.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤ24HORAS 2ㅤ</div></div></div>'
-  },
-  Señal_Interna_24HTVN_4: {
-    slug: 'Señal_Interna_24HTVN_4',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_24HTVN.svg"></img>ﾠSEÑAL 4',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalInterna24H_4.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤ24HORAS 4ㅤ</div></div></div>'
-  },
   DocumentacionTVN: {
     slug: 'DocumentacionTVN',
     name: 'DOCUMENTACION TVN',
@@ -414,8 +392,7 @@ export const regionesSources: SourcesMap = {
     slug: 'Señal_Interna_CNNCHILE_1',
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_CNNCHILE2.svg"></img>ﾠSEÑAL 1',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalInternaCNNCHILE_1.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤCNNCHILE 1ㅤ</div></div></div>'
+    m3u8Url:
+      'https://unlimited1-cl-isp.dps.live/cnnprensa/cnnprensa.smil/playlist.m3u8'
   }
 };
-

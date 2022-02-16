@@ -8,13 +8,6 @@ export const chileSources: SourcesMap = {
     m3u8Url:
       'https://mdstrm.com/live-stream-playlist-v/5dc17f8944795108a2a52a49.m3u8'
   },
-  SENADO_TV: {
-    slug: 'SENADO_TV',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_TVSENADO_2.svg"></img>',
-    iframeSrc: '/Monitores/SeñalSENADO_TV.html',
-    name: 'SENADO TVㅤ'
-  },
   'tv-senado': {
     slug: 'tv-senado',
     name: '🏛️ TV Senado',

@@ -4,80 +4,66 @@ export const radiosSources: SourcesMap = {
   BIOBIO_CHILE_1: {
     slug: 'BIOBIO_CHILE_1',
     titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>ﾠSEÑAL 1',
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img> 1',
     m3u8Url:
       'https://unlimited1-cl-isp.dps.live/bbclccp/bbclccp.smil/playlist.m3u8'
   },
   BIOBIOTV: {
     slug: 'BIOBIOTV',
     titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>ﾠBIOBIO TV',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_BIOBIOTV.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤBIOBIO TVㅤ</div></div></div>'
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_BIOBIOCHILE.svg"></img>  TV',
+    m3u8Url: 'https://unlimited2-cl-isp.dps.live/bbtv/bbtv.smil/playlist.m3u8'
   },
-  ADNRADIO: {
-    slug: 'ADNRADIO',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_ADNRADIO.svg"></img>ﾠ',
-    name: 'ADN RADIO',
-    m3u8Url: 'https://unlimited1-cl-isp.dps.live/adntv/adntv.smil/playlist.m3u8'
-  },
-  COOPERATIVA: {
-    slug: 'COOPERATIVA',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Logo_Radio_Cooperativa.svg"></img>ﾠ',
-    name: 'COOPERATIVA',
-    m3u8Url:
-      'https://unlimited1-cl-isp.dps.live/coopetv/coopetv.smil/playlist.m3u8'
-  },
+
   T13RADIO: {
     slug: 'T13RADIO',
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Tele13RADIO.svg"></img>',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_T13.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤT13 RADIOㅤ</div></div></div>'
+    iframeSrc: '/Source/T13RADIO_EMBED.html'
   },
   INFINITA: {
     slug: 'INFINITA',
-    titleHtml: 'RADIO INFINITA',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_INFINITA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO INFINITAㅤ</div></div></div>'
+    titleHtml: '📻 Infinita',
+    m3u8Url:
+      'http://unlimited2-cl.dps.live/infinitatv/infinitatv.smil/playlist.m3u8'
   },
   LA_CLAVE: {
     slug: 'LA_CLAVE',
-    titleHtml: 'RADIO LA CLAVE',
+    titleHtml: '📻 La Clave',
     m3u8Url:
       'https://unlimited1-cl-isp.dps.live/laclavetv/laclavetv.smil/playlist.m3u8'
   },
-  TIEMPO: {
-    slug: 'TIEMPO',
-    titleHtml: 'RADIO TIEMPO',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_TIEMPO.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO TIEMPOㅤ</div></div></div>'
-  },
   PUDAHUEL: {
     slug: 'PUDAHUEL',
-    titleHtml: 'RADIO PUDAHUEL',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_PUDAHUEL.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO PUDAHUELㅤ</div></div></div>'
+    titleHtml: '📻 Pudahuel',
+    m3u8Url:
+      'https://unlimited10-cl.dps.live/pudahueltv/pudahueltv.smil/playlist.m3u8'
   },
   SeñalRADIO_DUNA: {
     slug: 'SeñalRADIO_DUNA',
-    titleHtml: 'RADIO DUNA',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_DUNA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO DUNAㅤ</div></div></div>'
+    titleHtml: '📻 Duna',
+    m3u8Url:
+      'https://unlimited1-cl-isp.dps.live/dunatv/dunatv.smil/playlist.m3u8'
   },
   SeñalRADIO_AGRICULTURA: {
     slug: 'SeñalRADIO_AGRICULTURA',
-    titleHtml: 'RADIO AGRICULTURA',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_AGRICULTURA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO AGRICULTURAㅤ</div></div></div>'
+    titleHtml: '📻 Agricultura',
+    m3u8Url: 'https://unlimited1-cl-isp.dps.live/921tv/921tv.smil/playlist.m3u8'
   },
   cooperativa: {
     slug: 'cooperativa',
-    titleHtml: '📻 Cooperativa',
+    titleIcons: [
+      <img src="imagenes/Logo_Radio_Cooperativa.svg" key="logo"></img>
+    ],
     iframeSrc: 'https://rudo.video/live/coopetv?volume=0&mute=1',
     fuente: 'http://programas.cooperativa.cl/showalairelibre/'
+  },
+  COOPERATIVA: {
+    slug: 'COOPERATIVA',
+    titleHtml: '📻 Cooperativa',
+
+    m3u8Url:
+      'https://unlimited1-cl-isp.dps.live/coopetv/coopetv.smil/playlist.m3u8'
   },
   bbtv: {
     slug: 'bbtv',
@@ -90,6 +76,13 @@ export const radiosSources: SourcesMap = {
     titleHtml: '📻 Biobio TV 2',
     m3u8Url: 'https://unlimited1-cl-isp.dps.live/bbtv/bbtv.smil/playlist.m3u8',
     fuente: 'https://www.biobiochile.cl/biobiotv/'
+  },
+  ADNRADIO: {
+    slug: 'ADNRADIO',
+    titleHtml:
+      '<img style="height: 20px; width:auto:" src="imagenes/Logo_ADNRADIO.svg"></img>',
+    name: 'ADN',
+    m3u8Url: 'https://unlimited1-cl-isp.dps.live/adntv/adntv.smil/playlist.m3u8'
   },
   adn: {
     slug: 'adn',
@@ -241,27 +234,19 @@ export const radiosSources: SourcesMap = {
   },
   RLN: {
     slug: 'RLN',
-    titleIcons: [<img src="imagenes/Logo_RLN.svg" key="logo" />],
     m3u8Url: 'https://v2.tustreaming.cl/rln/tracks-v1a1/mono.m3u8',
-    name: 'RADIO LAS NIEVES'
-  },
-  GENIAL: {
-    slug: 'GENIAL',
-    titleHtml: 'RADIO GENIAL',
-    iframeSrc: '/Monitores/SeñalRADIO_GENIAL.html',
-    name: 'RADIO GENIAL'
+    name: '📻 Radio Las Nieves'
   },
   CANAL_SUR_PATAGONIA: {
     slug: 'CANAL_SUR_PATAGONIA',
-    titleHtml: 'CANAL SUR PATAGONIA',
+    titleHtml: '📻 Radio Canal Sur Patagonia',
     m3u8Url:
-      'https://v2.tustreaming.cl:19360/canalsurpatagoniatv/canalsurpatagoniatv.m3u8',
-    name: 'RADIO CANAL SUR PATAGONIA'
+      'https://v2.tustreaming.cl:19360/canalsurpatagoniatv/canalsurpatagoniatv.m3u8'
   },
   MILENARIA: {
     slug: 'MILENARIA',
-    titleHtml: 'RADIO MILENARIA',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalRADIO_MILENARIA.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤRADIO MILENARIAㅤ</div></div></div>'
+    titleHtml: '📻 Radio Milenaria',
+    m3u8Url:
+      'https://hd.chileservidores.cl:1936/chiloefive/chiloefive/chunklist_w1377199760.m3u8'
   }
 };

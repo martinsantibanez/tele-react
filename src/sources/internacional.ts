@@ -264,7 +264,7 @@ const hondurasSources: SourcesMap = {
     slug: "hch-vivo",
     name: "HCH En Vivo",
     youtubeChannelId: "UCIs6fmAXOI1K2jgkoBdWveg",
-    flag: "ho",
+    flag: "hn",
   },
 };
 const espanaSources: SourcesMap = {

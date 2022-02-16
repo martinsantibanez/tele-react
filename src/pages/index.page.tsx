@@ -1,18 +1,19 @@
-import type { NextPage } from "next";
-import Head from "next/head";
-import Link from "next/link";
-import { useState } from "react";
-import { useFeaturedSource } from "../hooks/useFeaturedSource";
-import styles from "../styles/Home.module.css";
-import { useSavedGrid } from "./grid/index.page";
-import { useSavedLayout } from "./layout/index.page";
-import { useSavedSelectedItem } from "./list/index.page";
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useFeaturedSource } from '../hooks/useFeaturedSource';
+import styles from '../styles/Home.module.css';
+import { useSavedGrid } from './grid/index.page';
+import { useSavedLayout } from './layout/index.page';
+import { useSavedSelectedItem } from './list/index.page';
 
 function HomeElement({
   description,
   title,
   href,
   openInNewTab,
+  onClick
 }: {
   title: string;
   description?: string;
@@ -23,8 +24,8 @@ function HomeElement({
     <div className="row mt-5 text-center">
       <Link href={href} passHref>
         <a
-          className="col-6 offset-3 text-white border border-white pt-2"
-          target={openInNewTab ? "_blank" : ""}
+          className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
+          target={openInNewTab ? '_blank' : ''}
         >
           <h3>{title}</h3>
           {description && <p>{description}</p>}
@@ -86,9 +87,9 @@ const Home: NextPage = () => {
           <div className="row mt-5 text-center">
             <button
               onClick={handleClearLocalStorage}
-              className="btn btn-outline-light col-6 offset-3"
+              className="btn btn-outline-light col-12 col-md-4 offset-md-4"
             >
-              {clearedState ? "✅ Borrado" : "Borrar datos locales"}
+              {clearedState ? '✅ Borrado' : 'Borrar datos locales'}
             </button>
           </div>
         </div>

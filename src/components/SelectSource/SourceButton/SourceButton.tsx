@@ -1,7 +1,7 @@
-import React from "react";
-import { Source } from "../../../sources";
-import classnames from "classnames/bind";
-import styles from "./SourceButton.module.scss";
+import React from 'react';
+import { Source } from '../../../sources';
+import classnames from 'classnames/bind';
+import styles from './SourceButton.module.scss';
 const cx = classnames.bind(styles);
 
 type Props = {
@@ -14,14 +14,16 @@ export function SourceButton({ source, onSelect, isSelected }: Props) {
     <button
       title={source.slug}
       key={source.slug}
-      className={cx("btn", "source-button", { selected: isSelected })}
+      className={cx('btn', 'source-button', { selected: isSelected })}
       onClick={() => onSelect && onSelect(source)}
     >
       {source.titleIcons?.length && (
-        <span className={cx("icons", "mr-1")}>{source.titleIcons}</span>
+        <span className={cx('icons')}>
+          {source.titleIcons.map(titleIcon => titleIcon)}
+        </span>
       )}
       {source.flag && (
-        <span className={cx("icons", "mr-1")}>
+        <span className={cx('icons')}>
           <img src={`https://flagcdn.com/${source.flag}.svg`}></img>
         </span>
       )}
@@ -30,7 +32,7 @@ export function SourceButton({ source, onSelect, isSelected }: Props) {
       ) : (
         <span
           dangerouslySetInnerHTML={{
-            __html: source.titleHtml || "",
+            __html: source.titleHtml || ''
           }}
         ></span>
       )}

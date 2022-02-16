@@ -22,14 +22,12 @@ export const especialesSources: SourcesMap = {
     slug: 'MEDIABANCO_IFRAME',
     titleIcons: [AntennaIcon],
     titleHtml: 'MEDIABANCO LIMPIA [iframe]',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalMEDIABANCO_IFRAME.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤMEDIABANCOㅤ</div></div></div>'
+    iframeSrc: 'https://rudo.video/live/mediabanco'
   },
   MEDIABANCO2_IFRAME: {
     slug: 'MEDIABANCO2_IFRAME',
     titleIcons: [AntennaIcon],
     titleHtml: 'MEDIABANCO [iframe]',
-    codeHtml:
-      '<div class="embed-responsive embed-responsive-16by9"> <iframe class="embed-responsive-item" src="/Monitores/SeñalMEDIABANCO_IFRAME_2.html" frameborder="0"></iframe><div class="CAJATituloDePantallaPequeña2"><div class="TextoTitulosMonitor1">ㅤMEDIABANCOㅤ</div></div></div>'
+    iframeSrc: 'https://rudo.video/live/mediabanco2'
   }
 };

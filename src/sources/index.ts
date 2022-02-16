@@ -7,7 +7,7 @@ import { espacioSources } from './espacio';
 import { especialesSources } from './especiales';
 import { internacionalSources } from './internacional';
 import { musicaSources } from './musica';
-import { otrasSources, placeHolderSources } from './otras';
+import { placeHolderSources } from './placeholder';
 import { radiosSources } from './radios';
 import { regionesSources } from './regiones';
 import { relojesSources } from './relojes';
@@ -60,12 +60,12 @@ export const sourcesCategories: SourceGroup[] = [
     sources: tvNacionalSources
   },
   {
-    name: 'Regiones',
-    sources: regionesSources
-  },
-  {
     name: 'TV Nacional YouTube',
     sources: tvNacionalYoutubeSources
+  },
+  {
+    name: 'Regiones',
+    sources: regionesSources
   },
   {
     name: 'Radios',
@@ -90,10 +90,6 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: 'TV Internacional',
     sources: internacionalSources
-  },
-  {
-    name: 'Sin Categoria',
-    sources: otrasSources
   },
   {
     name: 'Espacio',
