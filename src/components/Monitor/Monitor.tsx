@@ -1,11 +1,11 @@
-import classnames from "classnames/bind";
-import React, { useMemo } from "react";
-import { useTeleContext } from "../../context/TeleContext";
-import { useFeaturedSource } from "../../hooks/useFeaturedSource";
-import { useCustomSources } from "../../pages/grid/index.page";
-import { getSource } from "../../sources";
-import styles from "./Monitor.module.scss";
-import { SourceOutput } from "./SourceOutput";
+import classnames from 'classnames/bind';
+import React, { useMemo } from 'react';
+import { useTeleContext } from '../../context/TeleContext';
+import { useFeaturedSource } from '../../hooks/useFeaturedSource';
+import { useCustomSources } from '../../pages/grid/index.page';
+import { getSource } from '../../sources';
+import styles from './Monitor.module.scss';
+import { SourceOutput } from './SourceOutput';
 const cx = classnames.bind(styles);
 
 type Props = {
@@ -21,8 +21,8 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   const [customSources] = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
-      if (sourceSlug.startsWith("custom_")) {
-        return customSources?.find((src) => src.slug === sourceSlug);
+      if (sourceSlug.startsWith('custom_')) {
+        return customSources?.find(src => src.slug === sourceSlug);
       } else {
         return getSource(sourceSlug);
       }
@@ -40,26 +40,26 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
 
   return (
     <div className={`stream col-${size}`}>
-      <div>
-        <div>{!!source && <SourceOutput source={source} />}</div>
+      <div className="w-100 h-100">
+        {!!source && <SourceOutput source={source} />}
         {isEditing && (
-          <div className={cx("actions-container")}>
+          <div className={cx('actions-container')}>
             {onChangeClick && (
               <>
                 <div
-                  className={cx("action-button")}
+                  className={cx('action-button')}
                   onClick={handleChangeClick}
                 >
                   CAMBIAR
                 </div>
-                <div className={cx("action-button")} onClick={handlePromote}>
+                <div className={cx('action-button')} onClick={handlePromote}>
                   DESTACAR
                 </div>
               </>
             )}
             {onRemove && (
               <div
-                className={cx("action-button", "color-red")}
+                className={cx('action-button', 'color-red')}
                 onClick={onRemove}
               >
                 QUITAR
