@@ -24,7 +24,10 @@ export function SourceButton({ source, onSelect, isSelected }: Props) {
       )}
       {source.flag && (
         <span className={cx('icons')}>
-          <img src={`https://flagcdn.com/${source.flag}.svg`}></img>
+          <img
+            alt={source.flag}
+            src={`https://flagcdn.com/${source.flag}.svg`}
+          ></img>
         </span>
       )}
       {source.name ? (

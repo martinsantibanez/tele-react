@@ -12,8 +12,7 @@ function HomeElement({
   description,
   title,
   href,
-  openInNewTab,
-  onClick
+  openInNewTab
 }: {
   title: string;
   description?: string;
