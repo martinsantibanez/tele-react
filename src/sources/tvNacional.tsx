@@ -179,16 +179,17 @@ export const tvNacionalSources: SourcesMap = {
   //   iframeSrc: '/Source/CANAL13_EMBED.html'
   //   // name: 'CANAL 13'
   // },
-  TVN_M3: {
-    slug: 'TVN_M3',
-    titleIcons: [<img src="imagenes/Logo_TVN.svg" key="logo" />],
-    m3u8Url:
-      'https://mdstrm.com/live-stream-playlist/5346f657c1e6f5810b5b9df3.m3u8?PlaylistM3UCL'
-  },
   TVN_WEB_IFRAME: {
     slug: 'TVN_WEB_IFRAME',
     titleIcons: [<img src="imagenes/Logo_TVN.svg" key="logo" />],
     iframeSrc: '/Source/TVN_EMBED.html'
+  },
+  TVN_M3: {
+    slug: 'TVN_M3',
+    titleIcons: [<img src="imagenes/Logo_TVN.svg" key="logo" />],
+    name: '2',
+    m3u8Url:
+      'https://mdstrm.com/live-stream-playlist/5346f657c1e6f5810b5b9df3.m3u8?PlaylistM3UCL'
   },
   TVMAS: {
     slug: 'TVMAS',
