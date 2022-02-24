@@ -67,7 +67,7 @@ const GridPage: NextPage = () => {
   };
 
   const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
-  const displaySourcePicker = true;
+  const displaySourcePicker = isEditing;
   const selectedSourceSlug =
     selectedSources &&
     editingSourceIdx !== undefined &&
