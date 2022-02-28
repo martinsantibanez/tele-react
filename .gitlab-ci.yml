@@ -19,8 +19,7 @@ Build-prod-front:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY_IMAGE
     - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml build
     - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml push
-  only:
-    - main
+  when: manual
 
 Deploy-prod-front:
   stage: deploy
@@ -41,5 +40,4 @@ Deploy-prod-front:
     - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" pull
     - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" up -d
     - docker-compose -p $DOCKER_IMG_TAG -f ./docker-compose.prod.yml -H "ssh://$SERVER_USER_PROD@$SERVER_IP_PROD" logs
-  only:
-    - main
+  when: manual
