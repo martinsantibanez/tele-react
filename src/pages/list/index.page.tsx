@@ -1,15 +1,15 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
-import { createLocalStorageStateHook } from 'use-local-storage-state';
+import useLocalStorageState from 'use-local-storage-state';
 import { Monitor } from '../../components/Monitor/Monitor';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
 import { MainLayout } from '../../layout/MainLayout';
 import { Source } from '../../sources';
 
-export const useSavedSelectedItem = createLocalStorageStateHook<
-  string | undefined
->('__tele_selected__');
+export function useSavedSelectedItem() {
+  return useLocalStorageState<string | undefined>('__tele_selected__');
+}
 
 const ListPage: NextPage = () => {
   const [sourceSlug, setSourceSlug] = useState<string>();

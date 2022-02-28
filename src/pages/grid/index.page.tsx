@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { ChangeEventHandler, CSSProperties, useEffect, useState } from 'react';
-import { createLocalStorageStateHook } from 'use-local-storage-state';
+import { ChangeEventHandler, useEffect, useState } from 'react';
+import useLocalStorageState from 'use-local-storage-state';
 import { Monitor } from '../../components/Monitor/Monitor';
 import { ScreenOptions } from '../../components/ScreenOptions/ScreenOptions';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
@@ -12,13 +12,19 @@ import { uuid } from '../../utils/uuid';
 import { SourceNode } from '../layout/types';
 import { initialGrid } from './initialGrid';
 
-export const useSavedGrid =
-  createLocalStorageStateHook<SourceNode[]>('__tele_grid__');
+export function useSavedGrid() {
+  return useLocalStorageState<SourceNode[]>('__tele_grid__', {
+    defaultValue: initialGrid,
+    ssr: true
+  });
+}
 
-export const useCustomSources = createLocalStorageStateHook<Source[]>(
-  '__tele_custom_source__',
-  []
-);
+export function useCustomSources() {
+  return useLocalStorageState<Source[]>('__tele_custom_source__', {
+    defaultValue: [],
+    ssr: true
+  });
+}
 
 const GridPage: NextPage = () => {
   const [size, setSize] = useState(6);
@@ -29,10 +35,6 @@ const GridPage: NextPage = () => {
 
   const [selectedSources, setSelectedSources] = useSavedGrid();
 
-  useEffect(() => {
-    if (!selectedSources) setSelectedSources(initialGrid);
-  }, [selectedSources, setSelectedSources]);
-
   const [changingIdx, setChangingIdx] = useState<number>();
 
   const handleSourceChange = (
@@ -41,7 +43,7 @@ const GridPage: NextPage = () => {
   ) => {
     if (idxToChange === undefined) return;
     setSelectedSources(sources => {
-      if (!sources) return;
+      if (!sources) return sources;
       return sources.map((src, idx) => {
         if (idxToChange === idx) return { ...src, sourceSlug: source.slug };
         else return src;
@@ -61,7 +63,7 @@ const GridPage: NextPage = () => {
 
   const handleSourceRemove = (idx: number) => {
     setSelectedSources(sources => {
-      if (!sources) return;
+      if (!sources) return sources;
       return sources.filter((src, index) => index !== idx);
     });
   };

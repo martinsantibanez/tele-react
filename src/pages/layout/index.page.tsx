@@ -1,17 +1,15 @@
-import type { NextPage } from "next";
-import Head from "next/head";
-import { clone } from "ramda";
-import { useEffect } from "react";
-import { createLocalStorageStateHook } from "use-local-storage-state";
-import { Monitor } from "../../components/Monitor/Monitor";
-import { MainLayout } from "../../layout/MainLayout";
-import { useSavedGrid } from "../grid/index.page";
-import { initialLayout } from "./initialLayout";
-import { Col, Layout, Row, SourceNode } from "./types";
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import { clone } from 'ramda';
+import useLocalStorageState from 'use-local-storage-state';
+import { Monitor } from '../../components/Monitor/Monitor';
+import { MainLayout } from '../../layout/MainLayout';
+import { initialLayout } from './initialLayout';
+import { Col, Layout, Row, SourceNode } from './types';
 
 function Col({
   col,
-  onSourceChange,
+  onSourceChange
 }: {
   col: Col;
   onSourceChange: (node: SourceNode) => void;
@@ -42,7 +40,7 @@ function Col({
 
 function Row({
   row,
-  onSourceChange,
+  onSourceChange
 }: {
   row: Row;
   onSourceChange: (node: SourceNode) => void;
@@ -57,18 +55,17 @@ function Row({
   );
 }
 
-export const useSavedLayout = createLocalStorageStateHook<Layout | undefined>(
-  "__tele_layout__"
-);
+export function useSavedLayout() {
+  return useLocalStorageState<Layout | undefined>('__tele_layout__', {
+    ssr: true,
+    defaultValue: initialLayout
+  });
+}
 
 const LayoutPage: NextPage = () => {
-  const [selectedSources, setSelectedSources] = useSavedGrid();
   const [layout, setLayout] = useSavedLayout();
-  useEffect(() => {
-    if (!layout) setLayout(initialLayout);
-  });
   const handleSelectSource = (node: SourceNode) => {
-    setLayout((l) => {
+    setLayout(l => {
       const layoutClone = clone(l);
       if (!layoutClone) return layoutClone;
 
