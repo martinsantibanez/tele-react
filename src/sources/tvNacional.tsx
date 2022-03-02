@@ -3,7 +3,6 @@ import { SourcesMap } from '.';
 export const tvNacionalYoutubeSources: SourcesMap = {
   '24HTVN_YT': {
     slug: '24HTVN_YT',
-    // name: 'Canal 24 horas',
     titleIcons: [
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_24HORAS.svg" key="logo" />
@@ -68,7 +67,7 @@ export const tvNacionalYoutubeSources: SourcesMap = {
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_CHV.svg" key="logo" />
     ],
-    youtubeChannelId: 'UC8EdTmyUaFIfZvVttJ9lgIA',
+    youtubeChannelId: 'UC8EdTmyUaFIfZvVttJ9lgIA'
   },
   MEGA_YT: {
     slug: 'MEGA_YT',
@@ -151,9 +150,7 @@ export const tvNacionalSources: SourcesMap = {
   },
   CNN_CHILE_FACEBOOK: {
     slug: 'CNN_CHILE_FACEBOOK',
-    titleIcons: [<img src="imagenes/Logo_CNNCHILE2.svg" key="logo" />],
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_CNNCHILE2.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_CNNCHILE2.svg" />],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fcnnchile%2Flive%2F&show_text=0&mute=0',
     name: 'FB'
@@ -225,54 +222,56 @@ export const tvNacionalSources: SourcesMap = {
   },
   MEGANOTICIAS_FACEBOOK: {
     slug: 'MEGANOTICIAS_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGANOTICIAS.svg"></img>',
+    titleIcons: [
+      <img
+        key="logo"
+        alt="meganoticias"
+        src="imagenes/Logo_MEGANOTICIAS.svg"
+      ></img>
+    ],
+    name: 'FB',
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fmeganoticiascl%2Flive%2F&show_text=0&mute=0"'
   },
   T13_FACEBOOK: {
     slug: 'T13_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_T13.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_T13.svg"></img>],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fteletrece%2Flive%2F&show_text=0&mute=0',
-    name: 'T13 MOVIL'
+    name: 'FB'
   },
   TVN_FACEBOOK: {
     slug: 'TVN_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_TVN.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_TVN.svg"></img>],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Ftvn.cl%2Flive%2F&show_text=0&mute=0',
-    name: 'TVN'
+    name: 'FB'
   },
   MEGA_FACEBOOK: {
     slug: 'MEGA_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_MEGA.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_MEGA.svg"></img>],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FMEGACL%2Flive%2F&show_text=0&mute=0',
-    name: 'MEGA'
+    name: 'FB'
   },
   CHV_FACEBOOK: {
     slug: 'CHV_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_CHV.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_CHV.svg"></img>],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fchilevision%2Flive%2F&show_text=0&mute=0',
     name: 'CHV'
   },
   'CANAL 13_FACEBOOK': {
     slug: 'CANAL 13_FACEBOOK',
-    titleHtml:
-      '<img style="height: 20px; width:auto:" src="imagenes/Icono_Facebook.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Icono_TV_News.svg"></img>ﾠ<img style="height: 20px; width:auto:" src="imagenes/Logo_Canal13.svg"></img>',
+    titleIcons: [<img key="logo" src="imagenes/Logo_Canal13.svg"></img>],
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Felcanal13%2Flive%2F&show_text=0&mute=0',
-    name: 'CANAL 13'
+    name: 'FB'
   },
   Señal_Interna_24HTVN_5: {
     slug: 'Señal_Interna_24HTVN_5',
     titleIcons: [<img src="imagenes/Logo_24HTVN.svg" key="logo" />],
+    name: 'ALT',
     m3u8Url:
       'https://mdstrm.com/live-stream-playlist-v/5653641561b4eba30a7e4929.m3u8'
   }
