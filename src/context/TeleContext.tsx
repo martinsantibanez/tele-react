@@ -1,15 +1,20 @@
-import React, { PropsWithChildren, useEffect, useState } from "react";
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 function useValue() {
   const [isEditing, setIsEditing] = useState(false);
-  const toggleEditting = () => setIsEditing((e) => !e);
+  const toggleEditting = () => setIsEditing(e => !e);
   const [editingSourceIdx, setEditingSourceIdx] = useState<
     number | undefined
+  >();
+
+  const [editingSourceUuid, setEditingSourceUuid] = useState<
+    string | undefined
   >();
 
   useEffect(() => {
     if (!isEditing) {
       setEditingSourceIdx(undefined);
+      setEditingSourceUuid(undefined);
     }
   }, [isEditing]);
   return {
@@ -17,6 +22,8 @@ function useValue() {
     toggleEditting,
     editingSourceIdx,
     setEditingSourceIdx,
+    editingSourceUuid,
+    setEditingSourceUuid
   };
 }
 
@@ -27,12 +34,12 @@ export const TeleCtx = React.createContext<TeleCtxType | undefined>(undefined);
 export const useTeleContext = () => {
   const context = React.useContext(TeleCtx);
   if (context === undefined)
-    throw new Error("useTele must be used within a TeleProvider");
+    throw new Error('useTele must be used within a TeleProvider');
   return context;
 };
 
 export function TeleProvider({
-  children,
+  children
 }: PropsWithChildren<Record<string, unknown>>) {
   const value = useValue();
   return <TeleCtx.Provider value={value}>{children}</TeleCtx.Provider>;
