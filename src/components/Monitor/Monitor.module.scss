@@ -46,4 +46,14 @@
 .stream {
   max-height: 100vh;
   overflow-y: scroll;
+  &:before {
+    padding-bottom: 56%;
+    content: '';
+    float: left;
+  }
+  &:after {
+    display: table;
+    content: '';
+    clear: both;
+  }
 }

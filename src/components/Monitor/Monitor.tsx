@@ -39,7 +39,7 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   };
 
   return (
-    <div className={`stream col-${size}`}>
+    <div className={cx(`stream`) + ` col-${size}`}>
       <div className="w-100 h-100">
         {!!source && <SourceOutput source={source} />}
         {isEditing && (
