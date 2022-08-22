@@ -45,7 +45,7 @@
 
 .stream {
   max-height: 100vh;
-  overflow-y: scroll;
+  overflow: hidden;
   &:before {
     padding-bottom: 56%;
     content: '';
