@@ -1,68 +1,13 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { clone } from 'ramda';
-import useLocalStorageState from 'use-local-storage-state';
-import { Monitor } from '../../components/Monitor/Monitor';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
 import { useTeleContext } from '../../context/TeleContext';
+import { useSavedLayout } from '../../hooks/useSavedLayout';
 import { MainLayout } from '../../layout/MainLayout';
 import { Source } from '../../sources';
-import { initialLayout } from './initialLayout';
-import { Col, Layout, Row, SourceNode } from './types';
-
-function Col({
-  col,
-  onSourceChange
-}: {
-  col: Col;
-  onSourceChange: (node: SourceNode) => void;
-}) {
-  const { rows, node } = col;
-  const size = col.size || 12;
-  const { setEditingSourceUuid } = useTeleContext();
-
-  if (node?.sourceSlug) {
-    return (
-      <Monitor
-        size={size}
-        sourceSlug={node?.sourceSlug}
-        onChangeClick={() => setEditingSourceUuid(node.uuid)}
-      />
-    );
-  }
-
-  return (
-    <div className={`col-${size}`}>
-      {rows?.map((row, i) => (
-        <Row key={i} row={row} onSourceChange={onSourceChange} />
-      ))}
-    </div>
-  );
-}
-
-function Row({
-  row,
-  onSourceChange
-}: {
-  row: Row;
-  onSourceChange: (node: SourceNode) => void;
-}) {
-  const { cols } = row;
-  return (
-    <div className="row no-gutters">
-      {cols?.map((col, i) => (
-        <Col col={col} key={i} onSourceChange={onSourceChange} />
-      ))}
-    </div>
-  );
-}
-
-export function useSavedLayout() {
-  return useLocalStorageState<Layout | undefined>('__tele_layout__', {
-    ssr: true,
-    defaultValue: initialLayout
-  });
-}
+import { Layout } from './Layout';
+import { ColType, RowType, SourceNode } from './types';
 
 const LayoutPage: NextPage = () => {
   const { isEditing, editingSourceUuid } = useTeleContext();
@@ -78,14 +23,14 @@ const LayoutPage: NextPage = () => {
       const layoutClone = clone(l);
       if (!layoutClone) return layoutClone;
 
-      const findInRow = (row: Row) => {
+      const findInRow = (row: RowType) => {
         if (row.cols) {
           for (const col of row.cols) {
             findInCol(col);
           }
         }
       };
-      const findInCol = (col: Col) => {
+      const findInCol = (col: ColType) => {
         if (col.node?.uuid === node.uuid) {
           col.node = node;
           return;
@@ -112,7 +57,9 @@ const LayoutPage: NextPage = () => {
       <div className="row">
         <div className={isEditing ? 'col-8' : 'col-12'}>
           <div className="row no-gutters row-canales">
-            {layout && <Col col={layout} onSourceChange={handleSelectSource} />}
+            {layout && (
+              <Layout layout={layout} onSourceChange={handleSelectSource} />
+            )}
           </div>
         </div>
         {isEditing && (

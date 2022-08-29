@@ -3,9 +3,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useFeaturedSource } from '../hooks/useFeaturedSource';
+import { useSavedLayout } from '../hooks/useSavedLayout';
 import styles from '../styles/Home.module.css';
 import { useSavedGrid } from './grid/index.page';
-import { useSavedLayout } from './layout/index.page';
 import { useSavedSelectedItem } from './list/index.page';
 
 function HomeElement({

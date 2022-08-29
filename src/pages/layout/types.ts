@@ -3,12 +3,12 @@ export type SourceNode = {
   uuid?: string;
 };
 
-export type Col = {
+export type ColType = {
   size?: number;
-  rows?: Row[];
+  rows?: RowType[];
   node?: SourceNode;
 };
 
-export type Row = { cols?: Col[] };
+export type RowType = { cols?: ColType[] };
 
-export type Layout = Col;
+export type LayoutType = ColType;

@@ -35,8 +35,6 @@ const GridPage: NextPage = () => {
 
   const [selectedSources, setSelectedSources] = useSavedGrid();
 
-  const [changingIdx, setChangingIdx] = useState<number>();
-
   const handleSourceChange = (
     source: Source,
     idxToChange: number | undefined

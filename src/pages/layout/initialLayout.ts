@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import { Layout } from "./types";
+import { LayoutType } from "./types";
 
-export const initialLayout: Layout = {
+export const initialLayout: LayoutType = {
   rows: [
     {
       cols: [

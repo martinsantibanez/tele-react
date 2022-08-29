@@ -26,7 +26,7 @@
     "react-twitch-embed-video": "^3.0.2",
     "react-twitter-widgets": "^1.10.0",
     "sass": "^1.49.9",
-    "use-local-storage-state": "^15.0.0",
+    "use-local-storage-state": "^17.2.0",
     "uuid": "^8.3.2",
     "video.js": "^7.17.0",
     "videojs-contrib-quality-levels": "^2.1.0",
