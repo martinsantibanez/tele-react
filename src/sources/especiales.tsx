@@ -1,5 +1,6 @@
 import { FaBroadcastTower } from 'react-icons/fa';
 import { SourcesMap } from '.';
+import { ZappingSource } from '../components/Monitor/ZappingSource/ZappingSource';
 
 const AntennaIcon = <FaBroadcastTower key="antenna" />;
 
@@ -29,5 +30,10 @@ export const especialesSources: SourcesMap = {
     titleIcons: [AntennaIcon],
     titleHtml: 'MEDIABANCO [iframe]',
     iframeSrc: 'https://rudo.video/live/mediabanco2'
+  },
+  zapping: {
+    slug: 'zapping',
+    titleHtml: 'Zapping',
+    component: <ZappingSource channelId={4} />
   }
 };
