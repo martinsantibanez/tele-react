@@ -1,33 +1,56 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+import { useZappingConfig } from '../../../hooks/useZappingConfig';
+import VideoPlayer from '../VideoJS';
 
 type Props = {
   channelId: number;
 };
+
+type SocketData = {
+  href: string;
+  id: number;
+  image: string;
+  name: string;
+};
+
+let socket: SocketIOClient.Socket;
+
 export function ZappingSource({ channelId }: Props) {
-  const src = 'https://app.zappingtv.com/player/';
-  const ref = useRef<HTMLIFrameElement>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const { zappingConfig } = useZappingConfig();
+
+  const [href, setHref] = useState<string>();
+
   useEffect(() => {
-    if (ref?.current?.contentWindow) {
-      const contentWindow: any = ref.current?.contentWindow;
-      console.log('contentWindow', contentWindow);
-      if (contentWindow?.playCanal) contentWindow?.playCanal(channelId);
-    }
-  }, [channelId]);
-  return (
-    <div className="w-100 h-100">
-      <div className="embed-responsive embed-responsive-16by9">
-        <iframe
-          ref={ref}
-          src={src}
-          className="embed-responsive-item embed-responsive-16by9"
-          frameBorder="0"
-        />
-        {/* {name && (
-          <div className="CAJATituloDePantallaPequeña2">
-            <div className="TextoTitulosMonitor1">{name}</div>
-          </div>
-        )} */}
-      </div>
-    </div>
-  );
+    if (!zappingConfig) return;
+    if (socket) socket.disconnect();
+    socket = io.connect(zappingConfig.endpoint, {
+      query: { token: zappingConfig.token }
+    });
+
+    socket.on('disconnect', function () {
+      setIsConnected(false);
+    });
+
+    socket.on('connect', function () {
+      console.log('connected');
+      setIsConnected(true);
+      const t = { media: channelId };
+      socket.emit('playCanal', t);
+    });
+
+    socket.on('data', function (data: SocketData) {
+      console.log('got data', data);
+      setHref(data.href);
+    });
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('data');
+    };
+  }, [channelId, zappingConfig]);
+
+  if (!href || !isConnected) return null;
+  return <VideoPlayer src={href} />;
 }

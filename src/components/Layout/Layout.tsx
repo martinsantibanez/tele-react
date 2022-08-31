@@ -1,5 +1,5 @@
-import { LayoutCol } from '../../components/Layout/LayoutCol/LayoutCol';
-import { LayoutType, SourceNode } from './types';
+import { LayoutCol } from './LayoutCol/LayoutCol';
+import { LayoutType, SourceNode } from '../../pages/layout/types';
 
 type Props = {
   layout: LayoutType;

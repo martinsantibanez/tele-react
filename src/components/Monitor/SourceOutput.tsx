@@ -1,8 +1,8 @@
-import React from "react";
-import { Source } from "../../sources";
-import { TwitchSource } from "../SourceType/TwitchSource";
-import { TwitterTimeline } from "./SourceOutput/TwitterTimeline";
-import VideoPlayer from "./VideoJS";
+import { Source } from '../../sources';
+import { TwitchSource } from '../SourceType/TwitchSource';
+import { TwitterTimeline } from './SourceOutput/TwitterTimeline';
+import VideoPlayer from './VideoJS';
+import { ZappingSource } from './ZappingSource/ZappingSource';
 
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
@@ -34,14 +34,14 @@ export function SourceOutput({ source }: Props) {
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: source.codeHtml,
+          __html: source.codeHtml
         }}
       />
     );
   } else if (source.component) {
     const Component = source.component;
-    return Component;
-  } else if (source.m3u8Url && typeof window !== "undefined") {
+    return <Component />;
+  } else if (source.m3u8Url && typeof window !== 'undefined') {
     // return <VideoM3u8Source src={source.m3u8Url} />;
     return <VideoPlayer src={source.m3u8Url} />;
   } else if (source.youtubeChannelId) {
@@ -62,6 +62,8 @@ export function SourceOutput({ source }: Props) {
     return <TwitterTimeline account={source.twitterAcount} />;
   } else if (source.twitchAccount) {
     return <TwitchSource channel={source.twitchAccount} />;
+  } else if (source.zappingChannel) {
+    return <ZappingSource channelId={source.zappingChannel} />;
   }
 
   return null;

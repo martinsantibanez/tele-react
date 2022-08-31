@@ -1,58 +1,32 @@
-import React, { useState } from 'react';
 import { Accordion } from 'react-bootstrap';
-import { BsTwitch } from 'react-icons/bs';
-import { useCustomSources } from '../../pages/grid/index.page';
 import { Source, sourcesCategories } from '../../sources';
 import { SourceButton } from './SourceButton/SourceButton';
+import { TwitchSelector } from './TwitchSelector/TwitchSelector';
+import { ZappingSelector } from './ZappingSelector/ZappingSelector';
 
 type Props = {
-  selectedSourceSlug?: string;
-  onSelect?: (source: Source) => void;
+  selectedSourceSlug: string | undefined;
+  onSelect: (source: Source) => void;
 };
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
-  const [customTwitchValue, setCustomTwitchValue] = useState<string>('');
-  const [customSources, setCustomSources] = useCustomSources();
-  const handleCreateSource = () => {
-    const newSource: Source = {
-      slug: `custom_${customTwitchValue}`,
-      titleHtml: customTwitchValue,
-      twitchAccount: customTwitchValue
-    };
-    setCustomSources(v => [...(v || []), newSource]);
-  };
   return (
     <Accordion
       defaultActiveKey="0"
       className="w-100"
       style={{ maxHeight: '90vh', overflowY: 'scroll' }}
     >
-      <Accordion.Item eventKey={`0`}>
-        <Accordion.Header>Twitch</Accordion.Header>
-        <Accordion.Body>
-          {customSources?.map(source => (
-            <SourceButton
-              onSelect={onSelect}
-              source={{ ...source, titleIcons: [<BsTwitch key="twitch" />] }}
-              isSelected={source.slug === selectedSourceSlug}
-              key={source.slug}
-            />
-          ))}
-          <div className="mb-2">
-            <BsTwitch size={24} className="mr-1" />
-            <input
-              type="text"
-              value={customTwitchValue}
-              placeholder="Canal de Twitch"
-              onChange={e => setCustomTwitchValue(e.target.value)}
-            />
-          </div>
-          <button onClick={handleCreateSource} className="btn btn-primary">
-            Agregar
-          </button>
-        </Accordion.Body>
-      </Accordion.Item>
+      <TwitchSelector
+        accordionEventKey="0"
+        onSourceSelect={onSelect}
+        selectedSourceSlug={selectedSourceSlug}
+      />
+      <ZappingSelector
+        accordionEventKey="1"
+        onSourceSelect={onSelect}
+        selectedSourceSlug={selectedSourceSlug}
+      />
       {sourcesCategories.map((sourceCategory, idx) => (
-        <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
+        <Accordion.Item eventKey={`${idx + 2}`} key={sourceCategory.name}>
           <Accordion.Header>{sourceCategory.name}</Accordion.Header>
           <Accordion.Body>
             {Object.values(sourceCategory.sources).map(source => (

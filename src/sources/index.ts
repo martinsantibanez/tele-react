@@ -24,12 +24,13 @@ export interface SourceInput {
   codeHtml?: string;
   iframeSrc?: string;
   m3u8Url?: string;
-  component?: React.ReactElement;
+  component?: () => React.ReactElement;
   youtubeChannelId?: string;
   youtubeVideoId?: string;
   youtubeChatVideoId?: string;
   twitterAcount?: string;
   twitchAccount?: string;
+  zappingChannel?: number;
 }
 
 export interface Source extends SourceInput {

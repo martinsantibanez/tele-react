@@ -1,8 +1,8 @@
 import classnames from 'classnames/bind';
 import React, { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
+import { useCustomSources } from '../../hooks/useCustomSources';
 import { useFeaturedSource } from '../../hooks/useFeaturedSource';
-import { useCustomSources } from '../../pages/grid/index.page';
 import { getSource } from '../../sources';
 import styles from './Monitor.module.scss';
 import { SourceOutput } from './SourceOutput';
@@ -18,7 +18,7 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   const { isEditing } = useTeleContext();
 
   const [, setFeaturedSource] = useFeaturedSource();
-  const [customSources] = useCustomSources();
+  const { customSources } = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
       if (sourceSlug.startsWith('custom_')) {

@@ -30,10 +30,5 @@ export const especialesSources: SourcesMap = {
     titleIcons: [AntennaIcon],
     titleHtml: 'MEDIABANCO [iframe]',
     iframeSrc: 'https://rudo.video/live/mediabanco2'
-  },
-  zapping: {
-    slug: 'zapping',
-    titleHtml: 'Zapping',
-    component: <ZappingSource channelId={4} />
   }
 };

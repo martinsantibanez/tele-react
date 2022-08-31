@@ -19,12 +19,6 @@ export function useSavedGrid() {
   });
 }
 
-export function useCustomSources() {
-  return useLocalStorageState<Source[]>('__tele_custom_source__', {
-    defaultValue: [],
-    ssr: true
-  });
-}
 
 const GridPage: NextPage = () => {
   const [size, setSize] = useState(6);

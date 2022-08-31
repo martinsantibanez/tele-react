@@ -1,5 +1,5 @@
-import { SourcesMap } from '.';
 import { BsFullscreen, BsPaintBucket } from 'react-icons/bs';
+import { SourcesMap } from '.';
 
 export const placeHolderSources: SourcesMap = {
   Vacio: {
@@ -12,7 +12,7 @@ export const placeHolderSources: SourcesMap = {
     slug: 'Barras',
     titleIcons: [<BsPaintBucket key="screen" />],
     name: 'Barras',
-    component: (
+    component: () => (
       <img
         className="embed-responsive-item w-100 h-100"
         src="/imagenes/SinSenal.png"

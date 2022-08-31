@@ -6,7 +6,7 @@ import { useTeleContext } from '../../context/TeleContext';
 import { useSavedLayout } from '../../hooks/useSavedLayout';
 import { MainLayout } from '../../layout/MainLayout';
 import { Source } from '../../sources';
-import { Layout } from './Layout';
+import { Layout } from '../../components/Layout/Layout';
 import { ColType, RowType, SourceNode } from './types';
 
 const LayoutPage: NextPage = () => {
@@ -64,7 +64,10 @@ const LayoutPage: NextPage = () => {
         </div>
         {isEditing && (
           <div className="col-4 pr-4">
-            <SourceAccordionList onSelect={handleSourceChange} />
+            <SourceAccordionList
+              onSelect={handleSourceChange}
+              selectedSourceSlug={editingSourceUuid}
+            />
           </div>
         )}
       </div>
