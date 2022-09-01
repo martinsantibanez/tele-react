@@ -6,13 +6,11 @@ export type ZappingConfig = {
 };
 
 export function useZappingConfig() {
-  const [zappingConfig, setZappingConfig] = useLocalStorageState<ZappingConfig>(
-    '__tele_zapping_config__',
-    {
+  const [zappingConfig, setZappingConfig, zappingConfigMeta] =
+    useLocalStorageState<ZappingConfig>('__tele_zapping_config__', {
       defaultValue: undefined,
       ssr: true
-    }
-  );
+    });
 
-  return { zappingConfig, setZappingConfig };
+  return { zappingConfig, setZappingConfig, zappingConfigMeta };
 }

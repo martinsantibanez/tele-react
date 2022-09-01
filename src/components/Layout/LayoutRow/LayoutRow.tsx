@@ -1,18 +1,16 @@
-import { RowType, SourceNode } from '../../../pages/layout/types';
+import { LayoutType, RowType, SourceNode } from '../../../pages/monitor/types';
 import { LayoutCol } from '../LayoutCol/LayoutCol';
 
-export function LayoutRow({
-  row,
-  onSourceChange
-}: {
+type Props = {
   row: RowType;
-  onSourceChange: (node: SourceNode) => void;
-}) {
+};
+
+export function LayoutRow({ row }: Props) {
   const { cols } = row;
   return (
     <div className="row no-gutters">
       {cols?.map((col, i) => (
-        <LayoutCol col={col} key={i} onSourceChange={onSourceChange} />
+        <LayoutCol col={col} key={i} />
       ))}
     </div>
   );

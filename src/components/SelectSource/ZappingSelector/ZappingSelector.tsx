@@ -40,7 +40,6 @@ export function ZappingSelector({
       <Accordion.Body>
         {Object.values(canales)?.map(canal => {
           const source: Source = {
-            titleIcons: [<BsTwitch key="twitch" />],
             slug: `custom_zapping_${canal.zapping_id}`,
             zappingChannel: canal.zapping_id,
             titleHtml: canal.name
@@ -48,7 +47,7 @@ export function ZappingSelector({
 
           return (
             <SourceButton
-              onSelect={updateSelectedChannel}
+              onSelect={() => updateSelectedChannel(source)}
               source={source}
               isSelected={source.slug === selectedSourceSlug}
               key={source.slug}
@@ -69,7 +68,10 @@ export function ZappingSelector({
               placeholder="Token"
               onChange={e => setZappingToken(e.target.value)}
             />
-            <button onClick={handleConfigSubmit} className="btn btn-primary mt-2">
+            <button
+              onClick={handleConfigSubmit}
+              className="btn btn-primary mt-2"
+            >
               Configurar
             </button>
           </div>
@@ -85,11 +87,14 @@ export function ZappingSelector({
             </a>{' '}
             y ejecuta el resultado en la consola de esta ventana, luego
             refresca.
-            <textarea className="w-100" readOnly rows={2}>
-              {
+            <textarea
+              className="w-100"
+              readOnly
+              rows={2}
+              defaultValue={
                 "console.log(`localStorage.setItem('__tele_zapping_config__', JSON.stringify({endpoint: '${su}', token: '${t}'}))`)"
               }
-            </textarea>
+            />
           </div>
         </div>
       </Accordion.Body>

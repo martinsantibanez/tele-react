@@ -1,23 +1,30 @@
-import Link from "next/link";
-import React, { ChangeEventHandler, CSSProperties } from "react";
-import Fullscreen1 from "../../../public/ui_icons/PantallaCompleta_1.svg";
-import Fullscreen2 from "../../../public/ui_icons/PantallaCompleta_2.svg";
-import { ActionButton } from "../ActionButton/ActionButton";
+import { CSSProperties } from 'react';
+import { DisplayMode } from '../../pages/monitor/types';
+import { ActionButton } from '../ActionButton/ActionButton';
 
 const buttons: CSSProperties = {
-  position: "sticky",
-  bottom: "2em",
-  width: "100%",
-  height: "20px",
-  lineHeight: "20px",
-  textAlign: "center",
+  position: 'sticky',
+  bottom: '2em',
+  width: '100%',
+  height: '20px',
+  lineHeight: '20px',
+  textAlign: 'center'
 };
 
 type Props = {
-  onSizeChange?: ChangeEventHandler<HTMLSelectElement>;
+  onSizeChange: (size: number) => void;
   onSourceAdd?: () => void;
+  onModeChange?: (selectedMode: DisplayMode) => void;
+  mode: DisplayMode;
+  size: number;
 };
-export function ScreenOptions({ onSizeChange, onSourceAdd }: Props) {
+export function ScreenOptions({
+  onSizeChange,
+  onSourceAdd,
+  onModeChange,
+  mode,
+  size
+}: Props) {
   const launchFullScreen = () => {
     const element: any = document.documentElement;
     if (element.requestFullScreen) {
@@ -44,42 +51,38 @@ export function ScreenOptions({ onSizeChange, onSourceAdd }: Props) {
   };
   return (
     <div className="Botones" style={buttons}>
+      {mode === DisplayMode.Grid && (
+        <div className="SeleccionarStreamsPorFila waves-effect waves-light">
+          <select
+            title="Streams por fila"
+            className="StreamsPorFila"
+            onChange={event => onSizeChange(+event.target.value)}
+            value={size + ''}
+          >
+            <option value="12">1 por fila</option>
+            <option value="6">2 por fila</option>
+            <option value="4">3 por fila</option>
+          </select>
+        </div>
+      )}
+
       <div className="SeleccionarStreamsPorFila waves-effect waves-light">
         <select
-          title="Streams por fila"
+          title="Modo"
           className="StreamsPorFila"
-          id="Stream_por_fila"
-          onChange={onSizeChange}
+          onChange={event =>
+            onModeChange && onModeChange(event.target.value as DisplayMode)
+          }
+          value={mode}
         >
-          <option value="6">Por fila</option>
-          <option value="12">1 por fila</option>
-          <option value="6">2 por fila</option>
-          <option value="4">3 por fila</option>
+          <option value="Layout">Layout</option>
+          <option value="Grid">Grid</option>
         </select>
       </div>
 
-      <a onClick={() => launchFullScreen()}>
-        <span
-          // type="button"
-          className="Boton_PantallaCompleta waves-effect waves-light"
-        >
-          <Fullscreen1 style={{ height: "15px", width: "auto" }} />
-        </span>
-      </a>
-      <Link href="/" passHref>
-        <ActionButton>ㅤIR A HOMEㅤ</ActionButton>
-      </Link>
-      <ActionButton onClick={onSourceAdd}>Agregar</ActionButton>
-
-      <a onClick={() => cancelFullScreen()}>
-        <span
-          // type="button"
-          className="Boton_PantallaCompleta waves-effect waves-light"
-        >
-          ﾠ
-          <Fullscreen2 style={{ height: "15px", width: "auto" }} />ﾠ
-        </span>
-      </a>
+      {onSourceAdd && (
+        <ActionButton onClick={onSourceAdd}>Agregar</ActionButton>
+      )}
     </div>
   );
 }

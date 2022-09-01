@@ -1,21 +1,26 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  pageExtensions: ["page.tsx"],
+  pageExtensions: ['page.tsx'],
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
-      use: ["@svgr/webpack"],
+      use: ['@svgr/webpack']
     });
     return config;
   },
   async redirects() {
     return [
       {
-        source: "/monitor",
-        destination: "/",
-        permanent: true,
+        source: '/layout',
+        destination: '/monitor',
+        permanent: true
       },
+      {
+        source: '/grid',
+        destination: '/monitor',
+        permanent: true
+      }
     ];
-  },
+  }
 };

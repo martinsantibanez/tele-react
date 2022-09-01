@@ -2,10 +2,12 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useCustomSources } from '../hooks/useCustomSources';
+import { useDisplayConfig } from '../hooks/useDisplayConfig';
 import { useFeaturedSource } from '../hooks/useFeaturedSource';
-import { useSavedLayout } from '../hooks/useSavedLayout';
+import { useSavedGrid } from '../hooks/useSavedGrid';
+import { useZappingConfig } from '../hooks/useZappingConfig';
 import styles from '../styles/Home.module.css';
-import { useSavedGrid } from './grid/index.page';
 import { useSavedSelectedItem } from './list/index.page';
 
 function HomeElement({
@@ -36,9 +38,11 @@ function HomeElement({
 
 const Home: NextPage = () => {
   const [, , gridStorage] = useSavedGrid();
-  const [, , layoutStorage] = useSavedLayout();
   const [, , featuredStorage] = useFeaturedSource();
   const [, , selectedItemStorage] = useSavedSelectedItem();
+  const { customSourcesMeta } = useCustomSources();
+  const [, , displayConfigStorage] = useDisplayConfig();
+  const { zappingConfigMeta } = useZappingConfig();
 
   const [clearedState, setClearedState] = useState(false);
   const handleClearLocalStorage = () => {
@@ -47,11 +51,12 @@ const Home: NextPage = () => {
       return;
     }
     gridStorage.removeItem();
-    layoutStorage.removeItem();
     selectedItemStorage.removeItem();
-
-    setClearedState(true);
     featuredStorage.removeItem();
+    customSourcesMeta.removeItem();
+    displayConfigStorage.removeItem();
+    zappingConfigMeta.removeItem();
+    setClearedState(true);
   };
 
   return (
@@ -65,13 +70,12 @@ const Home: NextPage = () => {
       <main>
         <div className="container text-center text-white pt-3">
           <h1>Ver Tele</h1>
-          <HomeElement href="/grid" title="Cuadrícula" />
 
-          {/* <HomeElement
-            href="/layout"
-            title="Layouts"
-            description="Elige un layout"
-          /> */}
+          <HomeElement
+            href="/monitor"
+            title="Monitor"
+            description="Monitor personalizable. Filas o layout."
+          />
           <HomeElement
             href="/promoted"
             title="Señal Destacada"

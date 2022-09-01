@@ -1,17 +1,16 @@
-import React, { PropsWithChildren } from "react";
-import classnames from "classnames/bind";
-import styles from "./styles.module.scss";
+import React, { PropsWithChildren } from 'react';
+import classnames from 'classnames/bind';
+import styles from './styles.module.scss';
 
 const cx = classnames.bind(styles);
 type Props = {
-  href?: string
-  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 };
 
-export function ActionButton({ children, href, onClick }: PropsWithChildren<Props>) {
+export function ActionButton({ children, onClick }: PropsWithChildren<Props>) {
   return (
-    <button className="btn" onClick={onClick}>
-      <span className={cx("button-content")}>{children}</span>
+    <button className={`btn ${cx('action-button')}`} onClick={onClick}>
+      <span className={cx('button-content')}>{children}</span>
     </button>
   );
 }

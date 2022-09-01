@@ -1,25 +1,27 @@
-import { Monitor } from '../../Monitor/Monitor';
 import { useTeleContext } from '../../../context/TeleContext';
-import { ColType, SourceNode } from '../../../pages/layout/types';
+import { useSavedGrid } from '../../../hooks/useSavedGrid';
+import { ColType, LayoutType, RowType } from '../../../pages/monitor/types';
+import { Monitor } from '../../Monitor/Monitor';
 import { LayoutRow } from '../LayoutRow/LayoutRow';
 
-export function LayoutCol({
-  col,
-  onSourceChange
-}: {
+type Props = {
   col: ColType;
-  onSourceChange: (node: SourceNode) => void;
-}) {
+};
+
+export function LayoutCol({ col }: Props) {
   const { rows, node } = col;
   const size = col.size || 12;
-  const { setEditingSourceUuid } = useTeleContext();
-
-  if (node?.sourceSlug) {
+  const { setEditingSourceIdx } = useTeleContext();
+  const [savedNodes] = useSavedGrid();
+  if (node) {
+    const sourceSlug = savedNodes[node.idx]?.sourceSlug;
     return (
       <Monitor
         size={size}
-        sourceSlug={node?.sourceSlug}
-        onChangeClick={() => setEditingSourceUuid(node.uuid)}
+        sourceSlug={sourceSlug}
+        onChangeClick={() => {
+          setEditingSourceIdx(node.idx);
+        }}
       />
     );
   }
@@ -27,7 +29,7 @@ export function LayoutCol({
   return (
     <div className={`col-${size}`}>
       {rows?.map((row, i) => (
-        <LayoutRow key={i} row={row} onSourceChange={onSourceChange} />
+        <LayoutRow key={i} row={row} />
       ))}
     </div>
   );

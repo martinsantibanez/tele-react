@@ -3,20 +3,20 @@ import useLocalStorageState from 'use-local-storage-state';
 import { Source } from '../sources';
 
 export function useCustomSources() {
-  const [customSources, setCustomSources] = useLocalStorageState<Source[]>(
-    '__tele_custom_source__',
-    {
+  const [customSources, setCustomSources, customSourcesMeta] =
+    useLocalStorageState<Source[]>('__tele_custom_source__', {
       defaultValue: [],
       ssr: true
-    }
-  );
+    });
   const createSource = useCallback(
     (newSource: Source) => {
-      if (customSources.some(source => source.slug === newSource.slug)) return;
-      setCustomSources(v => [...(v || []), newSource]);
+      setCustomSources(v => {
+        if (v.some(source => source.slug === newSource.slug)) return v;
+        return [...(v || []), newSource];
+      });
     },
-    [customSources, setCustomSources]
+    [setCustomSources]
   );
 
-  return { customSources, setCustomSources, createSource };
+  return { customSources, setCustomSources, createSource, customSourcesMeta };
 }

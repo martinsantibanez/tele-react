@@ -12,7 +12,8 @@ export function useSavedSelectedItem() {
 }
 
 const ListPage: NextPage = () => {
-  const [sourceSlug, setSourceSlug] = useState<string>();
+  const [sourceSlug, setSourceSlug] = useSavedSelectedItem();
+  // const [sourceSlug, setSourceSlug] = useState<string>();
 
   const handleSelectSource = (source: Source) => {
     setSourceSlug(source.slug);

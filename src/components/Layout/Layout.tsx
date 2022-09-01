@@ -1,11 +1,10 @@
 import { LayoutCol } from './LayoutCol/LayoutCol';
-import { LayoutType, SourceNode } from '../../pages/layout/types';
+import { LayoutType, SourceNode } from '../../pages/monitor/types';
 
 type Props = {
   layout: LayoutType;
-  onSourceChange: (node: SourceNode) => void;
 };
 
-export function Layout({ layout, onSourceChange }: Props) {
-  return <LayoutCol col={layout} onSourceChange={onSourceChange} />;
+export function Layout({ layout }: Props) {
+  return <LayoutCol col={layout} />;
 }
