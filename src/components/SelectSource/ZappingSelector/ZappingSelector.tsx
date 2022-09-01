@@ -38,23 +38,6 @@ export function ZappingSelector({
     <Accordion.Item eventKey={accordionEventKey}>
       <Accordion.Header>Zapping</Accordion.Header>
       <Accordion.Body>
-        <div className="mb-2">
-          <input
-            type="text"
-            value={zappingEndpoint}
-            placeholder="Endpoint"
-            onChange={e => setZappingEndpoint(e.target.value)}
-          />
-          <input
-            type="text"
-            value={zappingToken}
-            placeholder="Token"
-            onChange={e => setZappingToken(e.target.value)}
-          />
-        </div>
-        <button onClick={handleConfigSubmit} className="btn btn-primary">
-          Configurar
-        </button>
         {Object.values(canales)?.map(canal => {
           const source: Source = {
             titleIcons: [<BsTwitch key="twitch" />],
@@ -72,6 +55,43 @@ export function ZappingSelector({
             />
           );
         })}
+        <div className="mb-2">
+          <div>
+            <input
+              type="text"
+              value={zappingEndpoint}
+              placeholder="Endpoint"
+              onChange={e => setZappingEndpoint(e.target.value)}
+            />
+            <input
+              type="text"
+              value={zappingToken}
+              placeholder="Token"
+              onChange={e => setZappingToken(e.target.value)}
+            />
+            <button onClick={handleConfigSubmit} className="btn btn-primary mt-2">
+              Configurar
+            </button>
+          </div>
+          <div className="mt-2 mb-2">o</div>
+          <div className="w-100">
+            Pega esto en la consola en{' '}
+            <a
+              href="https://app.zappingtv.com/player/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Zapping
+            </a>{' '}
+            y ejecuta el resultado en la consola de esta ventana, luego
+            refresca.
+            <textarea className="w-100" readOnly rows={2}>
+              {
+                "console.log(`localStorage.setItem('__tele_zapping_config__', JSON.stringify({endpoint: '${su}', token: '${t}'}))`)"
+              }
+            </textarea>
+          </div>
+        </div>
       </Accordion.Body>
     </Accordion.Item>
   );

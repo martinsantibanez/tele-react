@@ -20,13 +20,8 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
         onSourceSelect={onSelect}
         selectedSourceSlug={selectedSourceSlug}
       />
-      <ZappingSelector
-        accordionEventKey="1"
-        onSourceSelect={onSelect}
-        selectedSourceSlug={selectedSourceSlug}
-      />
       {sourcesCategories.map((sourceCategory, idx) => (
-        <Accordion.Item eventKey={`${idx + 2}`} key={sourceCategory.name}>
+        <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
           <Accordion.Header>{sourceCategory.name}</Accordion.Header>
           <Accordion.Body>
             {Object.values(sourceCategory.sources).map(source => (
@@ -40,6 +35,11 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
           </Accordion.Body>
         </Accordion.Item>
       ))}
+      <ZappingSelector
+        accordionEventKey={`${sourcesCategories.length + 1}`}
+        onSourceSelect={onSelect}
+        selectedSourceSlug={selectedSourceSlug}
+      />
     </Accordion>
   );
 }
