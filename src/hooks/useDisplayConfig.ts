@@ -2,7 +2,7 @@ import useLocalStorageState from 'use-local-storage-state';
 import { initialLayout } from '../pages/monitor/initialLayout';
 import { DisplayConfig, DisplayMode } from '../pages/monitor/types';
 
-const defaultValue: DisplayConfig = {
+export const defaultDisplayConfig: DisplayConfig = {
   mode: DisplayMode.Layout,
   layout: initialLayout,
   grid: { size: 4 }
@@ -10,6 +10,6 @@ const defaultValue: DisplayConfig = {
 export function useDisplayConfig() {
   return useLocalStorageState<DisplayConfig>('__tele_display_config__', {
     ssr: true,
-    defaultValue
+    defaultValue: defaultDisplayConfig
   });
 }

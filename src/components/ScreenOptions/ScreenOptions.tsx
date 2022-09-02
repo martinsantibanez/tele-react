@@ -14,6 +14,7 @@ const buttons: CSSProperties = {
 type Props = {
   onSizeChange: (size: number) => void;
   onSourceAdd?: () => void;
+  onPromote?: () => void;
   onModeChange?: (selectedMode: DisplayMode) => void;
   mode: DisplayMode;
   size: number;
@@ -22,33 +23,10 @@ export function ScreenOptions({
   onSizeChange,
   onSourceAdd,
   onModeChange,
+  onPromote,
   mode,
   size
 }: Props) {
-  const launchFullScreen = () => {
-    const element: any = document.documentElement;
-    if (element.requestFullScreen) {
-      element.requestFullScreen();
-    } else if (element.mozRequestFullScreen) {
-      element.mozRequestFullScreen();
-    } else if (element.webkitRequestFullScreen) {
-      element.webkitRequestFullScreen();
-    }
-
-    if (element.requestFullScreen) {
-      element.requestFullScreen();
-    }
-  };
-  // Lanza en pantalla completa en navegadores que lo soporten
-  const cancelFullScreen = () => {
-    if ((document as any).cancelFullScreen) {
-      (document as any).cancelFullScreen();
-    } else if ((document as any).mozCancelFullScreen) {
-      (document as any).mozCancelFullScreen();
-    } else if ((document as any).webkitCancelFullScreen) {
-      (document as any).webkitCancelFullScreen();
-    }
-  };
   return (
     <div className="Botones" style={buttons}>
       {mode === DisplayMode.Grid && (
@@ -82,6 +60,9 @@ export function ScreenOptions({
 
       {onSourceAdd && (
         <ActionButton onClick={onSourceAdd}>Agregar</ActionButton>
+      )}
+      {onPromote && (
+        <ActionButton onClick={onPromote}>Destacar</ActionButton>
       )}
     </div>
   );

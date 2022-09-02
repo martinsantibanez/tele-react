@@ -1,10 +1,10 @@
-import type { NextPage } from "next";
-import Head from "next/head";
-import { Monitor } from "../../components/Monitor/Monitor";
-import { useFeaturedSource } from "../../hooks/useFeaturedSource";
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import { useFeaturedScreen } from '../../hooks/useFeaturedSource';
+import { Screen } from '../monitor/Screen';
 
 const MonitorPage: NextPage = () => {
-  const [featuredSource] = useFeaturedSource();
+  const [screen] = useFeaturedScreen();
 
   return (
     <div>
@@ -12,7 +12,7 @@ const MonitorPage: NextPage = () => {
         <title>LIVE</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Monitor size={12} sourceSlug={featuredSource} />
+      <Screen screen={screen} />
     </div>
   );
 };

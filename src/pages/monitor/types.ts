@@ -27,3 +27,8 @@ export type DisplayConfig = {
   grid: GridType;
   layout: LayoutType;
 };
+
+export type ScreenType = {
+  config: DisplayConfig;
+  sources: SourceNode[];
+};
