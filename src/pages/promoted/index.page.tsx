@@ -8,6 +8,12 @@ const MonitorPage: NextPage = () => {
 
   return (
     <div>
+      <style global jsx>{`
+        html,
+        body {
+          overflow-y: hidden;
+        }
+      `}</style>
       <Head>
         <title>LIVE</title>
         <link rel="icon" href="/favicon.ico" />
