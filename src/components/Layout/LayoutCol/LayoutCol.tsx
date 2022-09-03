@@ -6,9 +6,10 @@ type Props = {
   col: ColType;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
+  editingSourceIdx?: number;
 };
 
-export function LayoutCol({ col, sources, onEdit }: Props) {
+export function LayoutCol({ col, sources, onEdit, editingSourceIdx }: Props) {
   const { rows, node } = col;
   const size = col.size || 12;
 
@@ -20,6 +21,7 @@ export function LayoutCol({ col, sources, onEdit }: Props) {
         size={size}
         sourceSlug={sourceSlug}
         onChangeClick={() => (onEdit ? onEdit(node.idx) : undefined)}
+        isBeingEdited={node.idx === editingSourceIdx}
       />
     );
   }
@@ -27,7 +29,13 @@ export function LayoutCol({ col, sources, onEdit }: Props) {
   return (
     <div className={`col-${size}`}>
       {rows?.map((row, i) => (
-        <LayoutRow key={i} row={row} onEdit={onEdit} sources={sources} />
+        <LayoutRow
+          key={i}
+          row={row}
+          onEdit={onEdit}
+          sources={sources}
+          editingSourceIdx={editingSourceIdx}
+        />
       ))}
     </div>
   );

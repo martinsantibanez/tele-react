@@ -7,23 +7,16 @@ function useValue() {
     number | undefined
   >();
 
-  const [editingSourceUuid, setEditingSourceUuid] = useState<
-    string | undefined
-  >();
-
   useEffect(() => {
     if (!isEditing) {
       setEditingSourceIdx(undefined);
-      setEditingSourceUuid(undefined);
     }
   }, [isEditing]);
   return {
     isEditing,
     toggleEditting,
     editingSourceIdx,
-    setEditingSourceIdx,
-    editingSourceUuid,
-    setEditingSourceUuid
+    setEditingSourceIdx
   };
 }
 

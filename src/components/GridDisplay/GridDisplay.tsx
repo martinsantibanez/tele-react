@@ -6,8 +6,16 @@ type Props = {
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
+  editingSourceIdx?: number;
 };
-export function GridDisplay({ size, sources, onEdit, onRemove }: Props) {
+
+export function GridDisplay({
+  size,
+  sources,
+  onEdit,
+  onRemove,
+  editingSourceIdx
+}: Props) {
   return (
     <>
       {sources.map((source, idx) => (
@@ -17,6 +25,7 @@ export function GridDisplay({ size, sources, onEdit, onRemove }: Props) {
           key={`${source.uuid}`}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
+          isBeingEdited={idx === editingSourceIdx}
         />
       ))}
     </>

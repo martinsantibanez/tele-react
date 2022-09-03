@@ -5,14 +5,21 @@ type Props = {
   row: RowType;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
+  editingSourceIdx?: number;
 };
 
-export function LayoutRow({ row, onEdit, sources }: Props) {
+export function LayoutRow({ row, onEdit, sources, editingSourceIdx }: Props) {
   const { cols } = row;
   return (
     <div className="row no-gutters">
       {cols?.map((col, i) => (
-        <LayoutCol col={col} key={i} onEdit={onEdit} sources={sources} />
+        <LayoutCol
+          col={col}
+          key={i}
+          onEdit={onEdit}
+          sources={sources}
+          editingSourceIdx={editingSourceIdx}
+        />
       ))}
     </div>
   );

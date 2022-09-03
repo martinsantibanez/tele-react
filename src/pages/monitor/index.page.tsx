@@ -14,12 +14,7 @@ import { Screen } from './Screen';
 import { DisplayMode, ScreenType } from './types';
 
 const MonitorPage: NextPage = () => {
-  const {
-    isEditing,
-    editingSourceUuid,
-    editingSourceIdx,
-    setEditingSourceIdx
-  } = useTeleContext();
+  const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
@@ -30,6 +25,14 @@ const MonitorPage: NextPage = () => {
       sources: selectedSources
     }),
     [displayConfig, selectedSources]
+  );
+
+  const selectedSourceSlug = useMemo(
+    () =>
+      typeof editingSourceIdx === 'number'
+        ? selectedSources[editingSourceIdx]?.sourceSlug
+        : undefined,
+    [editingSourceIdx, selectedSources]
   );
 
   const handlePromote = () => {
@@ -110,6 +113,7 @@ const MonitorPage: NextPage = () => {
             screen={screen}
             onEdit={handleSourceEdit}
             onRemove={handleSourceRemove}
+            editingSourceIdx={editingSourceIdx}
           />
         </div>
         {isEditing && (
@@ -117,7 +121,7 @@ const MonitorPage: NextPage = () => {
             <div className="col-4 pr-4">
               <SourceAccordionList
                 onSelect={handleSourceChange}
-                selectedSourceSlug={editingSourceUuid}
+                selectedSourceSlug={selectedSourceSlug}
               />
             </div>
             <ScreenOptions

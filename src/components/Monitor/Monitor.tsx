@@ -13,8 +13,16 @@ type Props = {
   size: number;
   onChangeClick?: () => void;
   onRemove?: () => void;
+  isBeingEdited?: boolean;
 };
-export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
+
+export function Monitor({
+  sourceSlug,
+  size,
+  onChangeClick,
+  onRemove,
+  isBeingEdited
+}: Props) {
   const { isEditing } = useTeleContext();
 
   const [, setFeaturedSource] = useFeaturedSource();
@@ -39,9 +47,11 @@ export function Monitor({ sourceSlug, size, onChangeClick, onRemove }: Props) {
   };
 
   return (
-    <div className={cx(`stream`) + ` col-${size}`}>
+    <div className={cx(`stream`, { editing: false }) + ` col-${size}`}>
       <div className="w-100 h-100">
-        {!!source && <SourceOutput source={source} />}
+        <div className={cx({ editing: isBeingEdited })}>
+          {!!source && <SourceOutput source={source} />}
+        </div>
         {isEditing && (
           <div className={cx('actions-container')}>
             {onChangeClick && (

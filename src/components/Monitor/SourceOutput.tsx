@@ -13,11 +13,6 @@ export function IframeOutput({ name, src }: { src: string; name?: string }) {
           className="embed-responsive-item embed-responsive-16by9"
           frameBorder="0"
         />
-        {name && (
-          <div className="CAJATituloDePantallaPequeña2">
-            <div className="TextoTitulosMonitor1">{name}</div>
-          </div>
-        )}
       </div>
     </div>
   );

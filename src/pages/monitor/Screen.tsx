@@ -6,8 +6,10 @@ type Props = {
   screen: ScreenType;
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
+  editingSourceIdx?: number;
 };
-export function Screen({ screen, onEdit, onRemove }: Props) {
+
+export function Screen({ screen, onEdit, onRemove, editingSourceIdx }: Props) {
   const { config, sources } = screen;
   return (
     <div className="row no-gutters row-canales">
@@ -17,10 +19,16 @@ export function Screen({ screen, onEdit, onRemove }: Props) {
           sources={sources}
           onEdit={onEdit}
           onRemove={onRemove}
+          editingSourceIdx={editingSourceIdx}
         />
       )}
       {config.mode === DisplayMode.Layout && (
-        <Layout layout={config.layout} sources={sources} onEdit={onEdit} />
+        <Layout
+          layout={config.layout}
+          sources={sources}
+          onEdit={onEdit}
+          editingSourceIdx={editingSourceIdx}
+        />
       )}
     </div>
   );
