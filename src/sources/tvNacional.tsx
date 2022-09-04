@@ -33,6 +33,12 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     ],
     youtubeChannelId: 'UCaVaCaiG6qRzDiJDuEGKOhQ'
   },
+  MEGA_YT: {
+    slug: 'MEGA_YT',
+    youtubeVideoId: 'f7_om6wwnps',
+    titleIcons: [<img src="/imagenes/Logo_YT.svg" key="yt" />],
+    titleHtml: 'MEGA'
+  },
   MEGANOTICIAS_YT: {
     slug: 'MEGANOTICIAS_YT',
     titleIcons: [
@@ -43,14 +49,32 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     youtubeChannelId: 'UCkccyEbqhhM3uKOI6Shm-4Q',
     fuente: 'https://www.youtube.com/channel/UCkccyEbqhhM3uKOI6Shm-4Q'
   },
+  MEGA_YT_3: {
+    slug: 'MEGA_YT_3',
+    titleIcons: [
+      <img src="/imagenes/Logo_YT.svg" key="yt" />,
+      <img src="imagenes/Logo_MEGA.svg" key="logo" />
+    ],
+    titleHtml: '3'
+    youtubeChannelId: 'UCEpId-jtRABuZyX6D2z6FZQ'
+  },
   CHV_NOTICIAS_YT: {
     slug: 'CHV_NOTICIAS_YT',
     titleIcons: [
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_CHV_NOTICIAS.svg" key="logo" />
     ],
-    titleHtml: '',
-    iframeSrc: 'https://www.youtube.com'
+    titleHtml: '1',
+    youtubeVideoId: 'w7hz_CPRqcM'
+  },
+  CHV_NOTICIAS_YT_2: {
+    slug: 'CHV_NOTICIAS_YT_2',
+    titleIcons: [
+      <img src="/imagenes/Logo_YT.svg" key="yt" />,
+      <img src="imagenes/Logo_CHV_NOTICIAS.svg" key="logo" />
+    ],
+    titleHtml: '2',
+    youtubeVideoId: 'JhlUQ7Gzc3A'
   },
   'CANAL 13_YT': {
     slug: 'CANAL 13_YT',
@@ -68,14 +92,6 @@ export const tvNacionalYoutubeSources: SourcesMap = {
       <img src="imagenes/Logo_CHV.svg" key="logo" />
     ],
     youtubeChannelId: 'UC8EdTmyUaFIfZvVttJ9lgIA'
-  },
-  MEGA_YT: {
-    slug: 'MEGA_YT',
-    titleIcons: [
-      <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_MEGA.svg" key="logo" />
-    ],
-    youtubeChannelId: 'UCEpId-jtRABuZyX6D2z6FZQ'
   }
 };
 
