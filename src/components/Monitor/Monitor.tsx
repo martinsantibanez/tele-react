@@ -49,7 +49,7 @@ export function Monitor({
   return (
     <div className={cx(`stream`, { editing: false }) + ` col-${size}`}>
       <div className="w-100 h-100">
-        <div className={cx({ editing: isBeingEdited })}>
+        <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
           {!!source && <SourceOutput source={source} />}
         </div>
         {isEditing && (
