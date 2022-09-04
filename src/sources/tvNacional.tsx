@@ -13,8 +13,17 @@ export const tvNacionalYoutubeSources: SourcesMap = {
   '24HTVN_FACEBOOK': {
     slug: '24HTVN_FACEBOOK',
     titleIcons: [<img src="imagenes/Logo_24HORAS.svg" alt="24H" key="logo" />],
+    titleHtml: 'fb',
     iframeSrc:
       'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2F24horas.cl%2Flive%2F&show_text=0&mute=0'
+  },
+  TVN_YT: {
+    slug: 'TVN_YT',
+    titleIcons: [
+      <img src="/imagenes/Logo_YT.svg" key="yt" />,
+      <img src="imagenes/Logo_TVN.svg" key="logo" />
+    ],
+    youtubeChannelId: 'UCaVaCaiG6qRzDiJDuEGKOhQ'
   },
   T13_YT: {
     slug: 'T13_YT',
@@ -24,20 +33,13 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     ],
     youtubeChannelId: 'UCsRnhjcUCR78Q3Ud6OXCTNg'
   },
-  // ocasionales:
-  TVN_YT: {
-    slug: 'TVN_YT',
-    titleIcons: [
-      <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_TVN.svg" key="logo" />
-    ],
-    youtubeChannelId: 'UCaVaCaiG6qRzDiJDuEGKOhQ'
-  },
   MEGA_YT: {
     slug: 'MEGA_YT',
     youtubeVideoId: 'f7_om6wwnps',
-    titleIcons: [<img src="/imagenes/Logo_YT.svg" key="yt" />],
-    titleHtml: 'MEGA'
+    titleIcons: [
+      <img src="/imagenes/Logo_YT.svg" key="yt" />,
+      <img src="imagenes/Logo_MEGANOTICIAS.svg" key="logo" />
+    ]
   },
   MEGANOTICIAS_YT: {
     slug: 'MEGANOTICIAS_YT',
@@ -45,18 +47,9 @@ export const tvNacionalYoutubeSources: SourcesMap = {
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_MEGANOTICIAS.svg" key="logo" />
     ],
-    titleHtml: '',
+    titleHtml: '2',
     youtubeChannelId: 'UCkccyEbqhhM3uKOI6Shm-4Q',
     fuente: 'https://www.youtube.com/channel/UCkccyEbqhhM3uKOI6Shm-4Q'
-  },
-  MEGA_YT_3: {
-    slug: 'MEGA_YT_3',
-    titleIcons: [
-      <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_MEGA.svg" key="logo" />
-    ],
-    titleHtml: '3',
-    youtubeChannelId: 'UCEpId-jtRABuZyX6D2z6FZQ'
   },
   CHV_NOTICIAS_YT: {
     slug: 'CHV_NOTICIAS_YT',
@@ -76,22 +69,14 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     titleHtml: '2',
     youtubeVideoId: 'JhlUQ7Gzc3A'
   },
-  'CANAL 13_YT': {
-    slug: 'CANAL 13_YT',
+  CNN_CHILE_YT: {
+    slug: 'CNN_CHILE_YT',
     titleIcons: [
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_Canal13.svg" key="logo" />
+      <img src="imagenes/Logo_CNNCHILE2.svg" key="logo" />
     ],
-    titleHtml: '',
-    youtubeChannelId: 'UCd4D3LfXC_9MY2zSv_3gMgw'
-  },
-  CHV_YT: {
-    slug: 'CHV_YT',
-    titleIcons: [
-      <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_CHV.svg" key="logo" />
-    ],
-    youtubeChannelId: 'UC8EdTmyUaFIfZvVttJ9lgIA'
+    youtubeChannelId: 'UCpOAcjJNAp0Y0fhznRrXIJQ',
+    name: 'YT'
   }
 };
 
@@ -153,24 +138,6 @@ export const tvNacionalSources: SourcesMap = {
     m3u8Url: 'https://marine2.miplay.cl/chilevision/index.m3u8',
     iframeSrc: '/Source/CHV_EMBED.html'
   },
-  // CNN_CHILE: {
-  //   slug: 'CNN_CHILE',
-  //   titleIcons: [<img src="imagenes/Logo_CNNCHILE2.svg" key="logo" />],
-  //   m3u8Url: 'https://unlimited1-us.dps.live/cnn/cnn.smil/playlist.m3u8'
-  // },
-  CNN_CHILE_YT: {
-    slug: 'CNN_CHILE_YT',
-    titleIcons: [<img src="imagenes/Logo_CNNCHILE2.svg" key="logo" />],
-    youtubeChannelId: 'UCpOAcjJNAp0Y0fhznRrXIJQ',
-    name: 'YT'
-  },
-  CNN_CHILE_FACEBOOK: {
-    slug: 'CNN_CHILE_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_CNNCHILE2.svg" />],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fcnnchile%2Flive%2F&show_text=0&mute=0',
-    name: 'FB'
-  },
   T13_ENVIVO: {
     slug: 'T13_ENVIVO',
     titleIcons: [<img src="imagenes/Logo_T13_ENVIVO.svg" key="logo" />],
@@ -184,14 +151,6 @@ export const tvNacionalSources: SourcesMap = {
     iframeSrc: 'https://13313131.tnvas.repl.co/',
     fuente: 'https://www.13.cl/en-vivo'
   },
-  // CANAL13_WEB_IFRAME: {
-  //   slug: 'CANAL13_WEB_IFRAME',
-  //   titleIcons: [
-  //     <img src="imagenes/Logo_Canal13.svg" alt="CANAL 13" key="logo" />
-  //   ],
-  //   iframeSrc: '/Source/CANAL13_EMBED.html'
-  //   // name: 'CANAL 13'
-  // },
   TVN_WEB_IFRAME: {
     slug: 'TVN_WEB_IFRAME',
     titleIcons: [<img src="imagenes/Logo_TVN.svg" key="logo" />],
