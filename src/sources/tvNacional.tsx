@@ -55,7 +55,7 @@ export const tvNacionalYoutubeSources: SourcesMap = {
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_MEGA.svg" key="logo" />
     ],
-    titleHtml: '3'
+    titleHtml: '3',
     youtubeChannelId: 'UCEpId-jtRABuZyX6D2z6FZQ'
   },
   CHV_NOTICIAS_YT: {
