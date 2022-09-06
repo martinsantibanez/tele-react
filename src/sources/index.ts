@@ -1,7 +1,6 @@
 import React from 'react';
 import { camarasSources } from './camaras';
 import { chileSources } from './chile';
-import { convencionSources } from './convencion';
 import { datosSources } from './datos';
 import { espacioSources } from './espacio';
 import { especialesSources } from './especiales';
@@ -79,10 +78,6 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: 'Camaras',
     sources: camarasSources
-  },
-  {
-    name: 'Convencion Constitucional',
-    sources: convencionSources
   },
   {
     name: 'Instituciones Chile',

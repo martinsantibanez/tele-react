@@ -5,8 +5,8 @@ export const chileSources: SourcesMap = {
     slug: 'PRESIDENCIA',
     titleHtml:
       '<img style="height: 20px; width:auto:" src="imagenes/Logo_GOB.svg"></img>ﾠPRESIDENCIA',
-    m3u8Url:
-      'https://mdstrm.com/live-stream-playlist-v/5dc17f8944795108a2a52a49.m3u8'
+    iframeSrc:
+      'https://mdstrm.com/live-stream/6239f6d008e7ac488826f237?autoplay=true'
   },
   'tv-senado': {
     slug: 'tv-senado',
