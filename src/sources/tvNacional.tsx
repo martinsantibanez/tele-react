@@ -57,17 +57,7 @@ export const tvNacionalYoutubeSources: SourcesMap = {
       <img src="/imagenes/Logo_YT.svg" key="yt" />,
       <img src="imagenes/Logo_CHV_NOTICIAS.svg" key="logo" />
     ],
-    titleHtml: '1',
-    youtubeVideoId: 'w7hz_CPRqcM'
-  },
-  CHV_NOTICIAS_YT_2: {
-    slug: 'CHV_NOTICIAS_YT_2',
-    titleIcons: [
-      <img src="/imagenes/Logo_YT.svg" key="yt" />,
-      <img src="imagenes/Logo_CHV_NOTICIAS.svg" key="logo" />
-    ],
-    titleHtml: '2',
-    youtubeVideoId: 'JhlUQ7Gzc3A'
+    youtubeChannelId: 'UCRsUoZYC1ULUspipMRnMhwg'
   },
   CNN_CHILE_YT: {
     slug: 'CNN_CHILE_YT',
