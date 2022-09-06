@@ -26,6 +26,11 @@ const VideoPlayer = ({ src }: Props) => {
       muted: true,
       fluid: true,
       responsive: true,
+      controlBar: {
+        volumePanel: {
+          inline: true,
+        }
+      },
       aspectRatio: "16:9", 
       poster: '/imagenes/SinSenal.png',
       sources: [
