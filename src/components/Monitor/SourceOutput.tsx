@@ -37,7 +37,6 @@ export function SourceOutput({ source }: Props) {
     const Component = source.component;
     return <Component />;
   } else if (source.m3u8Url && typeof window !== 'undefined') {
-    // return <VideoM3u8Source src={source.m3u8Url} />;
     return <VideoPlayer src={source.m3u8Url} />;
   } else if (source.youtubeChannelId) {
     return (

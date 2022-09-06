@@ -21,7 +21,6 @@
     "react": "17.0.2",
     "react-bootstrap": "^2.1.2",
     "react-dom": "17.0.2",
-    "react-hls-player": "^3.0.7",
     "react-icons": "^4.3.1",
     "react-twitch-embed": "^3.0.1",
     "react-twitter-widgets": "^1.10.0",
