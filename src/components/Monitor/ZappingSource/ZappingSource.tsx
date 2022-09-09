@@ -14,8 +14,6 @@ type SocketData = {
   name: string;
 };
 
-let socket: SocketIOClient.Socket;
-
 export function ZappingSource({ channelId }: Props) {
   const [isConnected, setIsConnected] = useState(false);
   const { zappingConfig } = useZappingConfig();
@@ -24,8 +22,7 @@ export function ZappingSource({ channelId }: Props) {
 
   useEffect(() => {
     if (!zappingConfig) return;
-    if (socket) socket.disconnect();
-    socket = io.connect(zappingConfig.endpoint, {
+    const socket = io.connect(zappingConfig.endpoint, {
       query: { token: zappingConfig.token }
     });
 
@@ -48,6 +45,7 @@ export function ZappingSource({ channelId }: Props) {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('data');
+      socket.disconnect();
     };
   }, [channelId, zappingConfig]);
 
