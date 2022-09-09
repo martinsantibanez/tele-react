@@ -10,13 +10,6 @@ export const tvNacionalYoutubeSources: SourcesMap = {
     titleHtml: '',
     youtubeChannelId: 'UCTXNz3gjAypWp3EhlIATEJQ'
   },
-  '24HTVN_FACEBOOK': {
-    slug: '24HTVN_FACEBOOK',
-    titleIcons: [<img src="imagenes/Logo_24HORAS.svg" alt="24H" key="logo" />],
-    titleHtml: 'fb',
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2F24horas.cl%2Flive%2F&show_text=0&mute=0'
-  },
   TVN_YT: {
     slug: 'TVN_YT',
     titleIcons: [
@@ -117,10 +110,11 @@ export const tvNacionalSources: SourcesMap = {
     titleIcons: [<img src="imagenes/Logo_MEGANOTICIAS.svg" key="logo" />],
     youtubeChannelId: '8SOZCjrnVxQ'
   },
-  CHV_M3: {
-    slug: 'CHV_M3',
-    titleIcons: [<img src="imagenes/Logo_CHV.svg" alt="CHV" key="logo" />],
-    m3u8Url: 'https://marine2.miplay.cl/chilevision/index.m3u8'
+  CHV_NOTICIAS: {
+    slug: 'CHV_NOTICIAS',
+    titleIcons: [<img src="imagenes/Logo_CHV_NOTICIAS.svg" key="logo" />],
+    m3u8Url:
+      'https://siloh-latam-aka.plutotv.net/lilo/production/Chilevision/master.m3u8'
   },
   CHV_WEB_IFRAME: {
     slug: 'CHV_WEB_IFRAME',
@@ -184,54 +178,6 @@ export const tvNacionalSources: SourcesMap = {
     slug: '13E',
     titleIcons: [<img src="imagenes/Logo_Canal13E.svg" alt="13E" key="logo" />],
     m3u8Url: 'https://unlimited1-cl-isp.dps.live/13e/13e.smil/playlist.m3u8'
-  },
-  MEGANOTICIAS_FACEBOOK: {
-    slug: 'MEGANOTICIAS_FACEBOOK',
-    titleIcons: [
-      <img
-        key="logo"
-        alt="meganoticias"
-        src="imagenes/Logo_MEGANOTICIAS.svg"
-      ></img>
-    ],
-    name: 'FB',
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fmeganoticiascl%2Flive%2F&show_text=0&mute=0"'
-  },
-  T13_FACEBOOK: {
-    slug: 'T13_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_T13.svg"></img>],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fteletrece%2Flive%2F&show_text=0&mute=0',
-    name: 'FB'
-  },
-  TVN_FACEBOOK: {
-    slug: 'TVN_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_TVN.svg"></img>],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Ftvn.cl%2Flive%2F&show_text=0&mute=0',
-    name: 'FB'
-  },
-  MEGA_FACEBOOK: {
-    slug: 'MEGA_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_MEGA.svg"></img>],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FMEGACL%2Flive%2F&show_text=0&mute=0',
-    name: 'FB'
-  },
-  CHV_FACEBOOK: {
-    slug: 'CHV_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_CHV.svg"></img>],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fchilevision%2Flive%2F&show_text=0&mute=0',
-    name: 'CHV'
-  },
-  'CANAL 13_FACEBOOK': {
-    slug: 'CANAL 13_FACEBOOK',
-    titleIcons: [<img key="logo" src="imagenes/Logo_Canal13.svg"></img>],
-    iframeSrc:
-      'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Felcanal13%2Flive%2F&show_text=0&mute=0',
-    name: 'FB'
   },
   Señal_Interna_24HTVN_5: {
     slug: 'Señal_Interna_24HTVN_5',

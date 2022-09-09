@@ -15,7 +15,7 @@ export const camarasSources: SourcesMap = {
     flag: 'cl',
     titleIcons: [cameraIcon],
     name: 'PROVIDENCIA (Ledrium)',
-    youtubeVideoId: 'mGxX5PfREPA'
+    youtubeVideoId: 'ERHmlO0orUk'
   },
   OSORNO: {
     slug: 'OSORNO',
