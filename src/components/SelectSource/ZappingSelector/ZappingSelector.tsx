@@ -22,6 +22,7 @@ export function ZappingSelector({
     zappingConfig?.endpoint || ''
   );
   const [zappingToken, setZappingToken] = useState(zappingConfig?.token || '');
+  const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();
 
@@ -55,27 +56,6 @@ export function ZappingSelector({
           );
         })}
         <div className="mb-2">
-          <div>
-            <input
-              type="text"
-              value={zappingEndpoint}
-              placeholder="Endpoint"
-              onChange={e => setZappingEndpoint(e.target.value)}
-            />
-            <input
-              type="text"
-              value={zappingToken}
-              placeholder="Token"
-              onChange={e => setZappingToken(e.target.value)}
-            />
-            <button
-              onClick={handleConfigSubmit}
-              className="btn btn-primary mt-2"
-            >
-              Configurar
-            </button>
-          </div>
-          <div className="mt-2 mb-2">o</div>
           <div className="w-100">
             Pega esto en la consola en{' '}
             <a
@@ -85,16 +65,27 @@ export function ZappingSelector({
             >
               Zapping
             </a>{' '}
-            y ejecuta el resultado en la consola de esta ventana, luego
-            refresca.
             <textarea
               className="w-100"
               readOnly
               rows={2}
               defaultValue={
-                "console.log(`localStorage.setItem('__tele_zapping_config__', JSON.stringify({endpoint: '${su}', token: '${t}'}))`)"
+                'console.log( JSON.stringify( {endpoint: su, token: t} ) )'
               }
             />
+            Introduce el resultado:
+            <textarea
+              className="w-100"
+              rows={2}
+              onChange={e => setJsonInput(e.target.value)}
+              value={jsonInput}
+            />
+            <button
+              onClick={() => setZappingConfig(JSON.parse(jsonInput))}
+              className="btn btn-primary mt-2"
+            >
+              Configurar
+            </button>
           </div>
         </div>
       </Accordion.Body>
