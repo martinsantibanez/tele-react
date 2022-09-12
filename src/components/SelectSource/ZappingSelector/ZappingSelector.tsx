@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Accordion } from 'react-bootstrap';
-import { BsTwitch } from 'react-icons/bs';
 import { useCustomSources } from '../../../hooks/useCustomSources';
 import { useZappingConfig } from '../../../hooks/useZappingConfig';
 import { Source } from '../../../sources';
@@ -17,11 +16,7 @@ export function ZappingSelector({
   selectedSourceSlug,
   accordionEventKey
 }: Props) {
-  const { setZappingConfig, zappingConfig } = useZappingConfig();
-  const [zappingEndpoint, setZappingEndpoint] = useState(
-    zappingConfig?.endpoint || ''
-  );
-  const [zappingToken, setZappingToken] = useState(zappingConfig?.token || '');
+  const { setZappingConfig } = useZappingConfig();
   const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();
@@ -29,10 +24,6 @@ export function ZappingSelector({
   const updateSelectedChannel = (source: Source) => {
     createSource(source);
     onSourceSelect(source);
-  };
-
-  const handleConfigSubmit = () => {
-    setZappingConfig({ endpoint: zappingEndpoint, token: zappingToken });
   };
 
   return (
