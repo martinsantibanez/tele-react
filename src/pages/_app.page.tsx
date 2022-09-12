@@ -1,19 +1,27 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import type { AppProps } from "next/app";
-import { TeleProvider } from "../context/TeleContext";
-import "../styles/globals.scss";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import type { AppProps } from 'next/app';
+import { TeleProvider } from '../context/TeleContext';
+import '../styles/globals.scss';
+import { ChakraProvider } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
+
+const colors = {
+  brand: {
+    900: '#1a365d',
+    800: '#153e75',
+    700: '#2a69ac'
+  }
+};
+
+const theme = extendTheme({ colors });
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <TeleProvider>
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l"
-        crossOrigin="anonymous"
-      />
-      <Component {...pageProps} />
-    </TeleProvider>
+    <ChakraProvider theme={theme}>
+      <TeleProvider>
+        <Component {...pageProps} />
+      </TeleProvider>
+    </ChakraProvider>
   );
 }
 
