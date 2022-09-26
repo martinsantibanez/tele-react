@@ -4,6 +4,13 @@ import { Source } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
 import { BsTwitch } from 'react-icons/bs';
 import { useCustomSources } from '../../../hooks/useCustomSources';
+import {
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Box
+} from '@chakra-ui/react';
 
 type Props = {
   onSourceSelect: (source: Source) => void;
@@ -29,9 +36,16 @@ export function TwitchSelector({
   };
 
   return (
-    <Accordion.Item eventKey={accordionEventKey}>
-      <Accordion.Header>Twitch</Accordion.Header>
-      <Accordion.Body>
+    <AccordionItem>
+      <h2>
+        <AccordionButton>
+          <Box flex="1" textAlign="left">
+            Twitch
+          </Box>
+          <AccordionIcon />
+        </AccordionButton>
+      </h2>
+      <AccordionPanel pb={4}>
         {twitchSources?.map(source => (
           <SourceButton
             onSelect={onSourceSelect}
@@ -51,7 +65,7 @@ export function TwitchSelector({
         <button onClick={handleCreateSource} className="btn btn-primary">
           Agregar
         </button>
-      </Accordion.Body>
-    </Accordion.Item>
+      </AccordionPanel>
+    </AccordionItem>
   );
 }

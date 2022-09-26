@@ -1,4 +1,11 @@
-import { Accordion } from 'react-bootstrap';
+import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Box
+} from '@chakra-ui/react';
 import { Source, sourcesCategories } from '../../sources';
 import { SourceButton } from './SourceButton/SourceButton';
 import { TwitchSelector } from './TwitchSelector/TwitchSelector';
@@ -10,20 +17,23 @@ type Props = {
 };
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
   return (
-    <Accordion
-      defaultActiveKey="0"
-      className="w-100"
-      style={{ maxHeight: '90vh', overflowY: 'scroll' }}
-    >
+    <Accordion>
       <TwitchSelector
         accordionEventKey="0"
         onSourceSelect={onSelect}
         selectedSourceSlug={selectedSourceSlug}
       />
       {sourcesCategories.map((sourceCategory, idx) => (
-        <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
-          <Accordion.Header>{sourceCategory.name}</Accordion.Header>
-          <Accordion.Body>
+        <AccordionItem key={sourceCategory.name}>
+          <h2>
+            <AccordionButton>
+              <Box flex="1" textAlign="left">
+                {sourceCategory.name}
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+          </h2>
+          <AccordionPanel pb={4}>
             {Object.values(sourceCategory.sources).map(source => (
               <SourceButton
                 onSelect={onSelect}
@@ -32,8 +42,8 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
                 key={source.slug}
               />
             ))}
-          </Accordion.Body>
-        </Accordion.Item>
+          </AccordionPanel>
+        </AccordionItem>
       ))}
       <ZappingSelector
         accordionEventKey={`${sourcesCategories.length + 1}`}
