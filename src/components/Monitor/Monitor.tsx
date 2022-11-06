@@ -7,7 +7,7 @@ import { DisplayMode } from '../../pages/monitor/types';
 import { getSource } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import styles from './Monitor.module.scss';
-import { SourceOutput } from './SourceOutput';
+import { SourceOutput } from './SourceOutput/SourceOutput';
 const cx = classnames.bind(styles);
 
 type Props = {

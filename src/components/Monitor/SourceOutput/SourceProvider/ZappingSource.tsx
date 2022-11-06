@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import { useZappingConfig } from '../../../hooks/useZappingConfig';
-import VideoPlayer from '../VideoJS';
+import { useZappingConfig } from '../../../../hooks/useZappingConfig';
+import VideoPlayer from './VideoJS';
 
 type Props = {
   channelId: number;

@@ -1,8 +1,8 @@
-import { Source } from '../../sources';
-import { TwitchSource } from '../SourceType/TwitchSource';
-import { TwitterTimeline } from './SourceOutput/TwitterTimeline';
-import VideoPlayer from './VideoJS';
-import { ZappingSource } from './ZappingSource/ZappingSource';
+import { Source } from '../../../sources';
+import { TwitchSource } from '../../SourceType/TwitchSource';
+import { TwitterTimeline } from './SourceProvider/TwitterTimeline';
+import VideoPlayer from './SourceProvider/VideoJS';
+import { ZappingSource } from './SourceProvider/ZappingSource';
 
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
