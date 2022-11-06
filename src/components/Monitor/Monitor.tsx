@@ -1,9 +1,11 @@
 import classnames from 'classnames/bind';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useFeaturedSource } from '../../hooks/useFeaturedSource';
+import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
+import { DisplayMode } from '../../pages/monitor/types';
 import { getSource } from '../../sources';
+import { uuid } from '../../utils/uuid';
 import styles from './Monitor.module.scss';
 import { SourceOutput } from './SourceOutput';
 const cx = classnames.bind(styles);
@@ -24,8 +26,7 @@ export function Monitor({
   isBeingEdited
 }: Props) {
   const { isEditing } = useTeleContext();
-
-  const [, setFeaturedSource] = useFeaturedSource();
+  const [, setFeaturedScreen] = useFeaturedScreen();
   const { customSources } = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
@@ -39,7 +40,16 @@ export function Monitor({
   }, [customSources, sourceSlug]);
 
   const handlePromote = () => {
-    setFeaturedSource(source?.slug);
+    setFeaturedScreen({
+      config: {
+        grid: {
+          size: 12
+        },
+        mode: DisplayMode.Grid,
+        layout: {}
+      },
+      sources: [{ sourceSlug, uuid: uuid() }]
+    });
   };
 
   const handleChangeClick = () => {

@@ -5,7 +5,7 @@ import { ScreenOptions } from '../../components/ScreenOptions/ScreenOptions';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
 import { useTeleContext } from '../../context/TeleContext';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
-import { useFeaturedScreen } from '../../hooks/useFeaturedSource';
+import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { MainLayout } from '../../layout/MainLayout';
 import { Source } from '../../sources';
