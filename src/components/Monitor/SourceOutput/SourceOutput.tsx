@@ -1,5 +1,5 @@
 import { Source } from '../../../sources';
-import { TwitchSource } from '../../SourceType/TwitchSource';
+import { TwitchSource } from './SourceProvider/TwitchSource';
 import { TwitterTimeline } from './SourceProvider/TwitterTimeline';
 import VideoPlayer from './SourceProvider/VideoJS';
 import { ZappingSource } from './SourceProvider/ZappingSource';
