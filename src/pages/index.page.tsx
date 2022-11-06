@@ -52,7 +52,6 @@ const Home: NextPage = () => {
     }
     gridStorage.removeItem();
     selectedItemStorage.removeItem();
-    featuredStorage.removeItem();
     featuredScreenStorage.removeItem();
     customSourcesMeta.removeItem();
     displayConfigStorage.removeItem();
