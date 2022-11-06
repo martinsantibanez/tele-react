@@ -14,14 +14,16 @@ export function LayoutCol({ col, sources, onEdit, editingSourceIdx }: Props) {
   const size = col.size || 12;
 
   if (node) {
-    const sourceSlug = sources[node.idx]?.sourceSlug;
-    if (!sourceSlug) return null;
+    const source = sources[node.idx];
+    if (!source) return null;
+    const sourceSlug = source.sourceSlug;
     return (
       <Monitor
         size={size}
-        sourceSlug={sourceSlug}
+        sourceSlug={source.sourceSlug}
         onChangeClick={() => (onEdit ? onEdit(node.idx) : undefined)}
         isBeingEdited={node.idx === editingSourceIdx}
+        muted={source.muted ?? true}
       />
     );
   }

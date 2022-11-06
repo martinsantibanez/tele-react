@@ -19,10 +19,11 @@ export function IframeOutput({ name, src }: { src: string; name?: string }) {
 }
 
 type Props = {
+  muted?: boolean;
   source: Source;
 };
 
-export function SourceOutput({ source }: Props) {
+export function SourceOutput({ source, muted = true }: Props) {
   if (source.iframeSrc) {
     return <IframeOutput name={source.name} src={source.iframeSrc} />;
   } else if (source.codeHtml) {
@@ -39,10 +40,11 @@ export function SourceOutput({ source }: Props) {
   } else if (source.m3u8Url && typeof window !== 'undefined') {
     return <VideoPlayer src={source.m3u8Url} />;
   } else if (source.youtubeChannelId) {
+    const muteValue = muted ? '1' : '0';
     return (
       <IframeOutput
         name={source.name}
-        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${source.youtubeChannelId}&autoplay=1&mute=1&modestbranding=1&showinfo=0`}
+        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${source.youtubeChannelId}&autoplay=1&mute=${muteValue}&modestbranding=1&showinfo=0`}
       />
     );
   } else if (source.youtubeVideoId) {
@@ -55,7 +57,7 @@ export function SourceOutput({ source }: Props) {
   } else if (source.twitterAcount) {
     return <TwitterTimeline account={source.twitterAcount} />;
   } else if (source.twitchAccount) {
-    return <TwitchSource channel={source.twitchAccount} />;
+    return <TwitchSource channel={source.twitchAccount} muted={muted} />;
   } else if (source.zappingChannel) {
     return <ZappingSource channelId={source.zappingChannel} />;
   }

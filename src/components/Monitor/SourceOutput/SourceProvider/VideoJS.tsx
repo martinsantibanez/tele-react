@@ -6,8 +6,9 @@ import qualityLevels from "videojs-contrib-quality-levels";
 
 type Props = {
   src: string;
+  muted?: boolean
 };
-const VideoPlayer = ({ src }: Props) => {
+const VideoPlayer = ({ src, muted = true }: Props) => {
   const videoRef = useRef<any>();
   const [player, setPlayer] = useState<any>(undefined);
 
@@ -23,7 +24,7 @@ const VideoPlayer = ({ src }: Props) => {
       preload: "auto",
       autoplay: "any",
       controls: true,
-      muted: true,
+      muted,
       fluid: true,
       responsive: true,
       controlBar: {

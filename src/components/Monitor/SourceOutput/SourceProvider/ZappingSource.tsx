@@ -3,10 +3,6 @@ import io from 'socket.io-client';
 import { useZappingConfig } from '../../../../hooks/useZappingConfig';
 import VideoPlayer from './VideoJS';
 
-type Props = {
-  channelId: number;
-};
-
 type SocketData = {
   href: string;
   id: number;
@@ -14,7 +10,12 @@ type SocketData = {
   name: string;
 };
 
-export function ZappingSource({ channelId }: Props) {
+type Props = {
+  channelId: number;
+  muted?: boolean;
+};
+
+export function ZappingSource({ channelId, muted = true }: Props) {
   const [isConnected, setIsConnected] = useState(false);
   const { zappingConfig } = useZappingConfig();
 
@@ -50,5 +51,5 @@ export function ZappingSource({ channelId }: Props) {
   }, [channelId, zappingConfig]);
 
   if (!href || !isConnected) return null;
-  return <VideoPlayer src={href} />;
+  return <VideoPlayer src={href} muted={muted} />;
 }

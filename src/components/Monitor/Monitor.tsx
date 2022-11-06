@@ -12,6 +12,7 @@ const cx = classnames.bind(styles);
 
 type Props = {
   sourceSlug?: string;
+  muted?: boolean
   size: number;
   onChangeClick?: () => void;
   onRemove?: () => void;
@@ -20,6 +21,7 @@ type Props = {
 
 export function Monitor({
   sourceSlug,
+  muted = true,
   size,
   onChangeClick,
   onRemove,
@@ -48,7 +50,7 @@ export function Monitor({
         mode: DisplayMode.Grid,
         layout: {}
       },
-      sources: [{ sourceSlug, uuid: uuid() }]
+      sources: [{ sourceSlug, uuid: uuid(), muted: false }]
     });
   };
 
@@ -60,7 +62,7 @@ export function Monitor({
     <div className={cx(`stream`, { editing: false }) + ` col-${size}`}>
       <div className="w-100 h-100">
         <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
-          {!!source && <SourceOutput source={source} />}
+          {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
         {isEditing && (
           <div className={cx('actions-container')}>
