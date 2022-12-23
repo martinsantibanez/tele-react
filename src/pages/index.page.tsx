@@ -1,40 +1,45 @@
+import { Box, Flex, VStack } from '@chakra-ui/react';
 import type { NextPage } from 'next';
+
+import { Button, Heading } from '@chakra-ui/react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useState } from 'react';
 import { useCustomSources } from '../hooks/useCustomSources';
 import { useDisplayConfig } from '../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../hooks/useSavedGrid';
 import { useZappingConfig } from '../hooks/useZappingConfig';
-import styles from '../styles/Home.module.css';
+
+import Link from 'next/link';
 import { useSavedSelectedItem } from './list/index.page';
 
-function HomeElement({
-  description,
-  title,
-  href,
-  openInNewTab
-}: {
+type HomeElementProps = {
   title: string;
   description?: string;
   href: string;
   openInNewTab?: boolean;
-}) {
+};
+
+const HomeElement = ({
+  href,
+  description,
+  openInNewTab,
+  title
+}: HomeElementProps) => {
   return (
-    <div className="row mt-5 text-center">
-      <Link href={href} passHref>
-        <a
-          className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
-          target={openInNewTab ? '_blank' : ''}
-        >
-          <h3>{title}</h3>
-          {description && <p>{description}</p>}
-        </a>
-      </Link>
-    </div>
+    <Link href={href} target={openInNewTab ? '_blank' : ''} passHref>
+      <Button
+        w="100%"
+        // variant="outline"
+        colorScheme="gray"
+        fontWeight={500}
+        fontSize="2xl"
+      >
+        {title}
+      </Button>
+    </Link>
   );
-}
+};
 
 const Home: NextPage = () => {
   const [, , gridStorage] = useSavedGrid();
@@ -60,7 +65,7 @@ const Home: NextPage = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <>
       <Head>
         <title>Ver Tele</title>
         <meta name="description" content="Visor de canales de TV chilena" />
@@ -68,36 +73,36 @@ const Home: NextPage = () => {
       </Head>
 
       <main>
-        <div className="container text-center text-white pt-3">
-          <h1>Ver Tele</h1>
-
-          <HomeElement
-            href="/monitor"
-            title="Monitor"
-            description="Monitor personalizable. Filas o layout."
-          />
-          <HomeElement
-            href="/promoted"
-            title="Señal Destacada"
-            description="Abrelo en otra ventana, y destaca una señal desde la cuadrícula."
-          />
-
-          <HomeElement
-            href="/list"
-            title="Lista"
-            description="Elige solo un canal de la lista."
-          />
-          <div className="row mt-5 text-center">
-            <button
-              onClick={handleClearLocalStorage}
-              className="btn btn-outline-light col-12 col-md-4 offset-md-4"
-            >
-              {clearedState ? '✅ Borrado' : 'Borrar datos locales'}
-            </button>
-          </div>
-        </div>
+        <Flex minH="80vh" align="center" justify="center">
+          <Box py={12}>
+            <Heading as="h1" fontSize="4xl" pb={12} textAlign="center">
+              Ver Tele
+            </Heading>
+            <VStack spacing={3} textAlign="center">
+              <HomeElement
+                href="/monitor"
+                title="Monitor"
+                description="Monitor personalizable. Filas o layout."
+              />
+              <HomeElement
+                href="/promoted"
+                title="Señal Destacada"
+                description="Abrelo en otra ventana, y destaca una señal desde la cuadrícula."
+                openInNewTab
+              />
+              <HomeElement
+                href="/list"
+                title="Lista"
+                description="Elige solo un canal de la lista."
+              />
+              <Button variant="outline" onClick={handleClearLocalStorage}>
+                {clearedState ? '✅ Borrado' : 'Borrar datos locales'}
+              </Button>
+            </VStack>
+          </Box>
+        </Flex>
       </main>
-    </div>
+    </>
   );
 };
 

@@ -1,8 +1,14 @@
-import Link from "next/link";
-import React from "react";
-import { Container, Navbar } from "react-bootstrap";
-import { BsPencilFill, BsXLg } from "react-icons/bs";
-import { useTeleContext } from "../context/TeleContext";
+import {
+  Box,
+  Flex,
+  HStack,
+  IconButton,
+  useColorModeValue
+} from '@chakra-ui/react';
+import Link from 'next/link';
+import { BsPencilFill, BsXLg } from 'react-icons/bs';
+
+import { useTeleContext } from '../context/TeleContext';
 
 type Props = {};
 export function NavBar({}: Props) {
@@ -11,24 +17,25 @@ export function NavBar({}: Props) {
   const handleToggle = () => toggleEditting();
 
   return (
-    <Navbar variant="dark">
-      <Container fluid>
-        <Link href="/" passHref>
-          <Navbar.Brand>tele</Navbar.Brand>
-        </Link>
-        <button
-          type="button"
-          className="btn btn-default"
-          aria-label="Left Align"
-          onClick={handleToggle}
-        >
-          <span
-            className="glyphicon glyphicon-align-left"
-            aria-hidden="true"
-          ></span>
-          {isEditing ? <BsXLg color="white" /> : <BsPencilFill color="white" />}
-        </button>
-      </Container>
-    </Navbar>
+    <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
+      <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
+        <HStack spacing={8} alignItems={'center'}>
+          <Link href="/">Ver Tele</Link>
+        </HStack>
+        <Flex alignItems="center">
+          <IconButton
+            aria-label="Toggle edit mode"
+            onClick={handleToggle}
+            icon={
+              isEditing ? (
+                <BsXLg color="white" />
+              ) : (
+                <BsPencilFill color="white" />
+              )
+            }
+          />
+        </Flex>
+      </Flex>
+    </Box>
   );
 }
