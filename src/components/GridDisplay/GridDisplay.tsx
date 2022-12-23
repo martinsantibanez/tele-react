@@ -22,6 +22,7 @@ export function GridDisplay({
         <Monitor
           size={size}
           sourceSlug={source.sourceSlug}
+          muted={source.muted ?? true}
           key={`${source.uuid}`}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}

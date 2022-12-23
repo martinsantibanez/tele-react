@@ -1,6 +1,6 @@
 import { FaBroadcastTower } from 'react-icons/fa';
 import { SourcesMap } from '.';
-import { ZappingSource } from '../components/Monitor/ZappingSource/ZappingSource';
+import { ZappingSource } from '../components/Monitor/SourceOutput/SourceProvider/ZappingSource';
 
 const AntennaIcon = <FaBroadcastTower key="antenna" />;
 

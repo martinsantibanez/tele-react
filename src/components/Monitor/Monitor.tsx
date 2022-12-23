@@ -1,15 +1,18 @@
 import classnames from 'classnames/bind';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useFeaturedSource } from '../../hooks/useFeaturedSource';
+import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
+import { DisplayMode } from '../../pages/monitor/types';
 import { getSource } from '../../sources';
+import { uuid } from '../../utils/uuid';
 import styles from './Monitor.module.scss';
-import { SourceOutput } from './SourceOutput';
+import { SourceOutput } from './SourceOutput/SourceOutput';
 const cx = classnames.bind(styles);
 
 type Props = {
   sourceSlug?: string;
+  muted?: boolean
   size: number;
   onChangeClick?: () => void;
   onRemove?: () => void;
@@ -18,14 +21,14 @@ type Props = {
 
 export function Monitor({
   sourceSlug,
+  muted = true,
   size,
   onChangeClick,
   onRemove,
   isBeingEdited
 }: Props) {
   const { isEditing } = useTeleContext();
-
-  const [, setFeaturedSource] = useFeaturedSource();
+  const [, setFeaturedScreen] = useFeaturedScreen();
   const { customSources } = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
@@ -39,7 +42,16 @@ export function Monitor({
   }, [customSources, sourceSlug]);
 
   const handlePromote = () => {
-    setFeaturedSource(source?.slug);
+    setFeaturedScreen({
+      config: {
+        grid: {
+          size: 12
+        },
+        mode: DisplayMode.Grid,
+        layout: {}
+      },
+      sources: [{ sourceSlug, uuid: uuid(), muted: false }]
+    });
   };
 
   const handleChangeClick = () => {
@@ -50,7 +62,7 @@ export function Monitor({
     <div className={cx(`stream`, { editing: false }) + ` col-${size}`}>
       <div className="w-100 h-100">
         <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
-          {!!source && <SourceOutput source={source} />}
+          {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
         {isEditing && (
           <div className={cx('actions-container')}>

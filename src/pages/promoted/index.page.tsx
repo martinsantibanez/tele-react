@@ -1,6 +1,6 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { useFeaturedScreen } from '../../hooks/useFeaturedSource';
+import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { Screen } from '../monitor/Screen';
 
 const MonitorPage: NextPage = () => {

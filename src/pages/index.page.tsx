@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useCustomSources } from '../hooks/useCustomSources';
 import { useDisplayConfig } from '../hooks/useDisplayConfig';
-import { useFeaturedSource } from '../hooks/useFeaturedSource';
+import { useFeaturedScreen } from '../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../hooks/useSavedGrid';
 import { useZappingConfig } from '../hooks/useZappingConfig';
 import styles from '../styles/Home.module.css';
@@ -38,7 +38,7 @@ function HomeElement({
 
 const Home: NextPage = () => {
   const [, , gridStorage] = useSavedGrid();
-  const [, , featuredStorage] = useFeaturedSource();
+  const [, , featuredScreenStorage] = useFeaturedScreen();
   const [, , selectedItemStorage] = useSavedSelectedItem();
   const { customSourcesMeta } = useCustomSources();
   const [, , displayConfigStorage] = useDisplayConfig();
@@ -52,7 +52,7 @@ const Home: NextPage = () => {
     }
     gridStorage.removeItem();
     selectedItemStorage.removeItem();
-    featuredStorage.removeItem();
+    featuredScreenStorage.removeItem();
     customSourcesMeta.removeItem();
     displayConfigStorage.removeItem();
     zappingConfigMeta.removeItem();

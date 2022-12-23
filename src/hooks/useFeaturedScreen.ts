@@ -12,10 +12,3 @@ export function useFeaturedScreen() {
     }
   });
 }
-
-export function useFeaturedSource() {
-  return useLocalStorageState<string | undefined>('__tele_featured__', {
-    ssr: true,
-    defaultValue: undefined
-  });
-}
