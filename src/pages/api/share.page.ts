@@ -20,7 +20,7 @@ export default async function handler(
       const newUuid = uuid();
       console.log({ payload, newUuid });
       const redis = Redis.fromEnv();
-      await redis.set(newUuid, JSON.stringify(payload));
+      await redis.set(newUuid, JSON.stringify(payload), { ex: 60 * 60 * 24 });
       console.log(`Saved to Redis with key=${newUuid}`);
 
       res.status(200).json({ uuid: newUuid });
