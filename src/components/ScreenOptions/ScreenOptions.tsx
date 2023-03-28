@@ -16,6 +16,7 @@ type Props = {
   onSourceAdd?: () => void;
   onPromote?: () => void;
   onModeChange?: (selectedMode: DisplayMode) => void;
+  onShare?: () => void;
   mode: DisplayMode;
   size: number;
 };
@@ -24,6 +25,7 @@ export function ScreenOptions({
   onSourceAdd,
   onModeChange,
   onPromote,
+  onShare,
   mode,
   size
 }: Props) {
@@ -61,9 +63,9 @@ export function ScreenOptions({
       {onSourceAdd && (
         <ActionButton onClick={onSourceAdd}>Agregar</ActionButton>
       )}
-      {onPromote && (
-        <ActionButton onClick={onPromote}>Destacar</ActionButton>
-      )}
+      {onPromote && <ActionButton onClick={onPromote}>Destacar</ActionButton>}
+
+      {onShare && <ActionButton onClick={onShare}>Compartir</ActionButton>}
     </div>
   );
 }
