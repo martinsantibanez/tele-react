@@ -7,10 +7,10 @@ import { ZappingSource } from './SourceProvider/ZappingSource';
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
     <div className="w-100 h-100">
-      <div className="embed-responsive embed-responsive-16by9">
+      <div className="ratio ratio-16x9">
         <iframe
           src={src}
-          className="embed-responsive-item embed-responsive-16by9"
+          className="ratio ratio-16x9"
           frameBorder="0"
         />
       </div>

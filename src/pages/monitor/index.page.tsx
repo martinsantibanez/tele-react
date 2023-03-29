@@ -129,7 +129,7 @@ const MonitorPage: NextPage = () => {
         </div>
         {isEditing && (
           <>
-            <div className="col-4 pr-4">
+            <div className="col-4 pe-4">
               <SourceAccordionList
                 onSelect={handleSourceChange}
                 selectedSourceSlug={selectedSourceSlug}

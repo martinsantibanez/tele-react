@@ -12,7 +12,7 @@ type Props = {
 export function Screen({ screen, onEdit, onRemove, editingSourceIdx }: Props) {
   const { config, sources } = screen;
   return (
-    <div className="row no-gutters row-canales">
+    <div className="row g-0 row-canales mx-0">
       {config.mode === DisplayMode.Grid && (
         <GridDisplay
           size={config.grid?.size}

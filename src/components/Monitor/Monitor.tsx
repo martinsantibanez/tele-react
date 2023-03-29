@@ -12,7 +12,7 @@ const cx = classnames.bind(styles);
 
 type Props = {
   sourceSlug?: string;
-  muted?: boolean
+  muted?: boolean;
   size: number;
   onChangeClick?: () => void;
   onRemove?: () => void;
@@ -59,7 +59,11 @@ export function Monitor({
   };
 
   return (
-    <div className={cx(`stream`, { editing: false }) + ` col-${size}`}>
+    <div
+      className={
+        cx(`stream`, { editing: false }) + ` col-${size} position-relative`
+      }
+    >
       <div className="w-100 h-100">
         <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
           {!!source && <SourceOutput source={source} muted={muted} />}
