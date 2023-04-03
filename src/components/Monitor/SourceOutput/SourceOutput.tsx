@@ -1,4 +1,4 @@
-import { Source } from '../../../sources';
+import { SourceType } from '../../../sources';
 import { TwitchSource } from './SourceProvider/TwitchSource';
 import { TwitterTimeline } from './SourceProvider/TwitterTimeline';
 import VideoPlayer from './SourceProvider/VideoJS';
@@ -20,7 +20,7 @@ export function IframeOutput({ name, src }: { src: string; name?: string }) {
 
 type Props = {
   muted?: boolean;
-  source: Source;
+  source: SourceType;
 };
 
 export function SourceOutput({ source, muted = true }: Props) {

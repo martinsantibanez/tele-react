@@ -1,15 +1,15 @@
 import { useCallback } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
-import { Source } from '../sources';
+import { SourceType } from '../sources';
 
 export function useCustomSources() {
   const [customSources, setCustomSources, customSourcesMeta] =
-    useLocalStorageState<Source[]>('__tele_custom_source__', {
+    useLocalStorageState<SourceType[]>('__tele_custom_source__', {
       defaultValue: [],
       ssr: true
     });
   const createSource = useCallback(
-    (newSource: Source) => {
+    (newSource: SourceType) => {
       setCustomSources(v => {
         if (v.some(source => source.slug === newSource.slug)) return v;
         return [...(v || []), newSource];

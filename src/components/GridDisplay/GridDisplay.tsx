@@ -1,5 +1,5 @@
 import { SourceNode } from '../../pages/monitor/types';
-import { Monitor } from '../Monitor/Monitor';
+import { Source } from '../Monitor/Source';
 
 type Props = {
   size: number;
@@ -19,7 +19,7 @@ export function GridDisplay({
   return (
     <>
       {sources.map((source, idx) => (
-        <Monitor
+        <Source
           size={size}
           sourceSlug={source.sourceSlug}
           muted={source.muted ?? true}

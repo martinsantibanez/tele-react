@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Accordion } from 'react-bootstrap';
-import { Source } from '../../../sources';
+import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
 import { BsTwitch } from 'react-icons/bs';
 import { useCustomSources } from '../../../hooks/useCustomSources';
 
 type Props = {
-  onSourceSelect: (source: Source) => void;
+  onSourceSelect: (source: SourceType) => void;
   selectedSourceSlug: string | undefined;
   accordionEventKey: string;
 };
@@ -19,7 +19,7 @@ export function TwitchSelector({
   const { createSource, customSources } = useCustomSources();
   const twitchSources = customSources.filter(source => !!source.twitchAccount);
   const handleCreateSource = () => {
-    const source: Source = {
+    const source: SourceType = {
       slug: `custom_twitch_${customTwitchValue}`,
       titleHtml: customTwitchValue,
       twitchAccount: customTwitchValue

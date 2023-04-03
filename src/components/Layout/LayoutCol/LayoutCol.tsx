@@ -1,5 +1,5 @@
 import { ColType, SourceNode } from '../../../pages/monitor/types';
-import { Monitor } from '../../Monitor/Monitor';
+import { Source } from '../../Monitor/Source';
 import { LayoutRow } from '../LayoutRow/LayoutRow';
 
 type Props = {
@@ -16,9 +16,8 @@ export function LayoutCol({ col, sources, onEdit, editingSourceIdx }: Props) {
   if (node) {
     const source = sources[node.idx];
     if (!source) return null;
-    const sourceSlug = source.sourceSlug;
     return (
-      <Monitor
+      <Source
         size={size}
         sourceSlug={source.sourceSlug}
         onChangeClick={() => (onEdit ? onEdit(node.idx) : undefined)}

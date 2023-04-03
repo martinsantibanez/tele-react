@@ -12,7 +12,7 @@ import { regionesSources } from './regiones';
 import { relojesSources } from './relojes';
 import { tvNacionalSources, tvNacionalYoutubeSources } from './tvNacional';
 
-export enum SourceType {
+export enum SourceInputType {
   m3u8 = 'm3u8',
   iframe = 'iframe',
   html = 'html',
@@ -32,7 +32,7 @@ export interface SourceInput {
   zappingChannel?: number;
 }
 
-export interface Source extends SourceInput {
+export interface SourceType extends SourceInput {
   slug: string;
   name?: string;
   flag?: string;
@@ -46,7 +46,7 @@ export interface Source extends SourceInput {
 }
 
 export type SourcesMap = {
-  [sourceId: string]: Source;
+  [sourceId: string]: SourceType;
 };
 
 export interface SourceGroup {

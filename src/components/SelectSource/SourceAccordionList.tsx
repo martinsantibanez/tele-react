@@ -1,12 +1,12 @@
 import { Accordion } from 'react-bootstrap';
-import { Source, sourcesCategories } from '../../sources';
+import { SourceType, sourcesCategories } from '../../sources';
 import { SourceButton } from './SourceButton/SourceButton';
 import { TwitchSelector } from './TwitchSelector/TwitchSelector';
 import { ZappingSelector } from './ZappingSelector/ZappingSelector';
 
 type Props = {
   selectedSourceSlug: string | undefined;
-  onSelect: (source: Source) => void;
+  onSelect: (source: SourceType) => void;
 };
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
   return (

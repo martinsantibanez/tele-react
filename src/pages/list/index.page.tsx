@@ -1,10 +1,10 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import useLocalStorageState from 'use-local-storage-state';
-import { Monitor } from '../../components/Monitor/Monitor';
+import { Source } from '../../components/Monitor/Source';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
 import { MainLayout } from '../../layout/MainLayout';
-import { Source } from '../../sources';
+import { SourceType, SourceInputType } from '../../sources';
 
 export function useSavedSelectedItem() {
   return useLocalStorageState<string | undefined>('__tele_selected__');
@@ -12,9 +12,8 @@ export function useSavedSelectedItem() {
 
 const ListPage: NextPage = () => {
   const [sourceSlug, setSourceSlug] = useSavedSelectedItem();
-  // const [sourceSlug, setSourceSlug] = useState<string>();
 
-  const handleSelectSource = (source: Source) => {
+  const handleSelectSource = (source: SourceType) => {
     setSourceSlug(source.slug);
   };
 
@@ -27,7 +26,7 @@ const ListPage: NextPage = () => {
 
       <div className="row w-100 mw-100">
         <div className="col-8">
-          <Monitor size={12} sourceSlug={sourceSlug} />
+          <Source size={12} sourceSlug={sourceSlug} />
         </div>
         <div className="col-4">
           <SourceAccordionList
