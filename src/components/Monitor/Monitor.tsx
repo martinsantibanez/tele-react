@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { useMemo } from 'react';
-import { Button, Card, CloseButton, Form, InputGroup } from 'react-bootstrap';
 import useLocalStorageState from 'use-local-storage-state';
 import { useTeleContext } from '../../context/TeleContext';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { useZappingConfig } from '../../hooks/useZappingConfig';
 import { Screen } from '../../pages/monitor/Screen';
 import { DisplayMode, ScreenType } from '../../pages/monitor/types';
 import { SourceType } from '../../sources';
@@ -29,14 +29,16 @@ export const Monitor = () => {
   const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
+  const { zappingConfig } = useZappingConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
 
   const screen: ScreenType = useMemo(
     () => ({
       config: displayConfig,
-      sources: selectedSources
+      sources: selectedSources,
+      zappingConfig
     }),
-    [displayConfig, selectedSources]
+    [displayConfig, selectedSources, zappingConfig]
   );
 
   const selectedSourceSlug = useMemo(
