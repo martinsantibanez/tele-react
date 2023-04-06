@@ -1,13 +1,12 @@
-import React from 'react';
-import { Source } from '../../../sources';
 import classnames from 'classnames/bind';
+import { SourceType } from '../../../sources';
 import styles from './SourceButton.module.scss';
 const cx = classnames.bind(styles);
 
 type Props = {
-  source: Source;
+  source: SourceType;
   isSelected?: boolean;
-  onSelect?: (source: Source) => void;
+  onSelect?: (source: SourceType) => void;
 };
 export function SourceButton({ source, onSelect, isSelected }: Props) {
   return (
