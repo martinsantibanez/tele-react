@@ -8,6 +8,7 @@ import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { MainLayout } from '../../layout/MainLayout';
 import { ScreenType } from '../monitor/types';
 import { useZappingConfig } from '../../hooks/useZappingConfig';
+import { useCustomSources } from '../../hooks/useCustomSources';
 
 export const getServerSideProps: GetServerSideProps<{
   initialScreen: ScreenType;
@@ -39,21 +40,26 @@ const MonitorPage = ({
   const [, setSelectedSources] = useSavedGrid();
   const [, setDisplayConfig] = useDisplayConfig();
   const { setZappingConfig } = useZappingConfig();
+  const { setCustomSources } = useCustomSources();
   const router = useRouter();
   useEffect(() => {
     setSelectedSources(initialScreen.sources);
     setDisplayConfig(initialScreen.config);
     if (initialScreen.zappingConfig)
       setZappingConfig(initialScreen.zappingConfig);
+    if (initialScreen.customSources)
+      setCustomSources(initialScreen.customSources);
     router.push('/monitor');
   }, [
     initialScreen.config,
     initialScreen.sources,
     initialScreen.zappingConfig,
+    initialScreen.customSources,
     router,
     setDisplayConfig,
     setSelectedSources,
-    setZappingConfig
+    setZappingConfig,
+    setCustomSources
   ]);
   return (
     <MainLayout>

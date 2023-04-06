@@ -13,6 +13,7 @@ import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SavedSources } from '../SelectSource/SavedSources';
 import { SourceAccordionList } from '../SelectSource/SourceAccordionList';
+import { useCustomSources } from '../../hooks/useCustomSources';
 
 type SavedScreen = {
   name: string;
@@ -29,6 +30,7 @@ export const Monitor = () => {
   const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
+  const { customSources } = useCustomSources();
   const { zappingConfig } = useZappingConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
 
@@ -36,9 +38,10 @@ export const Monitor = () => {
     () => ({
       config: displayConfig,
       sources: selectedSources,
-      zappingConfig
+      zappingConfig,
+      customSources
     }),
-    [displayConfig, selectedSources, zappingConfig]
+    [displayConfig, selectedSources, zappingConfig, customSources]
   );
 
   const selectedSourceSlug = useMemo(
