@@ -1,4 +1,5 @@
 import classnames from 'classnames/bind';
+import { Button } from 'react-bootstrap';
 import { SourceType } from '../../../sources';
 import styles from './SourceButton.module.scss';
 const cx = classnames.bind(styles);
@@ -10,20 +11,24 @@ type Props = {
 };
 export function SourceButton({ source, onSelect, isSelected }: Props) {
   return (
-    <button
-      title={source.slug}
-      key={source.slug}
-      className={cx('btn', 'source-button', { selected: isSelected })}
+    <Button
+      variant="light"
       onClick={() => onSelect && onSelect(source)}
+      className={
+        cx('btn', 'source-button', { selected: isSelected }) + ' mb-2 ms-1'
+      }
     >
-      {source.titleIcons?.length && (
-        <span className={cx('icons')}>
-          {source.titleIcons.map(titleIcon => titleIcon)}
-        </span>
-      )}
+      <div>
+        {source.titleIcons?.length && (
+          <span className={cx('icons')}>
+            {source.titleIcons.map(titleIcon => titleIcon)}
+          </span>
+        )}
+      </div>
       {source.flag && (
         <span className={cx('icons')}>
           <img
+            className="img-fluid"
             alt={source.flag}
             src={`https://flagcdn.com/${source.flag}.svg`}
           ></img>
@@ -38,6 +43,6 @@ export function SourceButton({ source, onSelect, isSelected }: Props) {
           }}
         ></span>
       )}
-    </button>
+    </Button>
   );
 }

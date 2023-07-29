@@ -1,5 +1,5 @@
 import { SourceNode } from '../../pages/monitor/types';
-import { Source } from '../Monitor/Source';
+import { OnSwitchCb, Source } from '../Monitor/Source';
 
 type Props = {
   size: number;
@@ -7,6 +7,7 @@ type Props = {
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
+  onSwitch?: OnSwitchCb;
 };
 
 export function GridDisplay({
@@ -14,12 +15,14 @@ export function GridDisplay({
   sources,
   onEdit,
   onRemove,
-  editingSourceIdx
+  editingSourceIdx,
+  onSwitch
 }: Props) {
   return (
     <>
       {sources.map((source, idx) => (
         <Source
+          idx={idx}
           size={size}
           sourceSlug={source.sourceSlug}
           muted={source.muted ?? true}
@@ -27,6 +30,7 @@ export function GridDisplay({
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
           isBeingEdited={idx === editingSourceIdx}
+          onSwitch={onSwitch}
         />
       ))}
     </>

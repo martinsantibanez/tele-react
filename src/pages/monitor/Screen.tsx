@@ -1,5 +1,6 @@
 import { GridDisplay } from '../../components/GridDisplay/GridDisplay';
 import { Layout } from '../../components/Layout/Layout';
+import { OnSwitchCb } from '../../components/Monitor/Source';
 import { DisplayMode, ScreenType } from './types';
 
 type Props = {
@@ -7,9 +8,16 @@ type Props = {
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
+  onSwitch?: OnSwitchCb;
 };
 
-export function Screen({ screen, onEdit, onRemove, editingSourceIdx }: Props) {
+export function Screen({
+  screen,
+  onEdit,
+  onRemove,
+  editingSourceIdx,
+  onSwitch
+}: Props) {
   const { config, sources } = screen;
   return (
     <div className="row g-0 row-canales mx-0">
@@ -20,6 +28,7 @@ export function Screen({ screen, onEdit, onRemove, editingSourceIdx }: Props) {
           onEdit={onEdit}
           onRemove={onRemove}
           editingSourceIdx={editingSourceIdx}
+          onSwitch={onSwitch}
         />
       )}
       {config.mode === DisplayMode.Layout && (
@@ -28,6 +37,7 @@ export function Screen({ screen, onEdit, onRemove, editingSourceIdx }: Props) {
           sources={sources}
           onEdit={onEdit}
           editingSourceIdx={editingSourceIdx}
+          onSwitch={onSwitch}
         />
       )}
     </div>

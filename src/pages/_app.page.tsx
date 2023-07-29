@@ -1,16 +1,20 @@
 import type { AppProps } from 'next/app';
+import { useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TeleProvider } from '../context/TeleContext';
 import '../styles/globals.scss';
-import { useEffect } from 'react';
 
 function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     document.documentElement.dataset.bsTheme = 'dark';
   }, []);
   return (
-    <TeleProvider>
-      <Component {...pageProps} />
-    </TeleProvider>
+    <DndProvider backend={HTML5Backend}>
+      <TeleProvider>
+        <Component {...pageProps} />
+      </TeleProvider>
+    </DndProvider>
   );
 }
 

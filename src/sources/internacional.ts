@@ -1,14 +1,6 @@
 import { SourcesMap } from '.';
 
 const argentinaSources: SourcesMap = {
-  'TyC-sports': {
-    slug: 'TyC-sports',
-    name: 'TyC Sports',
-    m3u8Url:
-      'https://d3awnlgqz0szay.cloudfront.net/out/v1/b841c366cbe540e6a106c3ba83e5c8d6/index_9.m3u8',
-    titleHtml: 'TyC Sports (Mundial)',
-    flag: 'ar'
-  },
   tn: {
     slug: 'tn',
     name: 'Todonoticias',

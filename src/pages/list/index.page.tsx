@@ -26,7 +26,7 @@ const ListPage: NextPage = () => {
 
       <div className="row w-100 mw-100">
         <div className="col-8">
-          <Source size={12} sourceSlug={sourceSlug} />
+          <Source size={12} sourceSlug={sourceSlug} idx={0} />
         </div>
         <div className="col-4">
           <SourceAccordionList

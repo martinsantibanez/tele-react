@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useMemo } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import { useTeleContext } from '../../context/TeleContext';
+import { useCustomSources } from '../../hooks/useCustomSources';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
@@ -13,7 +14,7 @@ import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SavedSources } from '../SelectSource/SavedSources';
 import { SourceAccordionList } from '../SelectSource/SourceAccordionList';
-import { useCustomSources } from '../../hooks/useCustomSources';
+import { OnSwitchCb } from './Source';
 
 type SavedScreen = {
   name: string;
@@ -124,6 +125,19 @@ export const Monitor = () => {
     );
   };
 
+  const handleSwitch: OnSwitchCb = (left: number, right: number) => {
+    setSelectedSources(sources => {
+      console.log({ sources });
+      if (!sources) return sources;
+      const newSources = [...sources];
+      const leftBackup = { ...newSources[left] };
+      newSources[left] = newSources[right];
+      newSources[right] = leftBackup;
+      console.log({ newSources });
+      return newSources;
+    });
+  };
+
   return (
     <div className="row">
       <div className={isEditing ? 'col-8' : 'col-12'}>
@@ -133,6 +147,7 @@ export const Monitor = () => {
             onEdit={handleSourceEdit}
             onRemove={handleSourceRemove}
             editingSourceIdx={editingSourceIdx}
+            onSwitch={handleSwitch}
           />
         )}
       </div>

@@ -1,4 +1,5 @@
 import { RowType, SourceNode } from '../../../pages/monitor/types';
+import { OnSwitchCb } from '../../Monitor/Source';
 import { LayoutCol } from '../LayoutCol/LayoutCol';
 
 type Props = {
@@ -6,9 +7,16 @@ type Props = {
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
   editingSourceIdx?: number;
+  onSwitch?: OnSwitchCb;
 };
 
-export function LayoutRow({ row, onEdit, sources, editingSourceIdx }: Props) {
+export function LayoutRow({
+  row,
+  onEdit,
+  sources,
+  editingSourceIdx,
+  onSwitch
+}: Props) {
   const { cols } = row;
   return (
     <div className="row g-0 mx-0">
@@ -19,6 +27,7 @@ export function LayoutRow({ row, onEdit, sources, editingSourceIdx }: Props) {
           onEdit={onEdit}
           sources={sources}
           editingSourceIdx={editingSourceIdx}
+          onSwitch={onSwitch}
         />
       ))}
     </div>

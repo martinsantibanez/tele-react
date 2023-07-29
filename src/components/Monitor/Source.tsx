@@ -1,5 +1,6 @@
 import classnames from 'classnames/bind';
 import { useMemo } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
@@ -10,6 +11,8 @@ import styles from './Source.module.scss';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 const cx = classnames.bind(styles);
 
+export type OnSwitchCb = (left: number, right: number) => void;
+
 type Props = {
   sourceSlug?: string;
   muted?: boolean;
@@ -17,6 +20,8 @@ type Props = {
   onChangeClick?: () => void;
   onRemove?: () => void;
   isBeingEdited?: boolean;
+  idx: number;
+  onSwitch?: OnSwitchCb;
 };
 
 export function Source({
@@ -25,7 +30,9 @@ export function Source({
   size,
   onChangeClick,
   onRemove,
-  isBeingEdited
+  isBeingEdited,
+  idx,
+  onSwitch
 }: Props) {
   const { isEditing } = useTeleContext();
   const [, setFeaturedScreen] = useFeaturedScreen();
@@ -58,13 +65,45 @@ export function Source({
     if (onChangeClick) onChangeClick();
   };
 
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: 'Monitor',
+      item: () => ({
+        idx
+      }),
+      collect: monitor => ({
+        isDragging: !!monitor.isDragging()
+      })
+    }),
+    [idx]
+  );
+
+  const [{ isOver }, drop] = useDrop(
+    () => ({
+      accept: 'Monitor',
+      collect: monitor => ({
+        isOver: !!monitor.isOver()
+      }),
+      drop: (a: { idx: number }) => {
+        if (onSwitch) onSwitch(idx, a.idx);
+      }
+    }),
+    [idx]
+  );
+
   return (
     <div
       className={
         cx(`stream`, { editing: false }) + ` col-${size} position-relative`
       }
+      ref={drag}
+      style={{ opacity: isDragging ? 0.5 : 1, cursor: 'move' }}
     >
-      <div className="w-100 h-100">
+      <div
+        className={`w-100 h-100`}
+        style={{ opacity: isOver ? 0.1 : 1 }}
+        ref={drop}
+      >
         <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>

@@ -1,8 +1,7 @@
-import Link from "next/link";
-import React from "react";
-import { Container, Navbar } from "react-bootstrap";
-import { BsPencilFill, BsXLg } from "react-icons/bs";
-import { useTeleContext } from "../context/TeleContext";
+import Link from 'next/link';
+import { Container, Navbar } from 'react-bootstrap';
+import { BsPencilFill, BsXLg } from 'react-icons/bs';
+import { useTeleContext } from '../context/TeleContext';
 
 type Props = {};
 export function NavBar({}: Props) {
@@ -13,7 +12,7 @@ export function NavBar({}: Props) {
   return (
     <Navbar variant="dark">
       <Container fluid>
-        <Link href="/" passHref>
+        <Link href="/" legacyBehavior passHref>
           <Navbar.Brand>tele</Navbar.Brand>
         </Link>
         <button
