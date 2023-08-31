@@ -133,7 +133,6 @@ export const tvNacionalYoutubeSources: SourcesMap = {
   },
   CNN_CHILE_YT: {
     slug: 'CNN_CHILE_YT',
-    name: 'CNN_CHILE',
     titleIcons: [
       <img
         style={{ maxHeight: 30 }}
