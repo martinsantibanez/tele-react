@@ -80,7 +80,6 @@ export const tvNacionalYoutubeSources: SourcesMap = {
   },
   MEGANOTICIAS_yt_2: {
     slug: 'MEGANOTICIAS_yt_2',
-    name: 'MEGANOTICIAS_y',
     name: 'Meganoticias',
     titleIcons: [
       <img
