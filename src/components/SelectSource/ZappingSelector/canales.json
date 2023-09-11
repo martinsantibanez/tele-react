@@ -69,6 +69,11 @@
     "alias": "cnnchile",
     "name": "CNN Chile"
   },
+  "foxsports3": {
+    "zapping_id": 160,
+    "alias": "foxsports3",
+    "name": "Fox Sports 3"
+  },
   "lared": {
     "zapping_id": 165,
     "alias": "lared",
@@ -78,6 +83,11 @@
     "zapping_id": 173,
     "alias": "etc",
     "name": "etc"
+  },
+  "nasatv": {
+    "zapping_id": 156,
+    "alias": "nasatv",
+    "name": "Nasa TV"
   },
   "ntv": {
     "zapping_id": 184,
@@ -89,20 +99,10 @@
     "alias": "megaplus",
     "name": "Mega Plus"
   },
-  "cdo": {
-    "zapping_id": 92,
-    "alias": "cdo",
-    "name": "CDO Premium HD"
-  },
   "nexoplay": {
     "zapping_id": 221,
     "alias": "nexoplay",
     "name": "NexoPlay"
-  },
-  "clarosports": {
-    "zapping_id": 227,
-    "alias": "clarosports",
-    "name": "Claro Sports"
   },
   "tntsports3": {
     "zapping_id": 156,
@@ -113,6 +113,21 @@
     "zapping_id": 243,
     "alias": "wapptv",
     "name": "Wapp TV"
+  },
+  "senpaitv": {
+    "zapping_id": 288,
+    "alias": "senpaitv",
+    "name": "Senpai TV"
+  },
+  "megaficcion": {
+    "zapping_id": 289,
+    "alias": "megaficcion",
+    "name": "Megaficción"
+  },
+  "tvn3": {
+    "zapping_id": 742,
+    "alias": "tvn3",
+    "name": "TVN3"
   },
   "music-indie": {
     "zapping_id": 61,
@@ -157,12 +172,27 @@
   "music-lofi": {
     "zapping_id": 189,
     "alias": "music-lofi",
-    "name": "Zapping Music Lo-Fi"
+    "name": "Zapping Music LOF-AI"
   },
-  "zapping-channel2": {
+  "zappingsports": {
+    "zapping_id": 332,
+    "alias": "zappingsports",
+    "name": "Zapping Sports"
+  },
+  "zmix": {
     "zapping_id": 222,
-    "alias": "zapping-channel2",
-    "name": "Zapping Channel 2"
+    "alias": "zmix",
+    "name": "Zapping Mix"
+  },
+  "zsgolf": {
+    "zapping_id": 333,
+    "alias": "zsgolf",
+    "name": "Zapping Sports Golf"
+  },
+  "zspadel": {
+    "zapping_id": 334,
+    "alias": "zspadel",
+    "name": "Zapping Sports Padel"
   },
   "zapping-channel1": {
     "zapping_id": 225,
