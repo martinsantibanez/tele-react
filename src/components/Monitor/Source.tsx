@@ -68,6 +68,7 @@ export function Source({
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: 'Monitor',
+      canDrag: isEditing,
       item: () => ({
         idx
       }),
