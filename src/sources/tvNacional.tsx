@@ -286,5 +286,11 @@ export const tvNacionalSources: SourcesMap = {
     ],
     m3u8Url:
       'https://mdstrm.com/live-stream-playlist/5aaabe9e2c56420918184c6d.m3u8'
-  }
+  },
+  'TNT-Sports': {
+    slug: 'TNT-Sports',
+    name: 'TNT Sports',
+    m3u8Url:
+      '/api/tnt',
+  },
 };
