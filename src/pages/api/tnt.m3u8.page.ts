@@ -32,16 +32,21 @@ export default async function handler(
       const splitUrl = m3u8.split('/hls');
       const baseUrl = splitUrl[0] + '/hls';
       const fileParams = splitUrl[1];
-      const { data } = await axios.get<string>(`${baseUrl}/${fileParams}`, {
-        headers: {
-          Referer: 'https://lovesomecommunity.com/',
-          'Referrer-Policy': 'strict-origin-when-cross-origin'
+      const { data, headers } = await axios.get<string>(
+        `${baseUrl}/${fileParams}`,
+        {
+          headers: {
+            Referer: 'https://lovesomecommunity.com/',
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+          }
         }
-      });
+      );
 
       // console.log(re.exec(data));
       const resp = data.replace(re, `${baseUrl}/$1`);
       // console.log(resp);
+      if (typeof headers['Content-Type'] === 'string')
+        res.setHeader('Content-Type', headers['Content-Type']);
       res.status(200).send(resp);
     } catch (err) {
       console.error(err);
