@@ -1424,13 +1424,6 @@
   dependencies:
     isomorphic-fetch "^3.0.0"
 
-"@upstash/redis@^1.20.1":
-  version "1.20.1"
-  resolved "https://registry.yarnpkg.com/@upstash/redis/-/redis-1.20.1.tgz#44d7d429661fb59eba6e4784671a0b7fc33eb5ca"
-  integrity sha512-mYwV8uvQROJnq5aOxmQH3KDa0E8+DRdU0zJ/VGQV84HrhQQNy0IsLFFTo97WEhZAlHcJnVbrbwqUK9disWqx/w==
-  dependencies:
-    isomorphic-fetch "^3.0.0"
-
 "@vercel/analytics@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@vercel/analytics/-/analytics-1.0.1.tgz#38308a626c91866cb00a249c08bf65251e9b9d81"
