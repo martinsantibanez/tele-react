@@ -3,9 +3,12 @@ import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import initChromecast from './chromecast/js/index';
 
-require('@silvermine/videojs-chromecast')(videojs);
-
+// require('@silvermine/videojs-chromecast')(videojs);
+initChromecast(videojs, {});
+// require('./VideoJS/silvermine-videojs-chromecast')(videojs);
+//
 type Props = {
   src: string;
   muted?: boolean;
@@ -22,10 +25,19 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
   useEffect(() => {
     if (player) return;
-    const videoJsOptions: videojs.PlayerOptions = {
+    const videoJsOptions: videojs.PlayerOptions & { chromecast: any } = {
       preload: 'auto',
       autoplay: 'any',
-      techOrder: ['chromecast', 'html5'],
+      techOrder: ['chromecast', 'html5', 'hls'],
+      chromecast: {
+        modifyLoadRequestFn: function (loadRequest) {
+          // HLS support
+          console.log({ loadRequest });
+          loadRequest.media.hlsSegmentFormat = 'fmp4';
+          loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
+          return loadRequest;
+        }
+      },
       controls: true,
       muted,
       fluid: true,
