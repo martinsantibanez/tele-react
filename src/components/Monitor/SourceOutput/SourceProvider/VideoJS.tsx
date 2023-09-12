@@ -28,13 +28,13 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     const videoJsOptions: videojs.PlayerOptions & { chromecast: any } = {
       preload: 'auto',
       autoplay: 'any',
-      techOrder: ['chromecast', 'html5', 'hls'],
+      techOrder: ['chromecast', 'html5', 'hls', 'flash'],
       chromecast: {
         modifyLoadRequestFn: function (loadRequest: any) {
           // HLS support
           console.log({ loadRequest });
-          loadRequest.media.hlsSegmentFormat = 'fmp4';
-          loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
+          loadRequest.media.hlsSegmentFormat = 'ts';
+          loadRequest.media.hlsVideoSegmentFormat = 'ts';
           return loadRequest;
         }
       },
