@@ -33,8 +33,8 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
         modifyLoadRequestFn: function (loadRequest: any) {
           // HLS support
           console.log({ loadRequest });
-          loadRequest.media.hlsSegmentFormat = 'TS';
-          loadRequest.media.hlsVideoSegmentFormat = 'MPEG2_TS';
+          loadRequest.media.hlsSegmentFormat = 'FMP4';
+          loadRequest.media.hlsVideoSegmentFormat = 'FMP4';
           return loadRequest;
         }
       },
