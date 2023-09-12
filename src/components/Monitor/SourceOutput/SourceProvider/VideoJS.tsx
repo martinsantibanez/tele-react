@@ -6,7 +6,15 @@ import 'video.js/dist/video-js.css';
 import initChromecast from './chromecast/js/index';
 
 // require('@silvermine/videojs-chromecast')(videojs);
-initChromecast(videojs, {});
+initChromecast(videojs, {
+  modifyLoadRequestFn: function (loadRequest: any) {
+    // HLS support
+    console.log({ loadRequest });
+    loadRequest.media.hlsSegmentFormat = 'fMP4';
+    loadRequest.media.hlsVideoSegmentFormat = 'fMP4';
+    return loadRequest;
+  }
+});
 // require('./VideoJS/silvermine-videojs-chromecast')(videojs);
 //
 type Props = {
@@ -33,8 +41,8 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
         modifyLoadRequestFn: function (loadRequest: any) {
           // HLS support
           console.log({ loadRequest });
-          loadRequest.media.hlsSegmentFormat = 'FMP4';
-          loadRequest.media.hlsVideoSegmentFormat = 'FMP4';
+          loadRequest.media.hlsSegmentFormat = 'fMP4';
+          loadRequest.media.hlsVideoSegmentFormat = 'fMP4';
           return loadRequest;
         }
       },
