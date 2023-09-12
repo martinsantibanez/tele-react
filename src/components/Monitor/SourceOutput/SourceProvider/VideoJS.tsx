@@ -10,8 +10,8 @@ initChromecast(videojs, {
   modifyLoadRequestFn: function (loadRequest: any) {
     // HLS support
     console.log({ loadRequest });
-    loadRequest.media.hlsSegmentFormat = 'fMP4';
-    loadRequest.media.hlsVideoSegmentFormat = 'fMP4';
+    loadRequest.media.hlsSegmentFormat = 'fmp4';
+    loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
     return loadRequest;
   }
 });
@@ -41,8 +41,8 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
         modifyLoadRequestFn: function (loadRequest: any) {
           // HLS support
           console.log({ loadRequest });
-          loadRequest.media.hlsSegmentFormat = 'fMP4';
-          loadRequest.media.hlsVideoSegmentFormat = 'fMP4';
+          loadRequest.media.hlsSegmentFormat = 'fmp4';
+          loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
           return loadRequest;
         }
       },
