@@ -1,8 +1,7 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { kv } from '@vercel/kv';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { ScreenType } from '../monitor/types';
 import { v4 as uuid } from 'uuid';
-import { Redis } from '@upstash/redis';
+import { ScreenType } from '../monitor/types';
 
 type Data = {
   uuid: string;
@@ -19,8 +18,7 @@ export default async function handler(
       const payload = req.body;
       const newUuid = uuid();
       console.log({ payload, newUuid });
-      const redis = Redis.fromEnv();
-      await redis.set(newUuid, JSON.stringify(payload), { ex: 60 * 60 * 24 });
+      await kv.set(newUuid, JSON.stringify(payload), { ex: 60 * 60 * 24 });
       console.log(`Saved to Redis with key=${newUuid}`);
 
       res.status(200).json({ uuid: newUuid });
