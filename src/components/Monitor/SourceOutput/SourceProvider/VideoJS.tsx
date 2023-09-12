@@ -30,7 +30,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       autoplay: 'any',
       techOrder: ['chromecast', 'html5', 'hls'],
       chromecast: {
-        modifyLoadRequestFn: function (loadRequest) {
+        modifyLoadRequestFn: function (loadRequest: any) {
           // HLS support
           console.log({ loadRequest });
           loadRequest.media.hlsSegmentFormat = 'fmp4';
