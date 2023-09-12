@@ -290,7 +290,6 @@ export const tvNacionalSources: SourcesMap = {
   'TNT-Sports': {
     slug: 'TNT-Sports',
     name: 'TNT Sports',
-    m3u8Url:
-      '/api/tnt.m3u8',
-  },
+    m3u8Url: (process.env.VERCEL_URL || '') + '/api/tnt.m3u8'
+  }
 };
