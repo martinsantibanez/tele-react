@@ -42,6 +42,10 @@ export default async function handler(
         }
       );
 
+      for (const [key, value] of Object.entries(headers)) {
+        res.setHeader(key, value);
+      }
+
       // console.log(re.exec(data));
       const resp = data.replace(re, `${baseUrl}/$1`);
       // console.log(resp);
