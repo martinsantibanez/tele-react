@@ -42,7 +42,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
           // HLS support
           console.log({ loadRequest });
           loadRequest.media.hlsSegmentFormat = 'fmp4';
-          loadRequest.media.hlsVideoSegmentFormat = 'mpeg2_ts';
+          loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
           return loadRequest;
         }
       },
