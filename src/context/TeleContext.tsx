@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 function useValue() {
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const toggleEditting = () => setIsEditing(e => !e);
   const [editingSourceIdx, setEditingSourceIdx] = useState<
     number | undefined
