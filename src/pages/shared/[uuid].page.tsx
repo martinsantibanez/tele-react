@@ -11,7 +11,7 @@ import { MainLayout } from '../../layout/MainLayout';
 import { ScreenType } from '../monitor/types';
 
 export const getServerSideProps: GetServerSideProps<{
-  initialScreen: ScreenType;
+  initialScreen: ScreenType | null;
 }> = async context => {
   console.log(JSON.stringify(context.params));
   const uuid = context.params?.uuid;
@@ -22,7 +22,10 @@ export const getServerSideProps: GetServerSideProps<{
   const initialScreen = await kv.get<ScreenType>(uuid);
   if (!initialScreen)
     return {
-      notFound: true
+      redirect: '/monitor',
+      props: {
+        initialScreen: null
+      }
     };
 
   return {
@@ -42,6 +45,10 @@ const MonitorPage = ({
   const { setCustomSources } = useCustomSources();
   const router = useRouter();
   useEffect(() => {
+    if (!initialScreen) {
+      router.push('/monitor');
+      return;
+    }
     setSelectedSources(initialScreen.sources);
     setDisplayConfig(initialScreen.config);
     if (initialScreen.zappingConfig)
@@ -50,10 +57,7 @@ const MonitorPage = ({
       setCustomSources(initialScreen.customSources);
     router.push('/monitor');
   }, [
-    initialScreen.config,
-    initialScreen.sources,
-    initialScreen.zappingConfig,
-    initialScreen.customSources,
+    initialScreen,
     router,
     setDisplayConfig,
     setSelectedSources,
