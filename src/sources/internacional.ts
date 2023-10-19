@@ -29,7 +29,8 @@ const argentinaSources: SourcesMap = {
   'tv-publica-arg': {
     slug: 'tv-publica-arg',
     name: 'Televisión Pública',
-    youtubeChannelId: 'UCs231K71Bnu5295_x0MB5Pg',
+    // youtubeChannelId: 'UCs231K71Bnu5295_x0MB5Pg',
+    m3u8Url: 'https://cntlnk-main-edge-access.secure.footprint.net/entrypoint/c7_vivo01_dai_source-20001_all_720p.m3u8',
     flag: 'ar'
   },
   'cronica-tv': {
