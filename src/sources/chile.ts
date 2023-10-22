@@ -2,7 +2,7 @@ import { SourcesMap } from '.';
 
 export const chileSources: SourcesMap = {
   PANAMERICANOS_1: {
-    slug: 'PANAMERICANOS_3'.
+    slug: 'PANAMERICANOS_3',
     name: 'Panamericanos 3',
     m3u8Url: 'https://live-panam.panamsportschannel.org/live_abr/panam3/live/panam3_source/chunks.m3u8'
   },
