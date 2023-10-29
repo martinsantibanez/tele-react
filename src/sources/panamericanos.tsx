@@ -113,5 +113,40 @@ export const panamericanosSources: SourcesMap = {
     name: 'TVN - 9',
     iframeSrc:
       'https://mdstrm.com/live-stream/5346f5f2c1e6f5810b5b9df0?jsapi=true&autoplay=true&player=57f40bb4dc5b9f3075c49cfe&custom.ui=%2F317342475%2F24horas&custom.24h_demo=demo&custom.24h_tipo=Portada&custom.24h_seccion=prehome&custom.24h_subseccion=prehome&custom.24h_articulo=&custom.24h_tags=&volume=0&mute=true'
+  },
+  'chv-stgo2023-1': {
+    name: 'CHV - Feed 1',
+    slug: 'chv-stgo2023-1',
+    youtubeVideoId: 'NdpnoOKaeMM'
+  },
+  'chv-stgo2023-2': {
+    name: 'CHV - Feed 2',
+    slug: 'chv-stgo2023-2',
+    youtubeVideoId: '4iRMljd6dm8'
+  },
+  'chv-stgo2023-3': {
+    name: 'CHV - Feed 3',
+    slug: 'chv-stgo2023-3',
+    youtubeVideoId: 'dcImwGPRYnE'
+  },
+  'chv-stgo2023-4': {
+    name: 'CHV - Feed 4',
+    slug: 'chv-stgo2023-4',
+    youtubeVideoId: 'TPHbSKcBAoI'
+  },
+  'chv-stgo2023-5': {
+    name: 'CHV - Feed 5',
+    slug: 'chv-stgo2023-5',
+    youtubeVideoId: 'g7AZ3ZHLKco'
+  },
+  'chv-stgo2023-6': {
+    name: 'CHV - Feed 6',
+    slug: 'chv-stgo2023-6',
+    youtubeVideoId: 'X5UQE3FlJqk'
+  },
+  'chv-stgo2023-7': {
+    name: 'CHV - Feed 7',
+    slug: 'chv-stgo2023-7',
+    youtubeVideoId: 'lzzuOTp6EcM'
   }
 };
