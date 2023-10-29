@@ -38,6 +38,7 @@ export function Screen({
           onEdit={onEdit}
           editingSourceIdx={editingSourceIdx}
           onSwitch={onSwitch}
+          onRemove={onRemove}
         />
       )}
     </div>

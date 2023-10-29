@@ -112,8 +112,9 @@ export const Monitor = () => {
     });
   };
 
-  const handleSourceEdit = (idx: number) => {
-    setEditingSourceIdx(idx);
+  const handleSourceEdit = (newIdx: number) => {
+    // if it's already being edited, unselect it
+    setEditingSourceIdx(current => (current !== newIdx ? newIdx : undefined));
   };
 
   const handleShare = async () => {
@@ -139,7 +140,7 @@ export const Monitor = () => {
 
   return (
     <div className="row">
-      <div className={isEditing ? 'col-8' : 'col-12'}>
+      <div className={isEditing ? 'col-10' : 'col-12'}>
         {typeof window !== 'undefined' && (
           <Screen
             screen={screen}
@@ -152,7 +153,7 @@ export const Monitor = () => {
       </div>
       {isEditing && (
         <>
-          <div className="col-4 pe-4">
+          <div className="col-2 pe-4">
             <SelectSource
               onSelect={handleSourceChange}
               selectedSourceSlug={selectedSourceSlug}

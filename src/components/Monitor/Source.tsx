@@ -105,7 +105,7 @@ export function Source({
         style={{ opacity: isOver ? 0.1 : 1 }}
         ref={drop}
       >
-        <div className={cx({ editing: isBeingEdited }) + ' w-100 h-100'}>
+        <div className="w-100 h-100">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
         {isEditing && (
@@ -113,7 +113,7 @@ export function Source({
             {onChangeClick && (
               <>
                 <div
-                  className={cx('action-button')}
+                  className={cx('action-button', { isBeingEdited })}
                   onClick={handleChangeClick}
                 >
                   CAMBIAR

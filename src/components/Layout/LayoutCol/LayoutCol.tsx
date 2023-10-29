@@ -6,6 +6,7 @@ type Props = {
   col: ColType;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
+  onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   onSwitch?: OnSwitchCb;
 };
@@ -15,7 +16,8 @@ export function LayoutCol({
   sources,
   onEdit,
   editingSourceIdx,
-  onSwitch
+  onSwitch,
+  onRemove
 }: Props) {
   const { rows, node } = col;
   const size = col.size || 12;
@@ -32,6 +34,7 @@ export function LayoutCol({
         isBeingEdited={node.idx === editingSourceIdx}
         muted={source.muted ?? true}
         onSwitch={onSwitch}
+        onRemove={() => (onRemove ? onRemove(node.idx) : undefined)}
       />
     );
   }
@@ -43,6 +46,7 @@ export function LayoutCol({
           key={i}
           row={row}
           onEdit={onEdit}
+          onRemove={onRemove}
           sources={sources}
           editingSourceIdx={editingSourceIdx}
           onSwitch={onSwitch}

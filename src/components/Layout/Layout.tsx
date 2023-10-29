@@ -6,6 +6,7 @@ type Props = {
   layout: LayoutType;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
+  onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   onSwitch?: OnSwitchCb;
 };
@@ -13,6 +14,7 @@ type Props = {
 export function Layout({
   layout,
   onEdit,
+  onRemove,
   sources,
   editingSourceIdx,
   onSwitch
@@ -21,6 +23,7 @@ export function Layout({
     <LayoutCol
       col={layout}
       onEdit={onEdit}
+      onRemove={onRemove}
       sources={sources}
       editingSourceIdx={editingSourceIdx}
       onSwitch={onSwitch}

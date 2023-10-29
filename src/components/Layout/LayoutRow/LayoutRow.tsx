@@ -6,6 +6,7 @@ type Props = {
   row: RowType;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
+  onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   onSwitch?: OnSwitchCb;
 };
@@ -13,6 +14,7 @@ type Props = {
 export function LayoutRow({
   row,
   onEdit,
+  onRemove,
   sources,
   editingSourceIdx,
   onSwitch
@@ -25,6 +27,7 @@ export function LayoutRow({
           col={col}
           key={i}
           onEdit={onEdit}
+          onRemove={onRemove}
           sources={sources}
           editingSourceIdx={editingSourceIdx}
           onSwitch={onSwitch}

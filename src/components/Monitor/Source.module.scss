@@ -12,6 +12,7 @@
 }
 
 .action-button {
+  &.isBeingEdited,
   &:hover {
     background-color: #ff5e00;
   }
@@ -59,5 +60,5 @@
 }
 
 .editing {
-  opacity: 0.5;
+  opacity: 0.8;
 }
