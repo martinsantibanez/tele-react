@@ -1,9 +1,0 @@
-{
-
-   "extends": "@silvermine/eslint-config/browser",
-   "parser": "babel-eslint",
-   "globals": {
-      "chrome": true,
-      "cast": true
-   }
-}
