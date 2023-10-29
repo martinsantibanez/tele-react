@@ -24,18 +24,21 @@ function HomeElement({
   return (
     <div className="row mt-5 text-center">
       <Link
+        passHref
         href={href}
         className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
         target={openInNewTab ? '_blank' : ''}
       >
-        <h3>{title}</h3>
-        {description && <p>{description}</p>}
+        <a>
+          <h3>{title}</h3>
+          {description && <p>{description}</p>}
+        </a>
       </Link>
     </div>
   );
 }
 
-const Home: NextPage = () => {
+export const useCleanLocalStorage = () => {
   const [, , gridStorage] = useSavedGrid();
   const [, , featuredScreenStorage] = useFeaturedScreen();
   const [, , selectedItemStorage] = useSavedSelectedItem();
@@ -43,18 +46,25 @@ const Home: NextPage = () => {
   const [, , displayConfigStorage] = useDisplayConfig();
   const { zappingConfigMeta } = useZappingConfig();
 
-  const [clearedState, setClearedState] = useState(false);
-  const handleClearLocalStorage = () => {
-    if (clearedState) {
-      setClearedState(false);
-      return;
-    }
+  return () => {
     gridStorage.removeItem();
     selectedItemStorage.removeItem();
     featuredScreenStorage.removeItem();
     customSourcesMeta.removeItem();
     displayConfigStorage.removeItem();
     zappingConfigMeta.removeItem();
+  };
+};
+
+const Home: NextPage = () => {
+  const [clearedState, setClearedState] = useState(false);
+  const cleanLocalStorage = useCleanLocalStorage();
+  const handleClearLocalStorage = () => {
+    if (clearedState) {
+      setClearedState(false);
+      return;
+    }
+    cleanLocalStorage();
     setClearedState(true);
   };
 

@@ -53,3 +53,30 @@ export const initialLayout: LayoutType = {
     }
   ]
 };
+
+export const twoBigLayout: LayoutType = {
+  rows: [
+    {
+      cols: [
+        { size: 6, node: { idx: 0 } },
+        { size: 6, node: { idx: 1 } }
+      ]
+    },
+    {
+      cols: [
+        {
+          size: 4,
+          node: { idx: 2 }
+        },
+        {
+          size: 4,
+          node: { idx: 3 }
+        },
+        {
+          size: 4,
+          node: { idx: 4 }
+        }
+      ]
+    }
+  ]
+};

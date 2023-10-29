@@ -22,7 +22,8 @@ export function SavedSources({}: Props) {
     [displayConfig, selectedSources]
   );
   return (
-    <Card>
+    <Card className="mb-3">
+      <Card.Header>Guardados</Card.Header>
       <Card.Body className="d-flex flex-wrap">
         <InputGroup className="mb-3">
           <Form.Control

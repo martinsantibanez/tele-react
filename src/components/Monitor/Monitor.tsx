@@ -12,8 +12,7 @@ import { DisplayMode, ScreenType } from '../../pages/monitor/types';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { SavedSources } from '../SelectSource/SavedSources';
-import { SourceAccordionList } from '../SelectSource/SourceAccordionList';
+import { SelectSource } from '../SelectSource/SelectSource';
 import { OnSwitchCb } from './Source';
 
 type SavedScreen = {
@@ -154,11 +153,10 @@ export const Monitor = () => {
       {isEditing && (
         <>
           <div className="col-4 pe-4">
-            <SourceAccordionList
+            <SelectSource
               onSelect={handleSourceChange}
               selectedSourceSlug={selectedSourceSlug}
             />
-            <SavedSources />
           </div>
           <ScreenOptions
             onSizeChange={handleSizeChange}
@@ -173,7 +171,6 @@ export const Monitor = () => {
             mode={displayConfig.mode}
             size={displayConfig.grid.size}
           />
-          {/* <button onClick={() => handleShare()}>Share</button> */}
         </>
       )}
     </div>

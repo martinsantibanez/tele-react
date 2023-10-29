@@ -1,5 +1,5 @@
 import useLocalStorageState from 'use-local-storage-state';
-import { initialLayout } from '../pages/monitor/initialLayout';
+import { initialLayout } from '../pages/monitor/predefinedLayouts';
 import { DisplayConfig, DisplayMode } from '../pages/monitor/types';
 
 export const defaultDisplayConfig: DisplayConfig = {
