@@ -140,7 +140,7 @@ export const Monitor = () => {
 
   return (
     <div className="row">
-      <div className={isEditing ? 'col-10' : 'col-12'}>
+      <div className={isEditing ? 'col-xl-10 col-lg-12' : 'col-12'}>
         {typeof window !== 'undefined' && (
           <Screen
             screen={screen}
@@ -153,7 +153,7 @@ export const Monitor = () => {
       </div>
       {isEditing && (
         <>
-          <div className="col-2 pe-4">
+          <div className="col-xl-2 col-lg-12 pe-4">
             <SelectSource
               onSelect={handleSourceChange}
               selectedSourceSlug={selectedSourceSlug}
