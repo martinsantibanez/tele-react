@@ -117,36 +117,36 @@ export const panamericanosSources: SourcesMap = {
   'chv-stgo2023-1': {
     name: 'CHV - Feed 1',
     slug: 'chv-stgo2023-1',
-    youtubeVideoId: 'NdpnoOKaeMM'
+    youtubeVideoId: 'MPoMNoagSmY'
   },
   'chv-stgo2023-2': {
     name: 'CHV - Feed 2',
     slug: 'chv-stgo2023-2',
-    youtubeVideoId: '4iRMljd6dm8'
+    youtubeVideoId: 'ee9whbJPxHI'
   },
   'chv-stgo2023-3': {
     name: 'CHV - Feed 3',
     slug: 'chv-stgo2023-3',
-    youtubeVideoId: 'dcImwGPRYnE'
+    youtubeVideoId: 'Mlg2GSAcLfY'
   },
   'chv-stgo2023-4': {
     name: 'CHV - Feed 4',
     slug: 'chv-stgo2023-4',
-    youtubeVideoId: 'TPHbSKcBAoI'
+    youtubeVideoId: 'DOD06h2pJ7E'
   },
   'chv-stgo2023-5': {
     name: 'CHV - Feed 5',
     slug: 'chv-stgo2023-5',
-    youtubeVideoId: 'g7AZ3ZHLKco'
+    youtubeVideoId: '1wCGlyyfoRo'
   },
   'chv-stgo2023-6': {
     name: 'CHV - Feed 6',
     slug: 'chv-stgo2023-6',
-    youtubeVideoId: 'X5UQE3FlJqk'
+    youtubeVideoId: 'FAYetQFT0OM'
   },
   'chv-stgo2023-7': {
     name: 'CHV - Feed 7',
     slug: 'chv-stgo2023-7',
-    youtubeVideoId: 'lzzuOTp6EcM'
+    youtubeVideoId: 'UCfvGpYM5Ho'
   }
 };
