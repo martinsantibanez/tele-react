@@ -138,6 +138,14 @@ export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
                   {channels.name}
                 </ListGroup.Item>
               ))}
+              <ListGroup.Item
+                action
+                href="https://results-santiago2023.org/#/schedule/daily"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Resultados Panamericanos
+              </ListGroup.Item>
             </ListGroup>
           </Card.Body>
         </Card>
