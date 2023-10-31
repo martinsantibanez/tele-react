@@ -24,15 +24,12 @@ function HomeElement({
   return (
     <div className="row mt-5 text-center">
       <Link
-        passHref
         href={href}
         className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
         target={openInNewTab ? '_blank' : ''}
       >
-        <a>
-          <h3>{title}</h3>
-          {description && <p>{description}</p>}
-        </a>
+        <h3>{title}</h3>
+        {description && <p>{description}</p>}
       </Link>
     </div>
   );
