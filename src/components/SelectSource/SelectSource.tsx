@@ -59,7 +59,15 @@ const possibleLayouts: PossibleLayout[] = [
       grid: { size: 4 }
     },
     imgName: 'layout4.png'
-  }
+  },
+  {
+    config: {
+      layout: initialLayout,
+      mode: DisplayMode.Grid,
+      grid: { size: 3 }
+    },
+    imgName: 'layout5.png'
+  },
 ];
 
 type PossibleChannels = {
