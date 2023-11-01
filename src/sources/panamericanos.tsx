@@ -64,7 +64,7 @@ export const panamericanosSources: SourcesMap = {
   'tvn-stgo2023-1': {
     slug: 'tvn-stgo2023-1',
     name: 'TVN - 1',
-    youtubeVideoId: 'aR0esIfwVns'
+    youtubeVideoId: 'LgVhQTTGa-g'
   },
   'tvn-stgo2023-2': {
     slug: 'tvn-stgo2023-2',
