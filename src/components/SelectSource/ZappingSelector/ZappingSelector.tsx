@@ -52,7 +52,7 @@ export function ZappingSelector({
             <a
               href="https://app.zappingtv.com/player/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{ textDecoration: 'underline' }}
             >
               Zapping
