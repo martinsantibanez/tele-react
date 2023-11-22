@@ -91,7 +91,11 @@ export const Monitor = () => {
   const handleSourceRemove = (idx: number) => {
     setSelectedSources(sources => {
       if (!sources) return sources;
-      return sources.filter((src, index) => index !== idx);
+      return sources.map((src, index) =>
+        index === idx ? { ...src, sourceSlug: undefined } : { ...src }
+      );
+
+      // return sources.filter((src, index) => index !== idx);
     });
   };
 
