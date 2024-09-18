@@ -20,7 +20,7 @@
     "axios": "^1.7.4",
     "bootstrap": "^5.3.0-alpha2",
     "classnames": "^2.3.1",
-    "next": "^14.1.1",
+    "next": "^14.2.10",
     "ramda": "^0.28.0",
     "react": "18.2.0",
     "react-bootstrap": "^2.1.2",
