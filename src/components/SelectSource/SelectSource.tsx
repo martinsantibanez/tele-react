@@ -1,24 +1,23 @@
+import Image from 'next/image';
 import { Button, Card, ListGroup, Tab, Tabs } from 'react-bootstrap';
 import {
   defaultDisplayConfig,
   useDisplayConfig
 } from '../../hooks/useDisplayConfig';
 import { useCleanLocalStorage } from '../../pages/index.page';
-import { SourceType } from '../../sources';
-import { SavedSources } from './SavedSources';
-import { SourceAccordionList } from './SourceAccordionList';
+import {
+  initialLayout,
+  twoBigLayout
+} from '../../pages/monitor/predefinedLayouts';
 import {
   DisplayConfig,
   DisplayMode,
   SourceNode
 } from '../../pages/monitor/types';
-import {
-  initialLayout,
-  twoBigLayout
-} from '../../pages/monitor/predefinedLayouts';
-import Image from 'next/image';
-import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
+import { SavedSources } from './SavedSources';
+import { SourceAccordionList } from './SourceAccordionList';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -67,7 +66,7 @@ const possibleLayouts: PossibleLayout[] = [
       grid: { size: 3 }
     },
     imgName: 'layout5.png'
-  },
+  }
 ];
 
 type PossibleChannels = {
@@ -75,7 +74,7 @@ type PossibleChannels = {
   nodes: SourceNode[];
 };
 
-const defaultChannels: PossibleChannels[] = [
+const _defaultChannels: PossibleChannels[] = [
   {
     name: 'Panamericanos C13',
     nodes: [
@@ -120,8 +119,8 @@ const defaultChannels: PossibleChannels[] = [
 ];
 
 export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
-  const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const [selectedSources, setSelectedSources] = useSavedGrid();
+  const [, setDisplayConfig] = useDisplayConfig();
+  // const [selectedSources, setSelectedSources] = useSavedGrid();
   const cleanLocalStorage = useCleanLocalStorage();
 
   return (
@@ -133,7 +132,7 @@ export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
         />
       </Tab>
       <Tab eventKey="layouts" title="Layouts">
-        <Card className="mb-3">
+        {/* <Card className="mb-3">
           <Card.Header>Grupos de Canales</Card.Header>
           <Card.Body className="d-flex flex-wrap">
             <ListGroup>
@@ -156,7 +155,7 @@ export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
               </ListGroup.Item>
             </ListGroup>
           </Card.Body>
-        </Card>
+        </Card> */}
         <Card className="mb-3">
           <Card.Header>Layouts</Card.Header>
           <Card.Body className="d-flex flex-wrap">
