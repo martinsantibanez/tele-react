@@ -1,13 +1,10 @@
 import { kv } from '@vercel/kv';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuid } from 'uuid';
-import { ScreenType } from '../monitor/types';
 
 type Data = {
   uuid: string;
 };
-
-export const savedLayout = new Map<string, ScreenType>();
 
 export default async function handler(
   req: NextApiRequest,
