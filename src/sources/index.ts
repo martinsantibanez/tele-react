@@ -6,7 +6,6 @@ import { espacioSources } from './espacio';
 import { especialesSources } from './especiales';
 import { internacionalSources } from './internacional';
 import { musicaSources } from './musica';
-import { panamericanosSources } from './panamericanos';
 import { placeHolderSources } from './placeholder';
 import { radiosSources } from './radios';
 import { regionesSources } from './regiones';
@@ -56,10 +55,6 @@ export interface SourceGroup {
 }
 
 export const sourcesCategories: SourceGroup[] = [
-  {
-    name: 'Panamericanos',
-    sources: panamericanosSources
-  },
   {
     name: 'TV Nacional',
     sources: tvNacionalSources

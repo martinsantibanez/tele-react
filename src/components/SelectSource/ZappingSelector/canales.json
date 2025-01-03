@@ -198,14 +198,5 @@
     "zapping_id": 225,
     "alias": "zapping-channel1",
     "name": "Zapping Channel"
-  },
-  "panam1": { "zapping_id": 1502, "name": "Panamericanos 1" },
-  "panam2": { "zapping_id": 1512, "name": "Panamericanos 2" },
-  "panam3": { "zapping_id": 1522, "name": "Panamericanos 3" },
-  "panam4": { "zapping_id": 1532, "name": "Panamericanos 4" },
-  "panam5": { "zapping_id": 1542, "name": "Panamericanos 5" },
-  "panam6": { "zapping_id": 1552, "name": "Panamericanos 6" },
-  "panam7": { "zapping_id": 1562, "name": "Panamericanos 7" },
-  "panam8": { "zapping_id": 1572, "name": "Panamericanos 8" },
-  "panam9": { "zapping_id": 1582, "name": "Panamericanos 9" }
+  }
 }
