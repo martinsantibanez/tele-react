@@ -80,3 +80,22 @@ export const twoBigLayout: LayoutType = {
     }
   ]
 };
+
+export const testLayout: LayoutType = {
+  rows: [
+    {
+      cols: [
+        { size: 3 },
+        { size: 9, node: { idx: 0 } }
+      ]
+    },
+    {
+      cols: [
+        {
+          size: 3,
+          node: { idx: 1 }
+        },
+      ]
+    }
+  ]
+};
