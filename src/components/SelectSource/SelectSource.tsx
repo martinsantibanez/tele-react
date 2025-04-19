@@ -7,6 +7,7 @@ import {
 import { useCleanLocalStorage } from '../../pages/index.page';
 import {
   initialLayout,
+  testLayout,
   twoBigLayout
 } from '../../pages/monitor/predefinedLayouts';
 import {
@@ -66,7 +67,23 @@ const possibleLayouts: PossibleLayout[] = [
       grid: { size: 3 }
     },
     imgName: 'layout5.png'
-  }
+  },
+  {
+    config: {
+      mode: DisplayMode.Layout,
+      layout: twoBigLayout,
+      grid: { size: 4 }
+    },
+    imgName: 'layout4.png'
+  },
+  {
+    config: {
+      mode: DisplayMode.Layout,
+      layout: testLayout,
+      grid: { size: 4 }
+    },
+    imgName: 'layout4.png'
+  },
 ];
 
 type PossibleChannels = {

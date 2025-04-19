@@ -4,7 +4,7 @@ import { useCustomSources } from '../../../hooks/useCustomSources';
 import { useZappingConfig } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
-import canales from './canales.json';
+import { canalesZapping } from './canales';
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
@@ -30,13 +30,12 @@ export function ZappingSelector({
     <Accordion.Item eventKey={accordionEventKey}>
       <Accordion.Header>Zapping</Accordion.Header>
       <Accordion.Body>
-        {Object.values(canales)?.map(canal => {
+        {Object.values(canalesZapping).map(canal => {
           const source: SourceType = {
-            slug: `custom_zapping_${canal.zapping_id}`,
-            zappingChannel: canal.zapping_id,
+            slug: `custom_zapping_${canal.id}`,
+            zappingChannel: canal.url,
             titleHtml: canal.name
           };
-
           return (
             <SourceButton
               onSelect={() => updateSelectedChannel(source)}
@@ -61,9 +60,7 @@ export function ZappingSelector({
               className="w-100"
               readOnly
               rows={2}
-              defaultValue={
-                'console.log( JSON.stringify( {endpoint: su, token: t} ) )'
-              }
+              defaultValue={`console.log( JSON.stringify({ token: document.querySelector('#loginToken').value }) )`}
             />
             Introduce el resultado:
             <textarea

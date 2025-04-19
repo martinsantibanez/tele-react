@@ -29,7 +29,7 @@ export interface SourceInput {
   youtubeChatVideoId?: string;
   twitterAcount?: string;
   twitchAccount?: string;
-  zappingChannel?: number;
+  zappingChannel?: string;
 }
 
 export interface SourceType extends SourceInput {
