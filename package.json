@@ -2,15 +2,14 @@
   "name": "tele-react",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@silvermine/videojs-chromecast": "^1.5.0",
-    "@types/ramda": "^0.28.25",
-    "@types/socket.io-client": "^1.4.36",
+    "@tailwindcss/postcss": "^4.1.4",
+    "@types/ramda": "^0.30.2",
     "@types/uuid": "^8.3.4",
     "@types/video.js": "^7.3.58",
     "@types/videojs-contrib-quality-levels": "^2.0.4",
@@ -20,34 +19,38 @@
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
     "classnames": "^2.5.1",
-    "next": "^14.2.28",
+    "next": "15.3.1",
     "ramda": "^0.28.0",
-    "react": "18.2.0",
+    "react": "19.1.0",
     "react-bootstrap": "^2.10.9",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "18.2.0",
+    "react-dom": "19.1.0",
     "react-icons": "^4.12.0",
     "react-twitch-embed": "^3.0.2",
     "react-twitter-widgets": "^1.11.0",
     "sass": "^1.86.3",
-    "socket.io-client": "^2.5.0",
-    "use-local-storage-state": "^17.4.0",
+    "use-local-storage-state": "^19.5.0",
     "uuid": "^9.0.1",
     "video.js": "^7.21.7",
     "videojs-contrib-quality-levels": "^2.2.1",
     "videojs-hls-quality-selector": "^1.1.4"
   },
   "devDependencies": {
-    "@svgr/webpack": "^6.5.1",
-    "@types/node": "17.0.21",
-    "@types/react": "17.0.39",
+    "@svgr/webpack": "^8.1.0",
+    "@types/node": "22.14.1",
+    "@types/react": "19.1.2",
     "autoprefixer": "^10.4.21",
-    "eslint": "8.5.0",
-    "eslint-config-next": "12.0.7",
+    "eslint": "9.25.0",
+    "eslint-config-next": "15.3.1",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
-    "typescript": "4.5.5"
+    "tailwindcss": "^4.1.4",
+    "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@10.8.1+sha512.c50088ba998c67b8ca8c99df8a5e02fd2ae2e2b29aaf238feaa9e124248d3f48f9fb6db2424949ff901cffbb5e0f0cc1ad6aedb602cd29450751d11c35023677"
+  "packageManager": "pnpm@10.8.1+sha512.c50088ba998c67b8ca8c99df8a5e02fd2ae2e2b29aaf238feaa9e124248d3f48f9fb6db2424949ff901cffbb5e0f0cc1ad6aedb602cd29450751d11c35023677",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  }
 }

@@ -23,7 +23,7 @@ export interface SourceInput {
   codeHtml?: string;
   iframeSrc?: string;
   m3u8Url?: string;
-  component?: () => React.ReactElement;
+  component?: () => React.ReactElement<any>;
   youtubeChannelId?: string;
   youtubeVideoId?: string;
   youtubeChatVideoId?: string;

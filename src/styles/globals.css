@@ -1,11 +1,4 @@
-$icon-chromecast--default: '~@silvermine/videojs-chromecast/src/images/ic_cast_white_24dp.png' !default;
-$icon-chromecast--hover: '~@silvermine/videojs-chromecast/src/images/ic_cast_white_24dp.png' !default;
-$icon-chromecast-casting: '~@silvermine/videojs-chromecast/src/images/ic_cast_connected_white_24dp.png' !default;
-$icon-chromecast-casting--hover: '~@silvermine/videojs-chromecast/src/images/ic_cast_connected_white_24dp.png' !default;
-$chromecast-icon-size: 18px !default;
-
-@import "~bootstrap/scss/bootstrap";
-@import '~@silvermine/videojs-chromecast/src/scss/videojs-chromecast';
+@import "tailwindcss";
 
 html,
 body {

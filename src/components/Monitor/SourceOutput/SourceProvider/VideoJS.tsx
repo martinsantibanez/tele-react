@@ -3,26 +3,13 @@ import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-import initChromecast from './chromecast/js/index';
 
-// require('@silvermine/videojs-chromecast')(videojs);
-initChromecast(videojs, {
-  modifyLoadRequestFn: function (loadRequest: any) {
-    // HLS support
-    console.log({ loadRequest });
-    loadRequest.media.hlsSegmentFormat = 'fmp4';
-    loadRequest.media.hlsVideoSegmentFormat = 'mpeg2_ts';
-    return loadRequest;
-  }
-});
-// require('./VideoJS/silvermine-videojs-chromecast')(videojs);
-//
 type Props = {
   src: string;
   muted?: boolean;
 };
 const VideoPlayer = ({ src, muted = true }: Props) => {
-  const videoRef = useRef<any>();
+  const videoRef = useRef<any>(undefined);
   const [player, setPlayer] = useState<any>(undefined);
 
   useEffect(() => {
@@ -33,19 +20,10 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
   useEffect(() => {
     if (player) return;
-    const videoJsOptions: videojs.PlayerOptions & { chromecast: any } = {
+    const videoJsOptions: videojs.PlayerOptions = {
       preload: 'auto',
       autoplay: 'any',
-      techOrder: ['chromecast', 'html5', 'hls', 'flash'],
-      chromecast: {
-        modifyLoadRequestFn: function (loadRequest: any) {
-          // HLS support
-          console.log({ loadRequest });
-          loadRequest.media.hlsSegmentFormat = 'fmp4';
-          loadRequest.media.hlsVideoSegmentFormat = 'fmp4';
-          return loadRequest;
-        }
-      },
+      techOrder: ['html5', 'hls', 'flash'],
       controls: true,
       muted,
       fluid: true,
@@ -63,12 +41,10 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
           type: 'application/vnd.apple.mpegurl'
           // type: "application/x-mpegURL",
         }
-      ],
-      plugins: { chromecast: {} }
+      ]
     };
 
     videojs.registerPlugin('hlsQualitySelector', qualitySelector);
-    // videojs.registerPlugin('chromecast', chromecast);
     if (!videoRef.current) return;
     const p = videojs(
       videoRef.current,
@@ -81,7 +57,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     return () => {
       if (player) player.dispose();
     };
-  }, [player, src]);
+  }, [muted, player, src]);
 
   return (
     <div data-vjs-player>
