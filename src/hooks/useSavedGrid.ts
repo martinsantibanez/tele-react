@@ -4,7 +4,6 @@ import { SourceNode } from '../pages/monitor/types';
 
 export function useSavedGrid() {
   return useLocalStorageState<SourceNode[]>('__tele_grid__', {
-    defaultValue: defaultGrid,
-    ssr: true
+    defaultValue: defaultGrid
   });
 }

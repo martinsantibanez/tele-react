@@ -9,7 +9,6 @@ export const defaultDisplayConfig: DisplayConfig = {
 };
 export function useDisplayConfig() {
   return useLocalStorageState<DisplayConfig>('__tele_display_config__', {
-    ssr: true,
     defaultValue: defaultDisplayConfig
   });
 }

@@ -5,7 +5,6 @@ import { defaultDisplayConfig } from './useDisplayConfig';
 
 export function useFeaturedScreen() {
   return useLocalStorageState<ScreenType>('__tele_featured_monitor__', {
-    ssr: true,
     defaultValue: {
       config: defaultDisplayConfig,
       sources: defaultGrid
