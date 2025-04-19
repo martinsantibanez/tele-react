@@ -101,11 +101,11 @@ export function Source({
       style={{ opacity: isDragging ? 0.5 : 1, cursor: 'move' }}
     >
       <div
-        className={`w-100 h-100`}
+        className={`w-full h-full`}
         style={{ opacity: isOver ? 0.1 : 1 }}
         ref={drop}
       >
-        <div className="w-100 h-100">
+        <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
         {isEditing && (

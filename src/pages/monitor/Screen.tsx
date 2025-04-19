@@ -1,3 +1,4 @@
+'use client';
 import { GridDisplay } from '../../components/GridDisplay/GridDisplay';
 import { Layout } from '../../components/Layout/Layout';
 import { OnSwitchCb } from '../../components/Monitor/Source';
@@ -11,6 +12,12 @@ type Props = {
   onSwitch?: OnSwitchCb;
 };
 
+const gridSizeClass = {
+  [1]: 'grid-cols-1',
+  [2]: 'grid-cols-2',
+  [3]: 'grid-cols-3'
+};
+
 export function Screen({
   screen,
   onEdit,
@@ -19,9 +26,9 @@ export function Screen({
   onSwitch
 }: Props) {
   const { config, sources } = screen;
-  return (
-    <div className="row g-0 row-canales mx-0">
-      {config.mode === DisplayMode.Grid && (
+  if (config.mode === DisplayMode.Grid)
+    return (
+      <div className={`grid ${gridSizeClass[config.grid.size]}`}>
         <GridDisplay
           size={config.grid?.size}
           sources={sources}
@@ -30,17 +37,18 @@ export function Screen({
           editingSourceIdx={editingSourceIdx}
           onSwitch={onSwitch}
         />
-      )}
-      {config.mode === DisplayMode.Layout && (
-        <Layout
-          layout={config.layout}
-          sources={sources}
-          onEdit={onEdit}
-          editingSourceIdx={editingSourceIdx}
-          onSwitch={onSwitch}
-          onRemove={onRemove}
-        />
-      )}
-    </div>
-  );
+      </div>
+    );
+  else if (config.mode === DisplayMode.Layout)
+    return (
+      <Layout
+        layout={config.layout}
+        sources={sources}
+        onEdit={onEdit}
+        editingSourceIdx={editingSourceIdx}
+        onSwitch={onSwitch}
+        onRemove={onRemove}
+      />
+    );
+  return null;
 }

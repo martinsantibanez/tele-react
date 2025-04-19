@@ -1,3 +1,4 @@
+'use client';
 import { SourceType } from '../../../sources';
 import { TwitchSource } from './SourceProvider/TwitchSource';
 import { TwitterTimeline } from './SourceProvider/TwitterTimeline';
@@ -6,13 +7,9 @@ import { ZappingSource } from './SourceProvider/ZappingSource';
 
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
-    <div className="w-100 h-100">
+    <div className="w-full h-full">
       <div className="ratio ratio-16x9">
-        <iframe
-          src={src}
-          className="ratio ratio-16x9"
-          frameBorder="0"
-        />
+        <iframe src={src} className="ratio ratio-16x9" frameBorder="0" />
       </div>
     </div>
   );

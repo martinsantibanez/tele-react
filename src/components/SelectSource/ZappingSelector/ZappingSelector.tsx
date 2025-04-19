@@ -46,7 +46,7 @@ export function ZappingSelector({
           );
         })}
         <div className="mb-2">
-          <div className="w-100">
+          <div className="w-full">
             Pega esto en la consola en{' '}
             <a
               href="https://app.zappingtv.com/player/"
@@ -57,14 +57,14 @@ export function ZappingSelector({
               Zapping
             </a>{' '}
             <textarea
-              className="w-100"
+              className="w-full"
               readOnly
               rows={2}
               defaultValue={`console.log( JSON.stringify({ token: document.querySelector('#loginToken').value }) )`}
             />
             Introduce el resultado:
             <textarea
-              className="w-100"
+              className="w-full"
               rows={2}
               onChange={e => setJsonInput(e.target.value)}
               value={jsonInput}

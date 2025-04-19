@@ -14,7 +14,7 @@ export const placeHolderSources: SourcesMap = {
     name: 'Barras',
     component: () => (
       <img
-        className="embed-responsive-item w-100 h-100"
+        className="embed-responsive-item w-full h-full"
         src="/imagenes/SinSenal.png"
         alt="Sin señal"
       />

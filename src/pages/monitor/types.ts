@@ -23,7 +23,7 @@ export enum DisplayMode {
 }
 
 export type GridType = {
-  size: number;
+  size: 1 | 2 | 3;
 };
 
 export type DisplayConfig = {

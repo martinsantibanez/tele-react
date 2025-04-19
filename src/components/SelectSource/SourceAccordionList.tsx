@@ -12,7 +12,7 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
   return (
     <Accordion
       defaultActiveKey="0"
-      className="w-100"
+      className="w-full"
       style={{ maxHeight: '90vh', overflowY: 'scroll' }}
     >
       <TwitchSelector

@@ -3,7 +3,10 @@ import { useMemo } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import {
+  DEFAULT_GRID_SIZE,
+  useDisplayConfig
+} from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useZappingConfig } from '../../hooks/useZappingConfig';
@@ -60,7 +63,7 @@ export const Monitor = () => {
       setDisplayConfig(cfg => ({
         ...cfg,
         mode,
-        grid: { size: cfg.grid?.size || 4 }
+        grid: { size: cfg.grid?.size || DEFAULT_GRID_SIZE }
       }));
     } else {
       setDisplayConfig(cfg => ({
@@ -139,17 +142,15 @@ export const Monitor = () => {
 
   return (
     <div className="row">
-      <div className={isEditing ? 'col-xl-10 col-lg-12' : 'col-12'}>
-        {typeof window !== 'undefined' && (
-          <Screen
-            screen={screen}
-            onEdit={handleSourceEdit}
-            onRemove={handleSourceRemove}
-            editingSourceIdx={editingSourceIdx}
-            onSwitch={handleSwitch}
-          />
-        )}
-      </div>
+      {/* <div className={isEditing ? 'col-xl-10 col-lg-12' : 'col-12'}> */}
+      <Screen
+        screen={screen}
+        onEdit={handleSourceEdit}
+        onRemove={handleSourceRemove}
+        editingSourceIdx={editingSourceIdx}
+        onSwitch={handleSwitch}
+      />
+
       {isEditing && (
         <>
           <div className="col-xl-2 col-lg-12 pe-4">

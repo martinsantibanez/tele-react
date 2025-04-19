@@ -39,9 +39,9 @@ export function ScreenOptions({
             onChange={event => onSizeChange(+event.target.value)}
             value={size + ''}
           >
-            <option value="12">1 por fila</option>
-            <option value="6">2 por fila</option>
-            <option value="4">3 por fila</option>
+            <option value="1">1 por fila</option>
+            <option value="2">2 por fila</option>
+            <option value="3">3 por fila</option>
           </select>
         </div>
       )}

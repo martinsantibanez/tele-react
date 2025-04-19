@@ -24,7 +24,7 @@ const ListPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="row w-100 mw-100">
+      <div className="row w-full mw-full">
         <div className="col-8">
           <Source size={12} sourceSlug={sourceSlug} idx={0} />
         </div>
