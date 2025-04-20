@@ -141,7 +141,7 @@ export const Monitor = () => {
   };
 
   return (
-    <div className="row">
+    <div>
       {/* <div className={isEditing ? 'col-xl-10 col-lg-12' : 'col-12'}> */}
       <Screen
         screen={screen}

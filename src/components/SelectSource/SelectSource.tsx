@@ -18,6 +18,7 @@ import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { SavedSources } from './SavedSources';
 import { SourceAccordionList } from './SourceAccordionList';
+import { SourceAccordionListNew } from './SourceListNew';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -122,6 +123,13 @@ export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
   const [, setDisplayConfig] = useDisplayConfig();
   // const [selectedSources, setSelectedSources] = useSavedGrid();
   const cleanLocalStorage = useCleanLocalStorage();
+
+  return (
+    <SourceAccordionListNew
+      onSelect={onSelect}
+      selectedSourceSlug={selectedSourceSlug}
+    />
+  );
 
   return (
     <Tabs defaultActiveKey="list">
