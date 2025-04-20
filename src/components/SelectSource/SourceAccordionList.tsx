@@ -1,4 +1,9 @@
-import { Accordion } from 'react-bootstrap';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '../../../components/ui/accordion';
 import { SourceType, sourcesCategories } from '../../sources';
 import { SourceButton } from './SourceButton/SourceButton';
 import { TwitchSelector } from './TwitchSelector/TwitchSelector';
@@ -11,7 +16,8 @@ type Props = {
 export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
   return (
     <Accordion
-      defaultActiveKey="0"
+      collapsible
+      type="single"
       className="w-full"
       style={{ maxHeight: '90vh', overflowY: 'scroll' }}
     >
@@ -21,9 +27,9 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
         selectedSourceSlug={selectedSourceSlug}
       />
       {sourcesCategories.map((sourceCategory, idx) => (
-        <Accordion.Item eventKey={`${idx + 1}`} key={sourceCategory.name}>
-          <Accordion.Header>{sourceCategory.name}</Accordion.Header>
-          <Accordion.Body>
+        <AccordionItem value={`${idx + 1}`} key={sourceCategory.name}>
+          <AccordionTrigger>{sourceCategory.name}</AccordionTrigger>
+          <AccordionContent>
             {Object.values(sourceCategory.sources).map(source => (
               <SourceButton
                 onSelect={onSelect}
@@ -32,8 +38,8 @@ export function SourceAccordionList({ onSelect, selectedSourceSlug }: Props) {
                 key={source.slug}
               />
             ))}
-          </Accordion.Body>
-        </Accordion.Item>
+          </AccordionContent>
+        </AccordionItem>
       ))}
       <ZappingSelector
         accordionEventKey={`${sourcesCategories.length + 1}`}

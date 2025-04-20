@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Container, Navbar } from 'react-bootstrap';
 import { BsPencilFill, BsXLg } from 'react-icons/bs';
 import { useTeleContext } from '../context/TeleContext';
 
@@ -10,11 +9,9 @@ export function NavBar({}: Props) {
   const handleToggle = () => toggleEditting();
 
   return (
-    <Navbar variant="dark">
-      <Container fluid>
-        <Link href="/" legacyBehavior passHref>
-          <Navbar.Brand>tele</Navbar.Brand>
-        </Link>
+    <div>
+      <div>
+        <Link href="/">tele</Link>
         <button
           type="button"
           className="btn btn-default"
@@ -27,7 +24,7 @@ export function NavBar({}: Props) {
           ></span>
           {isEditing ? <BsXLg color="white" /> : <BsPencilFill color="white" />}
         </button>
-      </Container>
-    </Navbar>
+      </div>
+    </div>
   );
 }

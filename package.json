@@ -8,6 +8,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.0.1",
+    "@radix-ui/react-accordion": "^1.2.7",
+    "@radix-ui/react-label": "^2.1.4",
     "@radix-ui/react-slot": "^1.2.0",
     "@tailwindcss/postcss": "^4.1.4",
     "@types/ramda": "^0.30.2",
@@ -18,7 +21,6 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/kv": "^0.2.4",
     "axios": "^1.8.4",
-    "bootstrap": "^5.3.5",
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
@@ -27,10 +29,11 @@
     "next-themes": "^0.4.6",
     "ramda": "^0.28.0",
     "react": "19.1.0",
-    "react-bootstrap": "^2.10.9",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.56.0",
+    "react-hotkeys-hook": "^5.0.1",
     "react-icons": "^4.12.0",
     "react-twitch-embed": "^3.0.2",
     "react-twitter-widgets": "^1.11.0",
@@ -41,7 +44,8 @@
     "uuid": "^9.0.1",
     "video.js": "^7.21.7",
     "videojs-contrib-quality-levels": "^2.2.1",
-    "videojs-hls-quality-selector": "^1.1.4"
+    "videojs-hls-quality-selector": "^1.1.4",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

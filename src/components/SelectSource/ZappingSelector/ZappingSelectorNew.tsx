@@ -1,19 +1,42 @@
 'use client';
-import { useState } from 'react';
-import { Accordion } from 'react-bootstrap';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useState } from 'react';
+import { Form, FormProvider, useForm } from 'react-hook-form';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { z } from 'zod';
+import { Button } from '../../../../components/ui/button';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '../../../../components/ui/form';
+import { Input } from '../../../../components/ui/input';
 import { useCustomSources } from '../../../hooks/useCustomSources';
 import { useZappingConfig } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
-import { SourceButton } from '../SourceButton/SourceButton';
 import { canalesZapping } from './canales';
-import { Button } from '../../../../components/ui/button';
 
 const arrayCanales = Object.values(canalesZapping);
+const zappingSources = arrayCanales.map(canal => {
+  const source: SourceType = {
+    slug: `custom_zapping_${canal.id}`,
+    zappingChannel: canal.url,
+    name: canal.name
+  };
+  return source;
+});
+
+const formSchema = z.object({
+  jsonInput: z.string().min(2).max(50)
+});
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
   selectedSourceSlug: string | undefined;
 };
+
 export function ZappingSelectorNew({
   onSourceSelect,
   selectedSourceSlug
@@ -51,7 +74,32 @@ export function ZappingSelectorNew({
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(arrayCanales.length - 1, selectedIndex + 2);
 
-  console.log;
+  useHotkeys('left', () => prev(), { preventDefault: true });
+  useHotkeys('right', () => next(), { preventDefault: true });
+  useHotkeys(
+    'enter',
+    () => updateSelectedChannel(zappingSources[selectedIndex]),
+    { preventDefault: true }
+  );
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      jsonInput: ''
+    }
+  });
+
+  // 2. Define a submit handler.
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    console.log(values);
+  }
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+    useMemo(() => {
+      setJsonInput(event.target.value);
+    }, []);
   return (
     <div className="flex flex-col">
       <div>
@@ -62,26 +110,17 @@ export function ZappingSelectorNew({
         >
           {'<'}
         </Button>
-        {arrayCanales.map((canal, canalIndex) => {
+        {zappingSources.map((canal, canalIndex) => {
           if (canalIndex < startIndex || canalIndex > endIndex) return null;
-          const source: SourceType = {
-            slug: `custom_zapping_${canal.id}`,
-            zappingChannel: canal.url,
-            name: canal.name
-          };
-          // const isSelected = source.slug === selectedSourceSlug
-          const isSelected = false;
 
           const isActive = canalIndex === selectedIndex;
           return (
             <Button
-              onClick={() => updateSelectedChannel(source)}
-              variant={
-                isActive ? 'secondary' : isSelected ? 'default' : 'outline'
-              }
-              key={`zapping_${canal.id}`}
+              onClick={() => updateSelectedChannel(canal)}
+              variant={isActive ? 'secondary' : 'outline'}
+              key={`zapping_${canal.slug}`}
             >
-              {source.name}
+              {canal.name}
             </Button>
           );
         })}
@@ -107,12 +146,35 @@ export function ZappingSelectorNew({
           <pre>
             {`console.log( JSON.stringify({ token: document.querySelector('#loginToken').value }) )`}
           </pre>
-          Introduce el resultado:
+          <FormProvider {...form}>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                <FormField
+                  control={form.control}
+                  name="jsonInput"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Introduce el resultado:</FormLabel>
+                      <FormControl>
+                        <Input placeholder="token..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit">Submit</Button>
+              </form>
+            </Form>
+          </FormProvider>
           <input
             type="text"
-            className="w-full"
-            onChange={e => setJsonInput(e.target.value)}
+            onChange={handleInputChange}
             value={jsonInput}
+            name="jsonInput"
+            id="jsonInput"
           />
           <button onClick={() => setZappingConfig(JSON.parse(jsonInput))}>
             Configurar
@@ -120,26 +182,5 @@ export function ZappingSelectorNew({
         </div>
       </div>
     </div>
-    // <Accordion.Item eventKey={accordionEventKey}>
-    //   <Accordion.Header>Zapping</Accordion.Header>
-    //   <Accordion.Body>
-    //     {Object.values(canalesZapping).map(canal => {
-    //       const source: SourceType = {
-    //         slug: `custom_zapping_${canal.id}`,
-    //         zappingChannel: canal.url,
-    //         titleHtml: canal.name
-    //       };
-    //       return (
-    //         <SourceButton
-    //           onSelect={() => updateSelectedChannel(source)}
-    //           source={source}
-    //           isSelected={source.slug === selectedSourceSlug}
-    //           key={source.slug}
-    //         />
-    //       );
-    //     })}
-
-    //   </Accordion.Body>
-    // </Accordion.Item>
   );
 }

@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Accordion } from 'react-bootstrap';
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '../../../../components/ui/accordion';
 import { useCustomSources } from '../../../hooks/useCustomSources';
 import { useZappingConfig } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
@@ -27,9 +31,9 @@ export function ZappingSelector({
   };
 
   return (
-    <Accordion.Item eventKey={accordionEventKey}>
-      <Accordion.Header>Zapping</Accordion.Header>
-      <Accordion.Body>
+    <AccordionItem value={accordionEventKey}>
+      <AccordionTrigger>Zapping</AccordionTrigger>
+      <AccordionContent>
         {Object.values(canalesZapping).map(canal => {
           const source: SourceType = {
             slug: `custom_zapping_${canal.id}`,
@@ -77,7 +81,7 @@ export function ZappingSelector({
             </button>
           </div>
         </div>
-      </Accordion.Body>
-    </Accordion.Item>
+      </AccordionContent>
+    </AccordionItem>
   );
 }

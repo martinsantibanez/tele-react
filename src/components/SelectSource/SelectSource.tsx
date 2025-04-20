@@ -1,5 +1,3 @@
-import Image from 'next/image';
-import { Button, Card, ListGroup, Tab, Tabs } from 'react-bootstrap';
 import {
   defaultDisplayConfig,
   useDisplayConfig
@@ -16,8 +14,6 @@ import {
 } from '../../pages/monitor/types';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
-import { SavedSources } from './SavedSources';
-import { SourceAccordionList } from './SourceAccordionList';
 import { SourceAccordionListNew } from './SourceListNew';
 
 type Props = {
@@ -131,68 +127,68 @@ export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
     />
   );
 
-  return (
-    <Tabs defaultActiveKey="list">
-      <Tab eventKey="list" title="Canales">
-        <SourceAccordionList
-          onSelect={onSelect}
-          selectedSourceSlug={selectedSourceSlug}
-        />
-      </Tab>
-      <Tab eventKey="layouts" title="Layouts">
-        {/* <Card className="mb-3">
-          <Card.Header>Grupos de Canales</Card.Header>
-          <Card.Body className="d-flex flex-wrap">
-            <ListGroup>
-              {defaultChannels.map(channels => (
-                <ListGroup.Item
-                  key={channels.name}
-                  action
-                  onClick={() => setSelectedSources(channels.nodes)}
-                >
-                  {channels.name}
-                </ListGroup.Item>
-              ))}
-              <ListGroup.Item
-                action
-                href="https://results-santiago2023.org/#/schedule/daily"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Resultados Panamericanos
-              </ListGroup.Item>
-            </ListGroup>
-          </Card.Body>
-        </Card> */}
-        <Card className="mb-3">
-          <Card.Header>Layouts</Card.Header>
-          <Card.Body className="d-flex flex-wrap">
-            <ListGroup>
-              {possibleLayouts.map(layout => (
-                <ListGroup.Item
-                  key={layout.name}
-                  action
-                  onClick={() => setDisplayConfig(layout.config)}
-                >
-                  <Image
-                    alt=""
-                    src={`/img/layout/${layout.imgName}`}
-                    width="160"
-                    height="90"
-                  />
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          </Card.Body>
-        </Card>
+  // return (
+  //   <Tabs defaultActiveKey="list">
+  //     <Tab eventKey="list" title="Canales">
+  //       <SourceAccordionList
+  //         onSelect={onSelect}
+  //         selectedSourceSlug={selectedSourceSlug}
+  //       />
+  //     </Tab>
+  //     <Tab eventKey="layouts" title="Layouts">
+  //       {/* <Card className="mb-3">
+  //         <Card.Header>Grupos de Canales</Card.Header>
+  //         <Card.Body className="d-flex flex-wrap">
+  //           <ListGroup>
+  //             {defaultChannels.map(channels => (
+  //               <ListGroup.Item
+  //                 key={channels.name}
+  //                 action
+  //                 onClick={() => setSelectedSources(channels.nodes)}
+  //               >
+  //                 {channels.name}
+  //               </ListGroup.Item>
+  //             ))}
+  //             <ListGroup.Item
+  //               action
+  //               href="https://results-santiago2023.org/#/schedule/daily"
+  //               target="_blank"
+  //               rel="noopener noreferrer"
+  //             >
+  //               Resultados Panamericanos
+  //             </ListGroup.Item>
+  //           </ListGroup>
+  //         </Card.Body>
+  //       </Card> */}
+  //       <Card className="mb-3">
+  //         <Card.Header>Layouts</Card.Header>
+  //         <Card.Body className="d-flex flex-wrap">
+  //           <ListGroup>
+  //             {possibleLayouts.map(layout => (
+  //               <ListGroup.Item
+  //                 key={layout.name}
+  //                 action
+  //                 onClick={() => setDisplayConfig(layout.config)}
+  //               >
+  //                 <Image
+  //                   alt=""
+  //                   src={`/img/layout/${layout.imgName}`}
+  //                   width="160"
+  //                   height="90"
+  //                 />
+  //               </ListGroup.Item>
+  //             ))}
+  //           </ListGroup>
+  //         </Card.Body>
+  //       </Card>
 
-        <SavedSources />
-        <Card>
-          <Card.Body className="d-flex flex-wrap">
-            <Button onClick={() => cleanLocalStorage()}>Limpiar todo</Button>
-          </Card.Body>
-        </Card>
-      </Tab>
-    </Tabs>
-  );
+  //       <SavedSources />
+  //       <Card>
+  //         <Card.Body className="d-flex flex-wrap">
+  //           <Button onClick={() => cleanLocalStorage()}>Limpiar todo</Button>
+  //         </Card.Body>
+  //       </Card>
+  //     </Tab>
+  //   </Tabs>
+  // );
 };

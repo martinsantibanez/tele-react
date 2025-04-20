@@ -31,6 +31,16 @@ function HomeElement({
   openInNewTab?: boolean;
 }) {
   return (
+    // <div className="row mt-5 text-center">
+    //   <Link
+    //     href={href}
+    //     className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
+    //     target={openInNewTab ? '_blank' : ''}
+    //   >
+    //     <h3>{title}</h3>
+    //     {description && <p>{description}</p>}
+    //   </Link>
+    // </div>
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
@@ -43,16 +53,6 @@ function HomeElement({
         </Button>
       </CardFooter>
     </Card>
-    // <div className="row mt-5 text-center">
-    //   <Link
-    //     href={href}
-    //     className="col-12 col-md-4 offset-md-4 btn btn-outline-light pt-2"
-    //     target={openInNewTab ? '_blank' : ''}
-    //   >
-    //     <h3>{title}</h3>
-    //     {description && <p>{description}</p>}
-    //   </Link>
-    // </div>
   );
 }
 

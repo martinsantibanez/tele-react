@@ -1,7 +1,7 @@
 import classnames from 'classnames/bind';
-import { Button } from 'react-bootstrap';
 import { SourceType } from '../../../sources';
 import styles from './SourceButton.module.scss';
+import { Button } from '../../../../components/ui/button';
 const cx = classnames.bind(styles);
 
 type Props = {
@@ -12,7 +12,7 @@ type Props = {
 export function SourceButton({ source, onSelect, isSelected }: Props) {
   return (
     <Button
-      variant="light"
+      variant="outline"
       onClick={() => onSelect && onSelect(source)}
       className={
         cx('btn', 'source-button', { selected: isSelected }) + ' mb-2 ms-1'

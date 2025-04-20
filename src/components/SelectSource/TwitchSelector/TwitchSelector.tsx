@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { Accordion } from 'react-bootstrap';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
 import { BsTwitch } from 'react-icons/bs';
 import { useCustomSources } from '../../../hooks/useCustomSources';
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '../../../../components/ui/accordion';
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
@@ -29,9 +33,9 @@ export function TwitchSelector({
   };
 
   return (
-    <Accordion.Item eventKey={accordionEventKey}>
-      <Accordion.Header>Twitch</Accordion.Header>
-      <Accordion.Body>
+    <AccordionItem value={accordionEventKey}>
+      <AccordionTrigger>Twitch</AccordionTrigger>
+      <AccordionContent>
         {twitchSources?.map(source => (
           <SourceButton
             onSelect={onSourceSelect}
@@ -51,7 +55,7 @@ export function TwitchSelector({
         <button onClick={handleCreateSource} className="btn btn-primary">
           Agregar
         </button>
-      </Accordion.Body>
-    </Accordion.Item>
+      </AccordionContent>
+    </AccordionItem>
   );
 }

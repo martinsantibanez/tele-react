@@ -1,8 +1,4 @@
-import { Accordion } from 'react-bootstrap';
-import { SourceType, sourcesCategories } from '../../sources';
-import { SourceButton } from './SourceButton/SourceButton';
-import { TwitchSelector } from './TwitchSelector/TwitchSelector';
-import { ZappingSelector } from './ZappingSelector/ZappingSelector';
+import { SourceType } from '../../sources';
 import { ZappingSelectorNew } from './ZappingSelector/ZappingSelectorNew';
 
 type Props = {
