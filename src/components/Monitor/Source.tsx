@@ -79,7 +79,10 @@ export function Source({
 
   return (
     <div className="w-full h-full">
-      <div className={`w-full h-full`} style={{ opacity: isOver ? 0.1 : 1 }}>
+      <div
+        className={`w-full h-full relative`}
+        style={{ opacity: isOver ? 0.1 : 1 }}
+      >
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
@@ -87,27 +90,18 @@ export function Source({
           <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-end w-full opacity-100 z-[2]">
             {onChangeClick && (
               <>
-                <Button variant={isBeingEdited ? 'outline' : 'default'} onClick={handleChangeClick}>
-                  Cambiar
-                </Button>
-                <div
-                  className={cx('action-button', { isBeingEdited })}
+                <Button
+                  variant={isBeingEdited ? 'outline' : 'default'}
                   onClick={handleChangeClick}
                 >
-                  CAMBIAR
-                </div>
-                {/* <div className={cx('action-button')} onClick={handlePromote}>
-                  DESTACAR
-                </div> */}
+                  Cambiar
+                </Button>
               </>
             )}
             {onRemove && (
-              <div
-                className={cx('action-button', 'color-red')}
-                onClick={onRemove}
-              >
-                QUITAR
-              </div>
+              <Button variant={'destructive'} onClick={onRemove}>
+                Quitar
+              </Button>
             )}
           </div>
         )}
