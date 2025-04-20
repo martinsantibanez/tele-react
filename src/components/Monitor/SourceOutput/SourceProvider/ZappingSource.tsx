@@ -11,6 +11,5 @@ export function ZappingSource({ channelId, muted = true }: Props) {
 
   const href = `${channelId}?token=${zappingConfig?.token}`;
 
-  if (!href || !zappingConfig?.token) return null;
   return <VideoPlayer src={href} muted={muted} />;
 }

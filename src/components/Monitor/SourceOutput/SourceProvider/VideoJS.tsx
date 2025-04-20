@@ -1,3 +1,4 @@
+"use client"
 import qualitySelector from 'videojs-hls-quality-selector';
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
