@@ -8,8 +8,8 @@ import { ZappingSource } from './SourceProvider/ZappingSource';
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
   return (
     <div className="w-full h-full">
-      <div className="ratio ratio-16x9">
-        <iframe src={src} className="ratio ratio-16x9" frameBorder="0" />
+      <div className="aspect-video">
+        <iframe src={src} className="aspect-video w-full h-full" frameBorder="0" />
       </div>
     </div>
   );

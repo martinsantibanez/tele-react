@@ -7,7 +7,6 @@ import {
 import { useCleanLocalStorage } from '../../pages/index.page';
 import {
   initialLayout,
-  testLayout,
   twoBigLayout
 } from '../../pages/monitor/predefinedLayouts';
 import {
@@ -40,7 +39,7 @@ const possibleLayouts: PossibleLayout[] = [
     config: {
       layout: initialLayout,
       mode: DisplayMode.Grid,
-      grid: { size: 4 }
+      grid: { size: 3 }
     },
     imgName: 'layout2.png'
   },
@@ -48,7 +47,7 @@ const possibleLayouts: PossibleLayout[] = [
     config: {
       layout: initialLayout,
       mode: DisplayMode.Grid,
-      grid: { size: 6 }
+      grid: { size: 2 }
     },
     imgName: 'layout3.png'
   },
@@ -56,7 +55,7 @@ const possibleLayouts: PossibleLayout[] = [
     config: {
       mode: DisplayMode.Layout,
       layout: twoBigLayout,
-      grid: { size: 4 }
+      grid: { size: 1 }
     },
     imgName: 'layout4.png'
   },
@@ -64,26 +63,10 @@ const possibleLayouts: PossibleLayout[] = [
     config: {
       layout: initialLayout,
       mode: DisplayMode.Grid,
-      grid: { size: 3 }
+      grid: { size: 4 }
     },
     imgName: 'layout5.png'
-  },
-  {
-    config: {
-      mode: DisplayMode.Layout,
-      layout: twoBigLayout,
-      grid: { size: 4 }
-    },
-    imgName: 'layout4.png'
-  },
-  {
-    config: {
-      mode: DisplayMode.Layout,
-      layout: testLayout,
-      grid: { size: 4 }
-    },
-    imgName: 'layout4.png'
-  },
+  }
 ];
 
 type PossibleChannels = {

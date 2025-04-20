@@ -23,7 +23,6 @@ export function GridDisplay({
       {sources.map((source, idx) => (
         <Source
           idx={idx}
-          size={size}
           sourceSlug={source.sourceSlug}
           muted={source.muted ?? true}
           key={`${source.uuid}`}

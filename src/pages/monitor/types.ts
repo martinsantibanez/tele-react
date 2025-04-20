@@ -8,14 +8,36 @@ export type SourceNode = {
 };
 
 export type ColType = {
-  size?: number;
+  size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
   rows?: RowType[];
   node?: { idx: number };
 };
 
 export type RowType = { cols?: ColType[] };
 
-export type LayoutType = ColType;
+export type ColValues =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16;
+export type RowValues = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type LayoutType = {
+  cols?: ColValues;
+  rows?: RowValues;
+}[];
 
 export enum DisplayMode {
   Layout = 'Layout',
@@ -23,7 +45,7 @@ export enum DisplayMode {
 }
 
 export type GridType = {
-  size: 1 | 2 | 3;
+  size: 1 | 2 | 3 | 4;
 };
 
 export type DisplayConfig = {
