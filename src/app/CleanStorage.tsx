@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { useCleanLocalStorage } from '../app/page';
+import { useCleanLocalStorage } from '../hooks/useCleanLocalStorage';
 
 type Props = {};
 export const Home = ({}: Props) => {
