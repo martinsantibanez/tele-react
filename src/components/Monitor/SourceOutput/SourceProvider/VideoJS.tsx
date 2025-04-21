@@ -13,7 +13,6 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
   const videoRef = useRef<any>(undefined);
   const [player, setPlayer] = useState<any>(undefined);
 
-  if (typeof window === 'undefined') return null;
   useEffect(() => {
     if (player) {
       player.src([src]);

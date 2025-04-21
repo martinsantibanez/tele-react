@@ -98,10 +98,6 @@ export function ZappingSelectorNew({
     setZappingConfig({ token: tokenValue });
   }
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) =>
-    useMemo(() => {
-      setJsonInput(event.target.value);
-    }, []);
   return (
     <div className="flex flex-col">
       <div>
@@ -145,9 +141,7 @@ export function ZappingSelectorNew({
           >
             Zapping
           </a>
-          <pre>
-            {`window.sessionStorage.playToken`}
-          </pre>
+          <pre>{`window.sessionStorage.playToken`}</pre>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}>
               <FormField
@@ -166,7 +160,6 @@ export function ZappingSelectorNew({
               <Button type="submit">Submit</Button>
             </form>
           </Form>
-          {/* </FormProvider> */}
         </div>
       </div>
     </div>
