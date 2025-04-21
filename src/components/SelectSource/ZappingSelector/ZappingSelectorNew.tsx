@@ -1,7 +1,7 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
-import { Form, FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
@@ -10,7 +10,8 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
+  Form
 } from '../../../../components/ui/form';
 import { Input } from '../../../../components/ui/input';
 import { useCustomSources } from '../../../hooks/useCustomSources';
@@ -29,7 +30,7 @@ const zappingSources = arrayCanales.map(canal => {
 });
 
 const formSchema = z.object({
-  jsonInput: z.string().min(2).max(50)
+  jsonInput: z.string()
 });
 
 type Props = {
@@ -43,14 +44,16 @@ export function ZappingSelectorNew({
 }: Props) {
   const { setZappingConfig } = useZappingConfig();
   const [jsonInput, setJsonInput] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(2);
 
   const { createSource } = useCustomSources();
 
-  const updateSelectedChannel = (source: SourceType) => {
+  const updateSelectedChannel = (sourceIndex: number) => {
+    setSelectedIndex(sourceIndex);
+    const source = zappingSources[selectedIndex];
     createSource(source);
     onSourceSelect(source);
   };
-  const [selectedIndex, setSelectedIndex] = useState(2);
 
   const next = () => {
     setSelectedIndex(prevIndex =>
@@ -76,11 +79,9 @@ export function ZappingSelectorNew({
 
   useHotkeys('left', () => prev(), { preventDefault: true });
   useHotkeys('right', () => next(), { preventDefault: true });
-  useHotkeys(
-    'enter',
-    () => updateSelectedChannel(zappingSources[selectedIndex]),
-    { preventDefault: true }
-  );
+  useHotkeys('enter', () => updateSelectedChannel(selectedIndex), {
+    preventDefault: true
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,9 +92,10 @@ export function ZappingSelectorNew({
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    console.log('values', values);
+    const tokenValue = values.jsonInput.replaceAll("'", '');
+    console.log({ tokenValue });
+    setZappingConfig({ token: tokenValue });
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) =>
@@ -116,7 +118,7 @@ export function ZappingSelectorNew({
           const isActive = canalIndex === selectedIndex;
           return (
             <Button
-              onClick={() => updateSelectedChannel(canal)}
+              onClick={() => updateSelectedChannel(canalIndex)}
               variant={isActive ? 'secondary' : 'outline'}
               key={`zapping_${canal.slug}`}
             >
@@ -144,41 +146,27 @@ export function ZappingSelectorNew({
             Zapping
           </a>
           <pre>
-            {`console.log( JSON.stringify({ token: document.querySelector('#loginToken').value }) )`}
+            {`window.sessionStorage.playToken`}
           </pre>
-          <FormProvider {...form}>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                <FormField
-                  control={form.control}
-                  name="jsonInput"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Introduce el resultado:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="token..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit">Submit</Button>
-              </form>
-            </Form>
-          </FormProvider>
-          <input
-            type="text"
-            onChange={handleInputChange}
-            value={jsonInput}
-            name="jsonInput"
-            id="jsonInput"
-          />
-          <button onClick={() => setZappingConfig(JSON.parse(jsonInput))}>
-            Configurar
-          </button>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}>
+              <FormField
+                control={form.control}
+                name="jsonInput"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Introduce el resultado:</FormLabel>
+                    <FormControl>
+                      <Input placeholder="token..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit">Submit</Button>
+            </form>
+          </Form>
+          {/* </FormProvider> */}
         </div>
       </div>
     </div>

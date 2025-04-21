@@ -1,7 +1,6 @@
 import useLocalStorageState from 'use-local-storage-state';
 
 export type ZappingConfig = {
-  endpoint: string;
   token: string;
 };
 

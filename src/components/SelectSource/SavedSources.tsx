@@ -1,8 +1,9 @@
+'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
-import { ScreenType } from '../../pages/monitor/types';
+import { ScreenType } from '../../_pages/monitor/types';
 import { useSavedScreens } from '../Monitor/Monitor';
 import { Card, CardContent, CardHeader } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';

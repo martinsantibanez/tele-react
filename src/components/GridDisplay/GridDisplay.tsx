@@ -1,4 +1,4 @@
-import { SourceNode } from '../../pages/monitor/types';
+import { SourceNode } from '../../_pages/monitor/types';
 import { OnSwitchCb, Source } from '../Monitor/Source';
 
 type Props = {

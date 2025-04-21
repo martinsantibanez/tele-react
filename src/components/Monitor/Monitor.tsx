@@ -1,3 +1,4 @@
+'use client';
 import axios from 'axios';
 import { useMemo } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
@@ -10,8 +11,8 @@ import {
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useZappingConfig } from '../../hooks/useZappingConfig';
-import { Screen } from '../../pages/monitor/Screen';
-import { DisplayMode, ScreenType } from '../../pages/monitor/types';
+import { Screen } from '../../_pages/monitor/Screen';
+import { DisplayMode, GridSize, ScreenType } from '../../_pages/monitor/types';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
@@ -72,7 +73,7 @@ export const Monitor = () => {
       }));
     }
   };
-  const handleSizeChange = (newSize: number) => {
+  const handleSizeChange = (newSize: GridSize) => {
     if (displayConfig.mode !== DisplayMode.Grid) return;
     setDisplayConfig(config => ({
       ...config,

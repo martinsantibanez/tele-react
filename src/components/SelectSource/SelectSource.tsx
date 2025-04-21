@@ -2,19 +2,19 @@ import {
   defaultDisplayConfig,
   useDisplayConfig
 } from '../../hooks/useDisplayConfig';
-import { useCleanLocalStorage } from '../../pages/index.page';
 import {
   initialLayout,
   twoBigLayout
-} from '../../pages/monitor/predefinedLayouts';
+} from '../../_pages/monitor/predefinedLayouts';
 import {
   DisplayConfig,
   DisplayMode,
   SourceNode
-} from '../../pages/monitor/types';
+} from '../../_pages/monitor/types';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { SourceAccordionListNew } from './SourceListNew';
+import { useCleanLocalStorage } from '../../app/page';
 
 type Props = {
   selectedSourceSlug: string | undefined;

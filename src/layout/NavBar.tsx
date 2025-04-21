@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 import { BsPencilFill, BsXLg } from 'react-icons/bs';
 import { useTeleContext } from '../context/TeleContext';

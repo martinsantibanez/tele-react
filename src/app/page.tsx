@@ -1,14 +1,4 @@
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useCustomSources } from '../hooks/useCustomSources';
-import { useDisplayConfig } from '../hooks/useDisplayConfig';
-import { useFeaturedScreen } from '../hooks/useFeaturedScreen';
-import { useSavedGrid } from '../hooks/useSavedGrid';
-import { useZappingConfig } from '../hooks/useZappingConfig';
-import styles from '../styles/Home.module.css';
-import { useSavedSelectedItem } from './list/index.page';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -17,7 +7,15 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import type { NextPage } from 'next';
+import Link from 'next/link';
+import { useCustomSources } from '../hooks/useCustomSources';
+import { useDisplayConfig } from '../hooks/useDisplayConfig';
+import { useFeaturedScreen } from '../hooks/useFeaturedScreen';
+import { useSavedGrid } from '../hooks/useSavedGrid';
+import { useZappingConfig } from '../hooks/useZappingConfig';
+import styles from '../styles/Home.module.css';
+import { useSavedSelectedItem } from '../hooks/useSavedSelectedItem';
 
 function HomeElement({
   description,
@@ -75,25 +73,8 @@ export const useCleanLocalStorage = () => {
 };
 
 const Home: NextPage = () => {
-  const [clearedState, setClearedState] = useState(false);
-  const cleanLocalStorage = useCleanLocalStorage();
-  const handleClearLocalStorage = () => {
-    if (clearedState) {
-      setClearedState(false);
-      return;
-    }
-    cleanLocalStorage();
-    setClearedState(true);
-  };
-
   return (
     <div className={styles.container}>
-      <Head>
-        <title>Ver Tele</title>
-        <meta name="description" content="Visor de canales de TV chilena" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
       <main>
         <h1>Ver Tele</h1>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -117,14 +98,6 @@ const Home: NextPage = () => {
             title="Lista"
             description="Elige solo un canal de la lista."
           />
-          <div className="row mt-5 text-center">
-            <button
-              onClick={handleClearLocalStorage}
-              className="btn btn-outline-light col-12 col-md-4 offset-md-4"
-            >
-              {clearedState ? '✅ Borrado' : 'Borrar datos locales'}
-            </button>
-          </div>
         </div>
       </main>
     </div>

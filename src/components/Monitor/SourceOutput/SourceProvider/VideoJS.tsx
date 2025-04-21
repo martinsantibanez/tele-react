@@ -63,10 +63,6 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
   return (
     <div data-vjs-player>
-      <Script
-        type="text/javascript"
-        src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"
-      />
       <video
         ref={videoRef}
         className="video-js vjs-default-skin vjs-big-play-centered"

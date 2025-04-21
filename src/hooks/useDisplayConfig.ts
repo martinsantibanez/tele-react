@@ -1,6 +1,6 @@
 import useLocalStorageState from 'use-local-storage-state';
-import { initialLayout } from '../pages/monitor/predefinedLayouts';
-import { DisplayConfig, DisplayMode } from '../pages/monitor/types';
+import { initialLayout } from '../_pages/monitor/predefinedLayouts';
+import { DisplayConfig, DisplayMode } from '../_pages/monitor/types';
 
 export const DEFAULT_GRID_SIZE = 3;
 

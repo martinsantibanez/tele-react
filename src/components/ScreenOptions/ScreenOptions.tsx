@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { DisplayMode } from '../../pages/monitor/types';
+import { DisplayMode, GridSize } from '../../_pages/monitor/types';
 import { ActionButton } from '../ActionButton/ActionButton';
 
 const buttons: CSSProperties = {
@@ -12,13 +12,13 @@ const buttons: CSSProperties = {
 };
 
 type Props = {
-  onSizeChange: (size: number) => void;
+  onSizeChange: (size: GridSize) => void;
   onSourceAdd?: () => void;
   onPromote?: () => void;
   onModeChange?: (selectedMode: DisplayMode) => void;
   onShare?: () => void;
   mode: DisplayMode;
-  size: number;
+  size: GridSize;
 };
 export function ScreenOptions({
   onSizeChange,
@@ -36,7 +36,7 @@ export function ScreenOptions({
           <select
             title="Streams por fila"
             className="StreamsPorFila"
-            onChange={event => onSizeChange(+event.target.value)}
+            onChange={event => onSizeChange(+event.target.value as GridSize)}
             value={size + ''}
           >
             <option value="1">1 por fila</option>

@@ -44,8 +44,10 @@ export enum DisplayMode {
   Grid = 'Grid'
 }
 
+export type GridSize = 1 | 2 | 3 | 4;
+
 export type GridType = {
-  size: 1 | 2 | 3 | 4;
+  size: GridSize;
 };
 
 export type DisplayConfig = {

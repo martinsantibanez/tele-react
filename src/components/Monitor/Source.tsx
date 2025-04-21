@@ -1,21 +1,17 @@
-import classnames from 'classnames/bind';
+'use client';
 import { useMemo } from 'react';
-import { useDrop } from 'react-dnd';
+import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { getSource } from '../../sources';
-import styles from './Source.module.scss';
 import { SourceOutput } from './SourceOutput/SourceOutput';
-import { Button } from '../../../components/ui/button';
-const cx = classnames.bind(styles);
 
 export type OnSwitchCb = (left: number, right: number) => void;
 
 type Props = {
   sourceSlug?: string;
   muted?: boolean;
-  // size: number;
   onChangeClick?: () => void;
   onRemove?: () => void;
   isBeingEdited?: boolean;
@@ -26,7 +22,6 @@ type Props = {
 export function Source({
   sourceSlug,
   muted = true,
-  // size,
   onChangeClick,
   onRemove,
   isBeingEdited,
@@ -64,25 +59,9 @@ export function Source({
     if (onChangeClick) onChangeClick();
   };
 
-  const [{ isOver }, drop] = useDrop(
-    () => ({
-      accept: 'Monitor',
-      collect: monitor => ({
-        isOver: !!monitor.isOver()
-      }),
-      drop: (a: { idx: number }) => {
-        if (onSwitch) onSwitch(idx, a.idx);
-      }
-    }),
-    [idx]
-  );
-
   return (
     <div className="w-full h-full">
-      <div
-        className={`w-full h-full relative`}
-        style={{ opacity: isOver ? 0.1 : 1 }}
-      >
+      <div className={`w-full h-full relative`}>
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>

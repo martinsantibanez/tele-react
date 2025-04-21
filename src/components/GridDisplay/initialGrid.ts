@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { SourceNode } from '../../pages/monitor/types';
+import { SourceNode } from '../../_pages/monitor/types';
 
 export const defaultGrid: SourceNode[] = [
   { sourceSlug: '24HTVN_YT', uuid: uuidv4() },

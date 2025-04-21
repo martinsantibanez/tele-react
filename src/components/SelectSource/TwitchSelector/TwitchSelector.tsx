@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
