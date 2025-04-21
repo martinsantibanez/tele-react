@@ -1,8 +1,4 @@
 import {
-  defaultDisplayConfig,
-  useDisplayConfig
-} from '../../hooks/useDisplayConfig';
-import {
   initialLayout,
   twoBigLayout
 } from '../../_pages/monitor/predefinedLayouts';
@@ -11,10 +7,10 @@ import {
   DisplayMode,
   SourceNode
 } from '../../_pages/monitor/types';
+import { defaultDisplayConfig } from '../../hooks/useDisplayConfig';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { SourceAccordionListNew } from './SourceListNew';
-import { useCleanLocalStorage } from '../../app/page';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -116,10 +112,6 @@ const _defaultChannels: PossibleChannels[] = [
 ];
 
 export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
-  const [, setDisplayConfig] = useDisplayConfig();
-  // const [selectedSources, setSelectedSources] = useSavedGrid();
-  const cleanLocalStorage = useCleanLocalStorage();
-
   return (
     <SourceAccordionListNew
       onSelect={onSelect}
