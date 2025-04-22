@@ -25,8 +25,8 @@ export const DuoPage = () => {
     preview: string;
     program: string;
   }>({
-    preview: 'MEGA',
-    program: ''
+    preview: 'Barras',
+    program: 'Barras'
   });
   const { customSources } = useCustomSources();
   const { zappingConfig } = useZappingConfig();
