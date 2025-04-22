@@ -1,33 +1,23 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { ScreenType, SourceNode } from '../../_pages/monitor/types';
+import { useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Source } from '../../components/Monitor/Source';
 import { SelectSource } from '../../components/SelectSource/SelectSource';
-import { SourceAccordionListNew } from '../../components/SelectSource/SourceListNew';
-import { useTeleContext } from '../../context/TeleContext';
+import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
+import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useZappingConfig } from '../../hooks/useZappingConfig';
 import { SourceType } from '../../sources';
-import { uuid } from '../../utils/uuid';
-import { useHotkeys } from 'react-hotkeys-hook';
-
-type SavedScreen = {
-  name: string;
-  screen: ScreenType;
-};
+import { useDuoState } from '../../hooks/useDuoState';
 
 export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);
-  useHotkeys('e', () => setIsEditing(e => !e), { preventDefault: true });
+  const [invertAudio, setInvertAudio] = useState(false);
 
-  const [sources, setSources] = useState<{
-    preview: string;
-    program: string;
-  }>({
-    preview: 'Barras',
-    program: 'Barras'
-  });
+  useHotkeys('i', () => setInvertAudio(v => !v), { preventDefault: true });
+  useHotkeys('e', () => setIsEditing(v => !v), { preventDefault: true });
+
+  const [sources, setSources] = useDuoState();
   const { customSources } = useCustomSources();
   const { zappingConfig } = useZappingConfig();
 
@@ -45,17 +35,25 @@ export const DuoPage = () => {
       return newSources;
     });
   };
-
+  const index = zappingSources.findIndex(s => s.slug === sources.program);
+  const image = Object.values(canalesZapping)[index]?.image;
+  const img = image
+    ? `https://davinci.zappingtv.com/gato/media/128/canales/white/${image}.png`
+    : undefined;
   return (
     <div className="grid grid-cols-16 grid-rows-9">
-      <div className={isEditing ? `col-span-12 row-span-6` : 'col-span-16 row-span-9'}>
-        <Source
-          idx={0}
-          sourceSlug={sources.program}
-          // muted={source.muted ?? true}
-          muted={false}
-        />
+      <div
+        className={
+          isEditing ? `col-span-12 row-span-6` : 'col-span-16 row-span-9'
+        }
+      >
+        <Source idx={0} sourceSlug={sources.program} muted={invertAudio} />
       </div>
+      {isEditing && img && (
+        <div className="col-span-4 row-span-6 text-center w-full flex items-center justify-center">
+          <img src={img} />
+        </div>
+      )}
       {isEditing && (
         <>
           <div className="col-span-12 row-span-3 row-start-7">
@@ -66,7 +64,7 @@ export const DuoPage = () => {
             />
           </div>
           <div className={`col-span-4 row-span-2 col-start-13 row-start-7`}>
-            <Source idx={1} sourceSlug={sources.preview} muted />
+            <Source idx={1} sourceSlug={sources.preview} muted={!invertAudio} />
           </div>
         </>
       )}

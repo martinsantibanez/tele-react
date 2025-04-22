@@ -1,4 +1,9 @@
 'use client';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +20,6 @@ import { Input } from '../../../../components/ui/input';
 import { useZappingConfig } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
-import { useState } from 'react';
 
 const arrayCanales = Object.values(canalesZapping);
 export const zappingSources = arrayCanales.map(canal => {
@@ -48,45 +52,62 @@ export function ZappingConfig({}: Props) {
     setZappingConfig({ token: tokenValue });
   }
 
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <div className="mt-3">
-      <Button onClick={() => setIsOpen(v => !v)} variant="ghost">
-        Configurar Zapping
-      </Button>
-      {isOpen && (
-        <div>
-          Pega esto en la consola en{' '}
-          <a
-            href="https://app.zappingtv.com/player/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: 'underline' }}
-          >
-            Zapping
-          </a>
-          <pre>{`window.sessionStorage.playToken`}</pre>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}>
-              <FormField
-                control={form.control}
-                name="jsonInput"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Introduce el resultado:</FormLabel>
-                    <FormControl>
-                      <Input placeholder="token..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Submit</Button>
-            </form>
-          </Form>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline">Zapping Config</Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium leading-none">Zapping</h4>
+            <p className="text-sm text-muted-foreground">
+              Copia esto en la consola de tu navegador (F12) en{' '}
+              <a
+                href="https://app.zappingtv.com/player/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'underline' }}
+              >
+                Zapping
+              </a>
+              :<pre>{`window.sessionStorage.playToken`}</pre>
+              Pega el resultado a continuación:
+            </p>
+          </div>
+          <div>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}
+                className="grid gap-2"
+              >
+                {/* <div className="grid grid-cols-3 items-center gap-4"> */}
+                <FormField
+                  control={form.control}
+                  name="jsonInput"
+                  render={({ field }) => (
+                    <FormItem className="grid grid-cols-3 items-center gap-4">
+                      <FormLabel>Token</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="..."
+                          {...field}
+                          className="col-span-2 h-8"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="text-right">
+                  <Button type="submit">Guardar</Button>
+                </div>
+              </form>
+            </Form>
+          </div>
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

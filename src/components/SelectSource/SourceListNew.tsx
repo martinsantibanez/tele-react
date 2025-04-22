@@ -1,9 +1,9 @@
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
-import { Card, CardContent } from '../../../components/ui/card';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { SourceType } from '../../sources';
 import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
+import { canalesZapping } from './ZappingSelector/canales';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -49,11 +49,12 @@ export function SourceAccordionListNew({
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(zappingSources.length - 1, selectedIndex + 2);
   return (
-    <div className="w-full h-full flex flex-col justify-center align-center">
-      <div className="flex justify-between">
+    <div className="w-full h-full flex flex-col justify-center">
+      <div className="flex justify-between items-center">
         <Button
           onClick={() => prev()}
-          variant="outline"
+          variant="ghost"
+          className="h-full"
           disabled={selectedIndex === 0}
         >
           {'<'}
@@ -61,26 +62,30 @@ export function SourceAccordionListNew({
         {zappingSources.map((canal, canalIndex) => {
           if (canalIndex < startIndex || canalIndex > endIndex) return null;
           const isActive = canal.slug === selectedSourceSlug;
+          const image = Object.values(canalesZapping)[canalIndex].image;
+          const img = `https://davinci.zappingtv.com/gato/media/62/canales/white/${image}.png`;
 
           return (
-            <Card
+            <div
               className={isActive ? 'bg-gray-800' : ''}
               onClick={() => {
                 updateSelectedChannel(canalIndex);
               }}
               key={`zp_${canal.slug}`}
             >
-              <CardContent className="flex flex-row items-center gap-4 p-6">
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold">{canal.name}</h2>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="flex flex-col items-center gap-4 p-6">
+                <img src={img} />
+                {/* <div className="space-y-1"> */}
+                  {/* <h2 className="text-lg font-semibold">{canal.name}</h2> */}
+                {/* </div> */}
+              </div>
+            </div>
           );
         })}
         <Button
           onClick={() => next()}
-          variant="outline"
+          variant="ghost"
+          className="h-full"
           disabled={selectedIndex === zappingSources.length - 1}
         >
           {'>'}
@@ -89,18 +94,20 @@ export function SourceAccordionListNew({
       <div className="flex">
         <div className="mt-3 flex flex-col mw-300 mr-6">
           <div>Keyboard shortcuts</div>
-          <div>
-            <span className="font-bold text-xl">E</span> Enter/exit edit mode
+          <div className="flex flex-row gap-3">
+            <div>
+              <span className="font-bold text-xl">E</span> Enter/exit edit mode
+            </div>
+            <div>
+              <span className="font-bold text-xl">Arrows</span> Preview
+              Next/Previous source
+            </div>
+            <div>
+              <span className="font-bold text-xl">Enter</span> Swap sources
+            </div>
           </div>
-          <div>
-            <span className="font-bold text-xl">Arrows</span> Preview
-            Next/Previous source
-          </div>
-          <div>
-            <span className="font-bold text-xl">Enter</span> Swap sources
-          </div>
+          <ZappingConfig />
         </div>
-        <ZappingConfig />
       </div>
     </div>
   );

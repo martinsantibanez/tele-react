@@ -56,7 +56,7 @@ export function SourceOutput({ source, muted = true }: Props) {
   } else if (source.twitchAccount) {
     return <TwitchSource channel={source.twitchAccount} muted={muted} />;
   } else if (source.zappingChannel) {
-    return <ZappingSource channelId={source.zappingChannel} />;
+    return <ZappingSource channelId={source.zappingChannel} muted={muted} />;
   }
 
   return null;
