@@ -1,11 +1,9 @@
-import { useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
+import { Card, CardContent } from '../../../components/ui/card';
+import { useCustomSources } from '../../hooks/useCustomSources';
 import { SourceType } from '../../sources';
 import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
-import { useCustomSources } from '../../hooks/useCustomSources';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { Card, CardContent } from '../../../components/ui/card';
-import { CommandShortcut } from '../../../components/ui/command';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -20,7 +18,9 @@ export function SourceAccordionListNew({
   selectedSourceSlug,
   onSourceSwap
 }: Props) {
-  const [selectedIndex, setSelectedIndex] = useState(2);
+  const selectedIndex = sources.findIndex(
+    src => src.slug === selectedSourceSlug
+  );
 
   const { createSource } = useCustomSources();
 
@@ -34,9 +34,8 @@ export function SourceAccordionListNew({
     updateSelectedChannel(Math.max(selectedIndex - 1, 0));
   };
 
-  const updateSelectedChannel = (sourceIndex: number) => {
-    setSelectedIndex(sourceIndex);
-    const source = zappingSources[selectedIndex];
+  const updateSelectedChannel = (index: number) => {
+    const source = zappingSources[index];
     createSource(source);
     onSelect(source);
   };
@@ -61,12 +60,14 @@ export function SourceAccordionListNew({
         </Button>
         {zappingSources.map((canal, canalIndex) => {
           if (canalIndex < startIndex || canalIndex > endIndex) return null;
-          const isActive = canalIndex === selectedIndex;
+          const isActive = canal.slug === selectedSourceSlug;
 
           return (
             <Card
               className={isActive ? 'bg-gray-800' : ''}
-              onClick={() => updateSelectedChannel(canalIndex)}
+              onClick={() => {
+                updateSelectedChannel(canalIndex);
+              }}
               key={`zp_${canal.slug}`}
             >
               <CardContent className="flex flex-row items-center gap-4 p-6">
