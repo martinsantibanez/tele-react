@@ -12,11 +12,6 @@ import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { SourceAccordionListNew } from './SourceListNew';
 
-type Props = {
-  selectedSourceSlug: string | undefined;
-  onSelect: (source: SourceType) => void;
-};
-
 type PossibleLayout = {
   name?: string;
   config: DisplayConfig;
@@ -111,11 +106,18 @@ const _defaultChannels: PossibleChannels[] = [
   }
 ];
 
-export const SelectSource = ({ onSelect, selectedSourceSlug }: Props) => {
+type Props = {
+  selectedSourceSlug: string | undefined;
+  onSelect: (source: SourceType) => void;
+  onSourceSwap?: () => void;
+};
+
+export const SelectSource = ({ onSelect, selectedSourceSlug, onSourceSwap }: Props) => {
   return (
     <SourceAccordionListNew
       onSelect={onSelect}
       selectedSourceSlug={selectedSourceSlug}
+      onSourceSwap={onSourceSwap}
     />
   );
 

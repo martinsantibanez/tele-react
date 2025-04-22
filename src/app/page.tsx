@@ -81,6 +81,11 @@ const Home: NextPage = () => {
             title="Lista"
             description="Elige solo un canal de la lista."
           />
+          <HomeElement
+            href="/duo"
+            title="Duo mode"
+            description="Preview one source, watch another."
+          />
         </div>
       </main>
     </div>

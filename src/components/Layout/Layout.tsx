@@ -29,7 +29,7 @@ const colSizeClass = {
   16: 'col-span-16'
 } as const;
 
-export const rowSizeclass = {
+export const rowSizeClass = {
   1: 'row-span-1',
   2: 'row-span-2',
   3: 'row-span-3',
@@ -53,7 +53,7 @@ export function Layout({
     <div className="grid grid-cols-16 grid-rows-9">
       {layout.map((col, idx) => {
         const colClass = col.cols ? colSizeClass[col.cols] : undefined;
-        const rowClass = col.rows ? rowSizeclass[col.rows] : undefined;
+        const rowClass = col.rows ? rowSizeClass[col.rows] : undefined;
         // const rowClass = 'auto-rows-2'
         const source = sources[idx];
         if (!source) return null;

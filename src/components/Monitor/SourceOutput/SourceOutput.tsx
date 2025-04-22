@@ -35,7 +35,7 @@ export function SourceOutput({ source, muted = true }: Props) {
     const Component = source.component;
     return <Component />;
   } else if (source.m3u8Url && typeof window !== 'undefined') {
-    return <VideoPlayer src={source.m3u8Url} />;
+    return <VideoPlayer src={source.m3u8Url} muted={muted} />;
   } else if (source.youtubeChannelId) {
     const muteValue = muted ? '1' : '0';
     return (
