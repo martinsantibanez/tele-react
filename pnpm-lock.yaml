@@ -101,6 +101,9 @@ importers:
       sass:
         specifier: ^1.86.3
         version: 1.86.3
+      screenfull:
+        specifier: ^6.0.2
+        version: 6.0.2
       tailwind-merge:
         specifier: ^3.2.0
         version: 3.2.0
@@ -110,6 +113,9 @@ importers:
       use-local-storage-state:
         specifier: ^19.5.0
         version: 19.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      use-session-storage-state:
+        specifier: ^19.0.1
+        version: 19.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -3216,6 +3222,10 @@ packages:
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
 
+  screenfull@6.0.2:
+    resolution: {integrity: sha512-AQdy8s4WhNvUZ6P8F6PB21tSPIYKniic+Ogx0AacBMjKP1GUHN2E9URxQHtCusiwxudnCKkdy4GrHXPPJSkCCw==}
+    engines: {node: ^14.13.1 || >=16.0.0}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -3476,6 +3486,13 @@ packages:
 
   use-local-storage-state@19.5.0:
     resolution: {integrity: sha512-sUJAyFvsmqMpBhdwaRr7GTKkkoxb6PWeNVvpBDrLuwQF1PpbJRKIbOYeLLeqJI7B3wdfFlLLCBbmOdopiSTBOw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
+  use-session-storage-state@19.0.1:
+    resolution: {integrity: sha512-TK1K+UyTGNyOPN2K3yLOt0nTfeRlYRrLlNRN0kiI4irDng3HU4P0BArSAib0eD/VaQNlYs5WCdjeoEK1y/fIZA==}
     engines: {node: '>=14'}
     peerDependencies:
       react: '>=18'
@@ -6856,6 +6873,8 @@ snapshots:
 
   scheduler@0.26.0: {}
 
+  screenfull@6.0.2: {}
+
   semver@6.3.1: {}
 
   semver@7.7.1: {}
@@ -7190,6 +7209,11 @@ snapshots:
       '@types/react': 19.1.2
 
   use-local-storage-state@19.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  use-session-storage-state@19.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)

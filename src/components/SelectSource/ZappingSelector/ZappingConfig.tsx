@@ -17,9 +17,10 @@ import {
   FormMessage
 } from '../../../../components/ui/form';
 import { Input } from '../../../../components/ui/input';
-import { useZappingConfig } from '../../../hooks/useZappingConfig';
+import { useZappingToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
+import { useCleanLocalStorage } from '../../../hooks/useCleanLocalStorage';
 
 const arrayCanales = Object.values(canalesZapping);
 export const zappingSources = arrayCanales.map(canal => {
@@ -38,7 +39,7 @@ const formSchema = z.object({
 type Props = {};
 
 export function ZappingConfig({}: Props) {
-  const { setZappingConfig } = useZappingConfig();
+  const { setZappingToken } = useZappingToken();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,67 +48,77 @@ export function ZappingConfig({}: Props) {
     }
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     const tokenValue = values.jsonInput.replaceAll("'", '');
-    setZappingConfig({ token: tokenValue });
-  }
+    setZappingToken(tokenValue);
+  };
+
+  const handleImportToken = () => {
+    console.log(window.sessionStorage.getItem('playToken') || undefined);
+    setZappingToken(window.sessionStorage.getItem('playToken') || undefined);
+  };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline">Zapping Config</Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <div className="grid gap-4">
-          <div className="space-y-2">
-            <h4 className="font-medium leading-none">Zapping</h4>
-            <p className="text-sm text-muted-foreground">
-              Copia esto en la consola de tu navegador (F12) en{' '}
-              <a
-                href="https://app.zappingtv.com/player/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'underline' }}
-              >
-                Zapping
-              </a>
-              :<pre>{`window.sessionStorage.playToken`}</pre>
-              Pega el resultado a continuación:
-            </p>
-          </div>
-          <div>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}
-                className="grid gap-2"
-              >
-                {/* <div className="grid grid-cols-3 items-center gap-4"> */}
-                <FormField
-                  control={form.control}
-                  name="jsonInput"
-                  render={({ field }) => (
-                    <FormItem className="grid grid-cols-3 items-center gap-4">
-                      <FormLabel>Token</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="..."
-                          {...field}
-                          className="col-span-2 h-8"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline">Zapping Config</Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium leading-none">Zapping</h4>
+              <p className="text-sm text-muted-foreground">
+                Copia esto en la consola de tu navegador (F12) en{' '}
+                <a
+                  href="https://app.zappingtv.com/player/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  Zapping
+                </a>
+                :<pre>{`window.sessionStorage.playToken`}</pre>
+                Pega el resultado a continuación:
+              </p>
+            </div>
+            <div>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit, e => console.log(e))}
+                  className="grid gap-2"
+                >
+                  {/* <div className="grid grid-cols-3 items-center gap-4"> */}
+                  <FormField
+                    control={form.control}
+                    name="jsonInput"
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-3 items-center gap-4">
+                        <FormLabel>Token</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="..."
+                            {...field}
+                            className="col-span-2 h-8"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="text-right">
-                  <Button type="submit">Guardar</Button>
-                </div>
-              </form>
-            </Form>
+                  <div className="text-right">
+                    <Button type="submit">Guardar</Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+      <Button variant="outline" onClick={() => handleImportToken()}>
+        Importar
+      </Button>
+    </>
   );
 }

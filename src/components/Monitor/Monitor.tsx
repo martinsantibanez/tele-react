@@ -10,7 +10,7 @@ import {
 } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
-import { useZappingConfig } from '../../hooks/useZappingConfig';
+import { useZappingToken } from '../../hooks/useZappingConfig';
 import { Screen } from '../../_pages/monitor/Screen';
 import { DisplayMode, GridSize, ScreenType } from '../../_pages/monitor/types';
 import { SourceType } from '../../sources';
@@ -34,17 +34,17 @@ export const Monitor = () => {
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
-  const { zappingConfig } = useZappingConfig();
+  const { zappingToken } = useZappingToken();
   const [, setFeaturedMonitor] = useFeaturedScreen();
 
   const screen: ScreenType = useMemo(
     () => ({
       config: displayConfig,
       sources: selectedSources,
-      zappingConfig,
+      zappingToken,
       customSources
     }),
-    [displayConfig, selectedSources, zappingConfig, customSources]
+    [displayConfig, selectedSources, zappingToken, customSources]
   );
 
   const selectedSourceSlug = useMemo(

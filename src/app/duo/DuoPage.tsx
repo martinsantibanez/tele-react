@@ -6,7 +6,7 @@ import { SelectSource } from '../../components/SelectSource/SelectSource';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
 import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useZappingConfig } from '../../hooks/useZappingConfig';
+import { useZappingToken } from '../../hooks/useZappingConfig';
 import { SourceType } from '../../sources';
 import { useDuoState } from '../../hooks/useDuoState';
 
@@ -18,8 +18,6 @@ export const DuoPage = () => {
   useHotkeys('e', () => setIsEditing(v => !v), { preventDefault: true });
 
   const [sources, setSources] = useDuoState();
-  const { customSources } = useCustomSources();
-  const { zappingConfig } = useZappingConfig();
 
   const handlePreviewChange = (source: SourceType) => {
     setSources(prev => ({ ...prev, preview: source.slug }));

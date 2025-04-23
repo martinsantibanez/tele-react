@@ -1,4 +1,3 @@
-import { ZappingConfig } from '../../hooks/useZappingConfig';
 import { SourceType } from '../../sources';
 
 export type SourceNode = {
@@ -60,6 +59,5 @@ export type DisplayConfig = {
 export type ScreenType = {
   config: DisplayConfig;
   sources: SourceNode[];
-  zappingConfig?: ZappingConfig;
   customSources?: SourceType[];
 };

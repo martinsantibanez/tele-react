@@ -4,6 +4,7 @@ import { useCustomSources } from '../../hooks/useCustomSources';
 import { SourceType } from '../../sources';
 import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
 import { canalesZapping } from './ZappingSelector/canales';
+import screenfull from 'screenfull';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -45,6 +46,9 @@ export function SourceAccordionListNew({
   useHotkeys('enter', () => (onSourceSwap ? onSourceSwap() : undefined), {
     preventDefault: true
   });
+  useHotkeys('f', () => {
+    if (screenfull.isEnabled) screenfull.toggle();
+  });
 
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(zappingSources.length - 1, selectedIndex + 2);
@@ -76,7 +80,7 @@ export function SourceAccordionListNew({
               <div className="flex flex-col items-center gap-4 p-6">
                 <img src={img} />
                 {/* <div className="space-y-1"> */}
-                  {/* <h2 className="text-lg font-semibold">{canal.name}</h2> */}
+                {/* <h2 className="text-lg font-semibold">{canal.name}</h2> */}
                 {/* </div> */}
               </div>
             </div>
@@ -96,7 +100,7 @@ export function SourceAccordionListNew({
           <div>Keyboard shortcuts</div>
           <div className="flex flex-row gap-3">
             <div>
-              <span className="font-bold text-xl">E</span> Enter/exit edit mode
+              <span className="font-bold text-xl">E</span> Toggle Edit Mode
             </div>
             <div>
               <span className="font-bold text-xl">Arrows</span> Preview
@@ -104,6 +108,9 @@ export function SourceAccordionListNew({
             </div>
             <div>
               <span className="font-bold text-xl">Enter</span> Swap sources
+            </div>
+            <div>
+              <span className="font-bold text-xl">F</span> Toggle Full Screen
             </div>
           </div>
           <ZappingConfig />

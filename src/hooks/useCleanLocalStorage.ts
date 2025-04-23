@@ -4,7 +4,7 @@ import { useDisplayConfig } from './useDisplayConfig';
 import { useFeaturedScreen } from './useFeaturedScreen';
 import { useSavedGrid } from './useSavedGrid';
 import { useSavedSelectedItem } from './useSavedSelectedItem';
-import { useZappingConfig } from './useZappingConfig';
+import { useZappingToken } from './useZappingConfig';
 
 export const useCleanLocalStorage = () => {
   const [, , gridStorage] = useSavedGrid();
@@ -12,7 +12,7 @@ export const useCleanLocalStorage = () => {
   const [, , selectedItemStorage] = useSavedSelectedItem();
   const { customSourcesMeta } = useCustomSources();
   const [, , displayConfigStorage] = useDisplayConfig();
-  const { zappingConfigMeta } = useZappingConfig();
+  const { zappingTokenMeta } = useZappingToken();
 
   return () => {
     gridStorage.removeItem();
@@ -20,6 +20,5 @@ export const useCleanLocalStorage = () => {
     featuredScreenStorage.removeItem();
     customSourcesMeta.removeItem();
     displayConfigStorage.removeItem();
-    zappingConfigMeta.removeItem();
   };
 };

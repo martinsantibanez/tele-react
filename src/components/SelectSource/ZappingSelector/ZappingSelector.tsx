@@ -6,7 +6,7 @@ import {
   AccordionTrigger
 } from '../../../../components/ui/accordion';
 import { useCustomSources } from '../../../hooks/useCustomSources';
-import { useZappingConfig } from '../../../hooks/useZappingConfig';
+import { useZappingToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
 import { canalesZapping } from './canales';
@@ -21,7 +21,7 @@ export function ZappingSelector({
   selectedSourceSlug,
   accordionEventKey
 }: Props) {
-  const { setZappingConfig } = useZappingConfig();
+  const { setZappingToken } = useZappingToken();
   const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();
@@ -75,7 +75,7 @@ export function ZappingSelector({
               value={jsonInput}
             />
             <button
-              onClick={() => setZappingConfig(JSON.parse(jsonInput))}
+              onClick={() => setZappingToken(JSON.parse(jsonInput))}
               className="btn btn-primary mt-2"
             >
               Configurar

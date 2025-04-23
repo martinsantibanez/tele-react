@@ -1,14 +1,10 @@
-import useLocalStorageState from 'use-local-storage-state';
+import useSessionStorageState from 'use-session-storage-state';
 
-export type ZappingConfig = {
-  token: string;
-};
-
-export function useZappingConfig() {
-  const [zappingConfig, setZappingConfig, zappingConfigMeta] =
-    useLocalStorageState<ZappingConfig>('__tele_zapping_config__', {
+export function useZappingToken() {
+  const [zappingToken, setZappingToken, zappingTokenMeta] =
+    useSessionStorageState<string | undefined>('playToken', {
       defaultValue: undefined
     });
 
-  return { zappingConfig, setZappingConfig, zappingConfigMeta };
+  return { zappingToken, setZappingToken, zappingTokenMeta };
 }
