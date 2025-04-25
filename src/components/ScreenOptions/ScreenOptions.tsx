@@ -1,6 +1,15 @@
 import { CSSProperties } from 'react';
 import { DisplayMode, GridSize } from '../../_pages/monitor/types';
 import { ActionButton } from '../ActionButton/ActionButton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Card, CardContent } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
 
 const buttons: CSSProperties = {
   position: 'sticky',
@@ -30,42 +39,57 @@ export function ScreenOptions({
   size
 }: Props) {
   return (
-    <div className="Botones" style={buttons}>
-      {mode === DisplayMode.Grid && (
-        <div className="SeleccionarStreamsPorFila waves-effect waves-light">
-          <select
-            title="Streams por fila"
-            className="StreamsPorFila"
-            onChange={event => onSizeChange(+event.target.value as GridSize)}
-            value={size + ''}
-          >
-            <option value="1">1 por fila</option>
-            <option value="2">2 por fila</option>
-            <option value="3">3 por fila</option>
-          </select>
-        </div>
-      )}
-
-      <div className="SeleccionarStreamsPorFila waves-effect waves-light">
-        <select
-          title="Modo"
-          className="StreamsPorFila"
-          onChange={event =>
-            onModeChange && onModeChange(event.target.value as DisplayMode)
-          }
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4">
+        <Select
           value={mode}
+          onValueChange={value =>
+            onModeChange && onModeChange(value as DisplayMode)
+          }
         >
-          <option value="Layout">Layout</option>
-          <option value="Grid">Grid</option>
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Layout">Layout</SelectItem>
+            <SelectItem value="Grid">Grid</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {mode === DisplayMode.Grid && (
+          <Select
+            value={String(size)}
+            onValueChange={value => onSizeChange(+value as GridSize)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 por fila</SelectItem>
+              <SelectItem value="2">2 por fila</SelectItem>
+              <SelectItem value="3">3 por fila</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        {onSourceAdd && (
+          <Button onClick={onSourceAdd} variant="outline">
+            Agregar
+          </Button>
+        )}
+        {onPromote && (
+          <Button onClick={onPromote} variant="outline">
+            Destacar
+          </Button>
+        )}
 
-      {onSourceAdd && (
-        <ActionButton onClick={onSourceAdd}>Agregar</ActionButton>
-      )}
-      {onPromote && <ActionButton onClick={onPromote}>Destacar</ActionButton>}
-
-      {onShare && <ActionButton onClick={onShare}>Compartir</ActionButton>}
+        {onShare && (
+          <Button onClick={onShare} variant="outline">
+            Compartir
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

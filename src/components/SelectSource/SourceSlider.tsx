@@ -14,7 +14,7 @@ type Props = {
 
 const sources = zappingSources;
 
-export function SourceAccordionListNew({
+export function SourceSlider({
   onSelect,
   selectedSourceSlug,
   onSourceSwap

@@ -16,8 +16,9 @@ import { DisplayMode, GridSize, ScreenType } from '../../_pages/monitor/types';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { SelectSource } from '../SelectSource/SelectSource';
 import { OnSwitchCb } from './Source';
+import { MonitorPanel } from '../SelectSource/MonitorPanel';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 type SavedScreen = {
   name: string;
@@ -30,7 +31,8 @@ export const useSavedScreens = () => {
 };
 
 export const Monitor = () => {
-  const { isEditing, editingSourceIdx, setEditingSourceIdx } = useTeleContext();
+  const { toggleEditting, isEditing, editingSourceIdx, setEditingSourceIdx } =
+    useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
@@ -141,26 +143,25 @@ export const Monitor = () => {
     });
   };
 
+  useHotkeys('e', () => toggleEditting());
+
   return (
-    <div>
-      {/* <div className={isEditing ? 'col-xl-10 col-lg-12' : 'col-12'}> */}
-      <Screen
-        screen={screen}
-        onEdit={handleSourceEdit}
-        onRemove={handleSourceRemove}
-        editingSourceIdx={editingSourceIdx}
-        onSwitch={handleSwitch}
-      />
+    <div className="grid md:grid-cols-12">
+      <div className={isEditing ? 'md:col-span-8' : 'md:col-span-12'}>
+        <Screen
+          screen={screen}
+          onEdit={handleSourceEdit}
+          onRemove={handleSourceRemove}
+          editingSourceIdx={editingSourceIdx}
+          onSwitch={handleSwitch}
+        />
+      </div>
 
       {isEditing && (
-        <>
-          <div className="col-xl-2 col-lg-12 pe-4">
-            <SelectSource
-              onSelect={handleSourceChange}
-              selectedSourceSlug={selectedSourceSlug}
-            />
-          </div>
-          <ScreenOptions
+        <div className="md:col-span-4 p-3">
+          <MonitorPanel
+            onSelect={handleSourceChange}
+            selectedSourceSlug={selectedSourceSlug}
             onSizeChange={handleSizeChange}
             onSourceAdd={
               displayConfig.mode === DisplayMode.Grid
@@ -173,7 +174,7 @@ export const Monitor = () => {
             mode={displayConfig.mode}
             size={displayConfig.grid.size}
           />
-        </>
+        </div>
       )}
     </div>
   );

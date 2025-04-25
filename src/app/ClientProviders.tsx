@@ -11,7 +11,7 @@ const ThemeProvider = dynamic(
   }
 );
 
-export const RootProviders = ({
+export const ClientProviders = ({
   children
 }: PropsWithChildren<Record<string, unknown>>) => {
   return (

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Source } from '../../components/Monitor/Source';
-import { SelectSource } from '../../components/SelectSource/SelectSource';
+import { SourceSlider } from '../../components/SelectSource/SourceSlider';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
 import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
 import { useDuoState } from '../../hooks/useDuoState';
@@ -53,7 +53,7 @@ export const DuoPage = () => {
       {isEditing && (
         <>
           <div className="col-span-12 row-span-3 row-start-7">
-            <SelectSource
+            <SourceSlider
               onSelect={source => handlePreviewChange(source)}
               selectedSourceSlug={sources.preview}
               onSourceSwap={handleSourceSwap}

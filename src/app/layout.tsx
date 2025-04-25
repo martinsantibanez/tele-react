@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import '../styles/globals.css';
-import { RootProviders } from './RootProviders';
-import dynamic from 'next/dynamic';
+import { ClientProviders } from './ClientProviders';
 
 export const metadata: Metadata = {
   title: 'Ver Tele',
@@ -16,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body>
-        <RootProviders>{children}</RootProviders>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
