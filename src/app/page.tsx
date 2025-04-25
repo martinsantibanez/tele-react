@@ -15,13 +15,15 @@ function HomeElement({
   description,
   title,
   href,
+  className
 }: {
   title: string;
   description?: string;
   href: string;
+  className?: string;
 }) {
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${className || ''}`}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -45,6 +47,7 @@ const Home: NextPage = () => {
             href="/monitor"
             title="Monitor"
             description="Monitor personalizable. Filas o layout."
+            className="hidden md:flex"
           />
           <HomeElement
             href="/list"
@@ -55,6 +58,7 @@ const Home: NextPage = () => {
             href="/duo"
             title="Duo mode"
             description="Preview one source, watch another."
+            className="hidden md:flex"
           />
         </div>
       </main>
