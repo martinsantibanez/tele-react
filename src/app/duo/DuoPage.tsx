@@ -1,12 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { MonitorSource } from '../../components/Monitor/MonitorSource';
+import { SourceOutput } from '../../components/Monitor/SourceOutput/SourceOutput';
 import { SourceSlider } from '../../components/SelectSource/SourceSlider';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
 import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
+import { useCustomSources } from '../../hooks/useCustomSources';
 import { useDuoState } from '../../hooks/useDuoState';
-import { SourceType } from '../../sources';
+import { sourcesCategories, SourceType } from '../../sources';
 
 export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);
@@ -33,9 +34,25 @@ export const DuoPage = () => {
   };
   const index = zappingSources.findIndex(s => s.slug === sources.program);
   const image = Object.values(canalesZapping)[index]?.image;
-  const img = image
+  const activeImg = image
     ? `https://davinci.zappingtv.com/gato/media/128/canales/white/${image}.png`
     : undefined;
+  const { customSources } = useCustomSources();
+
+  const getSource = useCallback((slug: string) => {
+    if (slug.startsWith('custom_')) {
+      return customSources?.find(src => src.slug === slug);
+    } else {
+      return [
+        ...sourcesCategories.flatMap(category =>
+          Object.values(category.sources)
+        ),
+        ...zappingSources
+      ].find(src => src.slug === slug);
+    }
+  }, []);
+  const programSource = getSource(sources.program);
+  const previewSource = getSource(sources.preview);
   return (
     <div className="grid grid-cols-16 grid-rows-9">
       <div
@@ -43,11 +60,15 @@ export const DuoPage = () => {
           isEditing ? `col-span-12 row-span-6` : 'col-span-16 row-span-9'
         }
       >
-        <MonitorSource idx={0} sourceSlug={sources.program} muted={invertAudio} />
+        <div className="w-full h-full">
+          {!!programSource && (
+            <SourceOutput source={programSource} muted={invertAudio} />
+          )}
+        </div>
       </div>
-      {isEditing && img && (
+      {isEditing && activeImg && (
         <div className="col-span-4 row-span-6 text-center w-full flex items-center justify-center">
-          <img src={img} />
+          <img src={activeImg} />
         </div>
       )}
       {isEditing && (
@@ -60,7 +81,11 @@ export const DuoPage = () => {
             />
           </div>
           <div className={`col-span-4 row-span-2 col-start-13 row-start-7`}>
-            <MonitorSource idx={1} sourceSlug={sources.preview} muted={!invertAudio} />
+            <div className="w-full h-full">
+              {!!previewSource && (
+                <SourceOutput source={previewSource} muted={!invertAudio} />
+              )}
+            </div>
           </div>
         </>
       )}

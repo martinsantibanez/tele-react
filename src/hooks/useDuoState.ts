@@ -7,7 +7,7 @@ export type DuoState = {
 };
 
 export function useDuoState() {
-  return useLocalStorageState<DuoState>('__tele_duo__', {
+  return useLocalStorageState<DuoState>('_tele_duo_', {
     defaultValue: {
       preview: 'Barras',
       program: 'Barras'

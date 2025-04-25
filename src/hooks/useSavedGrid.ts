@@ -3,7 +3,7 @@ import { defaultGrid } from '../components/GridDisplay/initialGrid';
 import { SourceNode } from '../types/Monitor';
 
 export function useSavedGrid() {
-  return useLocalStorageState<SourceNode[]>('__tele_grid__', {
+  return useLocalStorageState<SourceNode[]>('_tele_grid_', {
     defaultValue: defaultGrid
   });
 }

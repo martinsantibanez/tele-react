@@ -4,7 +4,7 @@ import { SourceType } from '../sources';
 
 export function useCustomSources() {
   const [customSources, setCustomSources, customSourcesMeta] =
-    useLocalStorageState<SourceType[]>('__tele_custom_source__', {
+    useLocalStorageState<SourceType[]>('_tele_custom_source_', {
       defaultValue: []
     });
   const createSource = useCallback(

@@ -25,7 +25,7 @@ type SavedScreen = {
   screen: ScreenType;
 };
 export const useSavedScreens = () => {
-  return useLocalStorageState<SavedScreen[]>('__saved_screens__', {
+  return useLocalStorageState<SavedScreen[]>('_saved_screens_', {
     defaultValue: []
   });
 };

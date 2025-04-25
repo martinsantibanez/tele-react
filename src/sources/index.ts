@@ -38,6 +38,7 @@ export interface SourceType extends SourceInput {
   flag?: string;
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
+  imageUrl?: string;
 
   // TODO
   // inputs?: SourceInput[];

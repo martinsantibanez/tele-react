@@ -24,10 +24,13 @@ import { useCleanLocalStorage } from '../../../hooks/useCleanLocalStorage';
 
 const arrayCanales = Object.values(canalesZapping);
 export const zappingSources = arrayCanales.map(canal => {
+  const imageName = canal.image;
+  const imageUrl = `https://davinci.zappingtv.com/gato/media/62/canales/white/${imageName}.png`;
   const source: SourceType = {
     slug: `custom_zapping_${canal.id}`,
     zappingChannel: canal.url,
-    name: canal.name
+    name: canal.name,
+    imageUrl
   };
   return source;
 });
