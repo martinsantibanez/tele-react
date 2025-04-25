@@ -8,7 +8,7 @@ import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { MainLayout } from '../../layout/MainLayout';
-import { ScreenType } from '../monitor/types';
+import { ScreenType } from '../../types/Monitor';
 
 export const getServerSideProps: GetServerSideProps<{
   initialScreen: ScreenType | null;

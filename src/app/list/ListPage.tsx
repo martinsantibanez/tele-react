@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Source } from '../../components/Monitor/Source';
+import { MonitorSource } from '../../components/Monitor/MonitorSource';
 import { useSavedSelectedItem } from '../../hooks/useSavedSelectedItem';
 import { SourceType } from '../../sources';
 import { SourceAccordionList } from '../../components/SelectSource/SourceAccordionList';
@@ -14,7 +14,7 @@ export const ListPage = ({}: Props) => {
   };
   return (
     <>
-      <Source sourceSlug={sourceSlug} idx={0} />
+      <MonitorSource sourceSlug={sourceSlug} idx={0} />
 
       <SourceAccordionList
         onSelect={handleSelectSource}

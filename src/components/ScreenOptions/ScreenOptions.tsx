@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { DisplayMode, GridSize } from '../../_pages/monitor/types';
+import { DisplayMode, GridSize } from '../../types/Monitor';
 import { ActionButton } from '../ActionButton/ActionButton';
 import {
   Select,

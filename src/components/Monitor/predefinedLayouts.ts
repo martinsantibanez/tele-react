@@ -1,4 +1,4 @@
-import { LayoutType } from './types';
+import { LayoutType } from '../../types/Monitor';
 
 // 16x9 grid
 export const initialLayout: LayoutType = [

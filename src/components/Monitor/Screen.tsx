@@ -1,8 +1,8 @@
 'use client';
-import { GridDisplay } from '../../components/GridDisplay/GridDisplay';
-import { Layout } from '../../components/Layout/Layout';
-import { OnSwitchCb } from '../../components/Monitor/Source';
-import { DisplayMode, ScreenType } from './types';
+import { GridDisplay } from '../GridDisplay/GridDisplay';
+import { Layout } from '../Layout/Layout';
+import { OnSwitchCb } from './MonitorSource';
+import { DisplayMode, ScreenType } from '../../types/Monitor';
 
 type Props = {
   screen: ScreenType;

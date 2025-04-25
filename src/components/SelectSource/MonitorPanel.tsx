@@ -1,35 +1,28 @@
-import Image from 'next/image';
-import {
-  initialLayout,
-  twoBigLayout
-} from '../../_pages/monitor/predefinedLayouts';
-import {
-  DisplayConfig,
-  DisplayMode,
-  GridSize,
-  SourceNode
-} from '../../_pages/monitor/types';
-import {
-  defaultDisplayConfig,
-  useDisplayConfig
-} from '../../hooks/useDisplayConfig';
-import { SourceType } from '../../sources';
-import { uuid } from '../../utils/uuid';
-import { SourceAccordionList } from './SourceAccordionList';
-import { SourceSlider } from './SourceSlider';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Image from 'next/image';
+import {
+  defaultDisplayConfig,
+  useDisplayConfig
+} from '../../hooks/useDisplayConfig';
+import { SourceType } from '../../sources';
+import {
+  DisplayConfig,
+  DisplayMode,
+  GridSize,
+  SourceNode
+} from '../../types/Monitor';
+import { uuid } from '../../utils/uuid';
+import { initialLayout, twoBigLayout } from '../Monitor/predefinedLayouts';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
+import { SourceAccordionList } from './SourceAccordionList';
 
 type PossibleLayout = {
   name?: string;

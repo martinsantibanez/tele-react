@@ -1,5 +1,5 @@
-import { LayoutType, SourceNode } from '../../_pages/monitor/types';
-import { OnSwitchCb, Source } from '../Monitor/Source';
+import { LayoutType, SourceNode } from '../../types/Monitor';
+import { OnSwitchCb, MonitorSource } from '../Monitor/MonitorSource';
 
 type Props = {
   layout: LayoutType;
@@ -59,7 +59,7 @@ export function Layout({
         if (!source) return null;
         return (
           <div className={`${colClass ?? ''} ${rowClass ?? ''}`} key={idx}>
-            <Source
+            <MonitorSource
               idx={idx}
               sourceSlug={source.sourceSlug}
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}

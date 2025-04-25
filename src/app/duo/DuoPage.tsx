@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Source } from '../../components/Monitor/Source';
+import { MonitorSource } from '../../components/Monitor/MonitorSource';
 import { SourceSlider } from '../../components/SelectSource/SourceSlider';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
 import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
@@ -43,7 +43,7 @@ export const DuoPage = () => {
           isEditing ? `col-span-12 row-span-6` : 'col-span-16 row-span-9'
         }
       >
-        <Source idx={0} sourceSlug={sources.program} muted={invertAudio} />
+        <MonitorSource idx={0} sourceSlug={sources.program} muted={invertAudio} />
       </div>
       {isEditing && img && (
         <div className="col-span-4 row-span-6 text-center w-full flex items-center justify-center">
@@ -60,7 +60,7 @@ export const DuoPage = () => {
             />
           </div>
           <div className={`col-span-4 row-span-2 col-start-13 row-start-7`}>
-            <Source idx={1} sourceSlug={sources.preview} muted={!invertAudio} />
+            <MonitorSource idx={1} sourceSlug={sources.preview} muted={!invertAudio} />
           </div>
         </>
       )}

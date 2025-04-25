@@ -1,5 +1,5 @@
-import { SourceNode } from '../../_pages/monitor/types';
-import { OnSwitchCb, Source } from '../Monitor/Source';
+import { SourceNode } from '../../types/Monitor';
+import { OnSwitchCb, MonitorSource } from '../Monitor/MonitorSource';
 
 type Props = {
   size: number;
@@ -21,7 +21,7 @@ export function GridDisplay({
   return (
     <>
       {sources.map((source, idx) => (
-        <Source
+        <MonitorSource
           idx={idx}
           sourceSlug={source.sourceSlug}
           muted={source.muted ?? true}

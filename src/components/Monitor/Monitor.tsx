@@ -11,12 +11,12 @@ import {
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useZappingToken } from '../../hooks/useZappingConfig';
-import { Screen } from '../../_pages/monitor/Screen';
-import { DisplayMode, GridSize, ScreenType } from '../../_pages/monitor/types';
+import { Screen } from './Screen';
+import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
 import { SourceType } from '../../sources';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { OnSwitchCb } from './Source';
+import { OnSwitchCb } from './MonitorSource';
 import { MonitorPanel } from '../SelectSource/MonitorPanel';
 import { useHotkeys } from 'react-hotkeys-hook';
 

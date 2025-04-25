@@ -1,4 +1,4 @@
-import { SourceType } from '../../sources';
+import { SourceType } from '../sources';
 
 export type SourceNode = {
   sourceSlug?: string;

@@ -19,7 +19,7 @@ type Props = {
   onSwitch?: OnSwitchCb;
 };
 
-export function Source({
+export function MonitorSource({
   sourceSlug,
   muted = true,
   onChangeClick,
