@@ -5,10 +5,8 @@ import { Source } from '../../components/Monitor/Source';
 import { SelectSource } from '../../components/SelectSource/SelectSource';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
 import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
-import { useCustomSources } from '../../hooks/useCustomSources';
-import { useZappingToken } from '../../hooks/useZappingConfig';
-import { SourceType } from '../../sources';
 import { useDuoState } from '../../hooks/useDuoState';
+import { SourceType } from '../../sources';
 
 export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);

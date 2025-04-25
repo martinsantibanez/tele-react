@@ -39,7 +39,7 @@ const formSchema = z.object({
 type Props = {};
 
 export function ZappingConfig({}: Props) {
-  const { setZappingToken } = useZappingToken();
+  const [, setZappingToken] = useZappingToken();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -34,7 +34,7 @@ export const Monitor = () => {
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
-  const { zappingToken } = useZappingToken();
+  const [zappingToken] = useZappingToken();
   const [, setFeaturedMonitor] = useFeaturedScreen();
 
   const screen: ScreenType = useMemo(

@@ -21,7 +21,7 @@ export function ZappingSelector({
   selectedSourceSlug,
   accordionEventKey
 }: Props) {
-  const { setZappingToken } = useZappingToken();
+  const [, setZappingToken] = useZappingToken();
   const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();

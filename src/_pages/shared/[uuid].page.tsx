@@ -41,7 +41,7 @@ const MonitorPage = ({
   console.log({ initialScreen });
   const [, setSelectedSources] = useSavedGrid();
   const [, setDisplayConfig] = useDisplayConfig();
-  const { setZappingToken } = useZappingToken();
+  const [, setZappingToken] = useZappingToken();
   const { setCustomSources } = useCustomSources();
   const router = useRouter();
   useEffect(() => {

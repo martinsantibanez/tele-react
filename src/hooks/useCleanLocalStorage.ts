@@ -12,7 +12,7 @@ export const useCleanLocalStorage = () => {
   const [, , selectedItemStorage] = useSavedSelectedItem();
   const { customSourcesMeta } = useCustomSources();
   const [, , displayConfigStorage] = useDisplayConfig();
-  const { zappingTokenMeta } = useZappingToken();
+  const [, , zappingTokenMeta] = useZappingToken();
 
   return () => {
     gridStorage.removeItem();
@@ -20,5 +20,6 @@ export const useCleanLocalStorage = () => {
     featuredScreenStorage.removeItem();
     customSourcesMeta.removeItem();
     displayConfigStorage.removeItem();
+    zappingTokenMeta.removeItem();
   };
 };
