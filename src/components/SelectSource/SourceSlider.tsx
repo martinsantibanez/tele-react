@@ -36,11 +36,13 @@ export function SourceSlider({
     } else if (activeCategory === 'twitch') {
       return (
         followedChannels?.map(followed => {
-          createSource;
+          // createSource();
           return {
-            slug: `twitch-${followed.userName}`,
+            slug: `custom_twitch-${followed.userName}`,
             name: followed.userName,
-            imageUrl: followed.getThumbnailUrl(62, 62)
+            imageUrl: followed.getThumbnailUrl(62, 62),
+            twitchAccount: followed.userName
+            
           };
         }) || []
       );
@@ -138,7 +140,7 @@ export function SourceSlider({
       setFollowedChannels(followedResponse.data);
       for (const followed of followedResponse.data) {
         const source: SourceType = {
-          slug: `twitch-${followed.userName}}`,
+          slug: `custom_twitch-${followed.userName}`,
           twitchAccount: followed.userName
         };
         createSource(source);
