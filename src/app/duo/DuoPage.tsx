@@ -50,7 +50,7 @@ export const DuoPage = () => {
         ...zappingSources
       ].find(src => src.slug === slug);
     }
-  }, []);
+  }, [customSources]);
   const programSource = getSource(sources.program);
   const previewSource = getSource(sources.preview);
   return (

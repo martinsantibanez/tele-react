@@ -1,12 +1,13 @@
+import { ApiClient } from '@twurple/api';
+import { StaticAuthProvider } from '@twurple/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import screenfull from 'screenfull';
+import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { sourcesCategories, SourceType } from '../../sources';
 import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
-import { StaticAuthProvider } from '@twurple/auth';
-import { ApiClient, HelixStream } from '@twurple/api';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -18,38 +19,30 @@ type SelectorCategories = 'tv' | 'zapping' | 'twitch';
 
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
 
+export const useActiveCategory = () => {
+  return useLocalStorageState<SelectorCategories>('_active_category_', {
+    defaultValue: 'tv'
+  });
+};
+
 export function SourceSlider({
   onSelect,
   selectedSourceSlug,
   onSourceSwap
 }: Props) {
-  const [activeCategory, setActiveCategory] =
-    useState<SelectorCategories>('zapping');
+  const [activeCategory, setActiveCategory] = useActiveCategory();
 
-  const { createSource, customSources } = useCustomSources();
-  const twitchSources = customSources.filter(source => !!source.twitchAccount);
-  const [followedChannels, setFollowedChannels] = useState<HelixStream[]>();
+  const { createSource } = useCustomSources();
+  const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
     if (activeCategory === 'tv') {
       return sourcesCategories.flatMap(cat => Object.values(cat.sources));
     } else if (activeCategory === 'twitch') {
-      return (
-        followedChannels?.map(followed => {
-          // createSource();
-          return {
-            slug: `custom_twitch-${followed.userName}`,
-            name: followed.userName,
-            imageUrl: followed.getThumbnailUrl(62, 62),
-            twitchAccount: followed.userName
-            
-          };
-        }) || []
-      );
       return twitchSources;
     }
     return zappingSources;
-  }, [activeCategory, twitchSources]);
+  }, [activeCategory]);
 
   const selectedIndex = activeCategorySources.findIndex(
     src => src.slug === selectedSourceSlug
@@ -137,14 +130,20 @@ export function SourceSlider({
       const followedResponse = await apiClient.streams.getFollowedStreams(
         userId
       );
-      setFollowedChannels(followedResponse.data);
-      for (const followed of followedResponse.data) {
-        const source: SourceType = {
-          slug: `custom_twitch-${followed.userName}`,
-          twitchAccount: followed.userName
-        };
-        createSource(source);
-      }
+
+      setTwitchSources(
+        await Promise.all(
+          followedResponse.data.map(async followed => {
+            const avatar = await apiClient.users.getUserById(followed.userId);
+            return {
+              slug: `custom_twitch-${followed.userName}`,
+              name: followed.userName,
+              imageUrl: avatar?.profilePictureUrl,
+              twitchAccount: followed.userName
+            };
+          })
+        )
+      );
     };
     getFollowing();
   }, [createSource]);
@@ -183,7 +182,7 @@ export function SourceSlider({
           </Button>
           {activeCategory === 'twitch' && !accessToken && (
             <a
-              href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=http://localhost:3002/duo&response_type=token&scope=user:read:follows`}
+              href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
             >
               Connect with Twitch
             </a>
@@ -201,7 +200,7 @@ export function SourceSlider({
                 key={`zp_${source.slug}`}
               >
                 <div className="flex flex-col items-center gap-4 p-6">
-                  <img src={source.imageUrl} />
+                  <img src={source.imageUrl} className="w-[62px] " />
                   {/* <div className="space-y-1"> */}
                   <div className="text-lg font-semibold">{source.name}</div>
                   {/* </div> */}
