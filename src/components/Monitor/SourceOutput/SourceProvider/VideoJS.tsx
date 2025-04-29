@@ -27,8 +27,8 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       techOrder: ['html5', 'hls', 'flash'],
       controls: true,
       muted,
-      fluid: true,
       responsive: true,
+      fill: true,
       controlBar: {
         volumePanel: {
           inline: true
@@ -64,7 +64,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     <div data-vjs-player>
       <video
         ref={videoRef}
-        className="video-js vjs-default-skin vjs-big-play-centered"
+        className="video-js vjs-default-skin vjs-big-play-centered vjs-fill"
       ></video>
     </div>
   );

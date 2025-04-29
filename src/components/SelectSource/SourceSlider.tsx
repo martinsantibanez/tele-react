@@ -5,14 +5,16 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import screenfull from 'screenfull';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
+import { useTwitchToken } from '../../app/duo/DuoPage';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { sourcesCategories, SourceType } from '../../sources';
-import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
+import { zappingSources } from './ZappingSelector/ZappingConfig';
 
 type Props = {
   selectedSourceSlug: string | undefined;
   onSelect: (source: SourceType) => void;
   onSourceSwap?: () => void;
+  invertControl?: boolean;
 };
 
 type SelectorCategories = 'tv' | 'zapping' | 'twitch';
@@ -31,6 +33,7 @@ export function SourceSlider({
   onSourceSwap
 }: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
+  const [accessToken] = useTwitchToken();
 
   const { createSource } = useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
@@ -42,7 +45,7 @@ export function SourceSlider({
       return twitchSources;
     }
     return zappingSources;
-  }, [activeCategory]);
+  }, [activeCategory, twitchSources]);
 
   const selectedIndex = activeCategorySources.findIndex(
     src => src.slug === selectedSourceSlug
@@ -101,52 +104,53 @@ export function SourceSlider({
     selectedIndex + 2
   );
 
-  let accessToken: string | null | undefined;
-  if (document.location.hash) {
-    const parsedHash = new URLSearchParams(window.location.hash.substring(1));
-    if (parsedHash.get('access_token')) {
-      accessToken = parsedHash.get('access_token');
-    }
-  }
+  const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
 
   useEffect(() => {
     const getFollowing = async () => {
-      if (!accessToken) return;
-      const authProvider = new StaticAuthProvider(clientId, accessToken);
-      const apiClient = new ApiClient({ authProvider });
+      try {
+        setIsLoadingTwitch(true);
+        if (!accessToken) return;
+        const authProvider = new StaticAuthProvider(clientId, accessToken);
+        const apiClient = new ApiClient({ authProvider });
 
-      const currentUserResponse = await fetch(
-        'https://api.twitch.tv/helix/users',
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Client-Id': clientId
+        const currentUserResponse = await fetch(
+          'https://api.twitch.tv/helix/users',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Client-Id': clientId
+            }
           }
-        }
-      );
-      const currentUser = await currentUserResponse.json();
-      const userId = currentUser.data[0].id;
+        );
+        const currentUser = await currentUserResponse.json();
+        const userId = currentUser.data[0].id;
 
-      const followedResponse = await apiClient.streams.getFollowedStreams(
-        userId
-      );
+        const followedResponse = await apiClient.streams.getFollowedStreams(
+          userId
+        );
 
-      setTwitchSources(
-        await Promise.all(
-          followedResponse.data.map(async followed => {
-            const avatar = await apiClient.users.getUserById(followed.userId);
-            return {
-              slug: `custom_twitch-${followed.userName}`,
-              name: followed.userName,
-              imageUrl: avatar?.profilePictureUrl,
-              twitchAccount: followed.userName
-            };
-          })
-        )
-      );
+        setTwitchSources(
+          await Promise.all(
+            followedResponse.data.map(async followed => {
+              const avatar = await apiClient.users.getUserById(followed.userId);
+              return {
+                slug: `custom_twitch-${followed.userName}`,
+                name: followed.userName,
+                imageUrl: avatar?.profilePictureUrl,
+                twitchAccount: followed.userName
+              };
+            })
+          )
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoadingTwitch(false);
+      }
     };
     getFollowing();
-  }, [createSource]);
+  }, [accessToken, createSource]);
 
   return (
     <div className="w-full h-full flex flex-col justify-center">
@@ -187,6 +191,7 @@ export function SourceSlider({
               Connect with Twitch
             </a>
           )}
+          {isLoadingTwitch && 'Cargando...'}
           {activeCategorySources.map((source, canalIndex) => {
             if (canalIndex < startIndex || canalIndex > endIndex) return null;
             const isActive = source.slug === selectedSourceSlug;
@@ -200,10 +205,15 @@ export function SourceSlider({
                 key={`zp_${source.slug}`}
               >
                 <div className="flex flex-col items-center gap-4 p-6">
-                  <img src={source.imageUrl} className="w-[62px] " />
-                  {/* <div className="space-y-1"> */}
+                  {source.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={source.imageUrl}
+                      className="w-[62px] "
+                      alt={source.name || ''}
+                    />
+                  )}
                   <div className="text-lg font-semibold">{source.name}</div>
-                  {/* </div> */}
                 </div>
               </div>
             );
@@ -216,27 +226,6 @@ export function SourceSlider({
           >
             {'>'}
           </Button>
-        </div>
-      </div>
-      <div className="flex">
-        <div className="mt-3 flex flex-col mw-300 mr-6">
-          <div>Keyboard shortcuts</div>
-          <div className="flex flex-row gap-3">
-            <div>
-              <span className="font-bold text-xl">E</span> Toggle Edit Mode
-            </div>
-            <div>
-              <span className="font-bold text-xl">Arrows</span> Preview
-              Next/Previous source
-            </div>
-            <div>
-              <span className="font-bold text-xl">Enter</span> Swap sources
-            </div>
-            <div>
-              <span className="font-bold text-xl">F</span> Toggle Full Screen
-            </div>
-          </div>
-          <ZappingConfig />
         </div>
       </div>
     </div>

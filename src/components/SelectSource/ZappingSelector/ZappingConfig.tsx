@@ -20,7 +20,6 @@ import { Input } from '../../../../components/ui/input';
 import { useZappingToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
-import { useCleanLocalStorage } from '../../../hooks/useCleanLocalStorage';
 
 const arrayCanales = Object.values(canalesZapping);
 export const zappingSources = arrayCanales.map(canal => {
@@ -39,9 +38,7 @@ const formSchema = z.object({
   jsonInput: z.string()
 });
 
-type Props = {};
-
-export function ZappingConfig({}: Props) {
+export function ZappingConfig() {
   const [, setZappingToken] = useZappingToken();
 
   const form = useForm<z.infer<typeof formSchema>>({

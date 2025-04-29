@@ -1,25 +1,46 @@
 'use client';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { SourceOutput } from '../../components/Monitor/SourceOutput/SourceOutput';
 import { SourceSlider } from '../../components/SelectSource/SourceSlider';
 import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
-import { zappingSources } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
+import {
+  ZappingConfig,
+  zappingSources
+} from '../../components/SelectSource/ZappingSelector/ZappingConfig';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { useDuoState } from '../../hooks/useDuoState';
 import { sourcesCategories, SourceType } from '../../sources';
+import useLocalStorageState from 'use-local-storage-state';
+
+export const useTwitchToken = () =>
+  useLocalStorageState<string>('_tele_twitch_token_');
 
 export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);
-  const [invertAudio, setInvertAudio] = useState(false);
+  const [invertControl, setInvertControl] = useState(false);
 
-  useHotkeys('i', () => setInvertAudio(v => !v), { preventDefault: true });
+  const [, setTwitchToken] = useTwitchToken();
+
+  useEffect(() => {
+    if (document.location.hash) {
+      const parsedHash = new URLSearchParams(window.location.hash.substring(1));
+      if (parsedHash.get('access_token')) {
+        setTwitchToken(parsedHash.get('access_token') || undefined);
+      }
+    }
+  }, [setTwitchToken]);
+
+  useHotkeys('i', () => setInvertControl(v => !v), { preventDefault: true });
   useHotkeys('e', () => setIsEditing(v => !v), { preventDefault: true });
 
   const [sources, setSources] = useDuoState();
 
   const handlePreviewChange = (source: SourceType) => {
     setSources(prev => ({ ...prev, preview: source.slug }));
+  };
+  const handleProgramChange = (source: SourceType) => {
+    setSources(prev => ({ ...prev, program: source.slug }));
   };
 
   const handleSourceSwap = () => {
@@ -39,56 +60,94 @@ export const DuoPage = () => {
     : undefined;
   const { customSources } = useCustomSources();
 
-  const getSource = useCallback((slug: string) => {
-    if (slug.startsWith('custom_')) {
-      return customSources?.find(src => src.slug === slug);
-    } else {
-      return [
-        ...sourcesCategories.flatMap(category =>
-          Object.values(category.sources)
-        ),
-        ...zappingSources
-      ].find(src => src.slug === slug);
-    }
-  }, [customSources]);
+  const getSource = useCallback(
+    (slug: string) => {
+      if (slug.startsWith('custom_')) {
+        return customSources?.find(src => src.slug === slug);
+      } else {
+        return [
+          ...sourcesCategories.flatMap(category =>
+            Object.values(category.sources)
+          ),
+          ...zappingSources
+        ].find(src => src.slug === slug);
+      }
+    },
+    [customSources]
+  );
   const programSource = getSource(sources.program);
   const previewSource = getSource(sources.preview);
   return (
-    <div className="grid grid-cols-16 grid-rows-9">
-      <div
-        className={
-          isEditing ? `col-span-12 row-span-6` : 'col-span-16 row-span-9'
-        }
-      >
-        <div className="w-full h-full">
-          {!!programSource && (
-            <SourceOutput source={programSource} muted={invertAudio} />
+    <div className="flex flex-col items-center">
+      <div className="grid grid-cols-16 h-screen aspect-video max-w-full">
+        <div
+          className={`${
+            isEditing ? `col-span-12 row-auto` : 'col-span-16 row-span-9'
+          } aspect-video`}
+        >
+          <div
+            className={`w-full h-full box-border ${
+              invertControl ? 'border-slate-500 border-2' : ''
+            }`}
+          >
+            {!!programSource && (
+              <SourceOutput source={programSource} muted={invertControl} />
+            )}
+          </div>
+        </div>
+        <div className="col-span-4 row-span-6 text-center w-full flex items-center justify-center">
+          {isEditing && activeImg && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={activeImg} alt={programSource?.name} />
           )}
         </div>
-      </div>
-      {isEditing && activeImg && (
-        <div className="col-span-4 row-span-6 text-center w-full flex items-center justify-center">
-          <img src={activeImg} />
-        </div>
-      )}
-      {isEditing && (
-        <>
-          <div className="col-span-12 row-span-3 row-start-7">
-            <SourceSlider
-              onSelect={source => handlePreviewChange(source)}
-              selectedSourceSlug={sources.preview}
-              onSourceSwap={handleSourceSwap}
-            />
-          </div>
-          <div className={`col-span-4 row-span-2 col-start-13 row-start-7`}>
-            <div className="w-full h-full">
+        {isEditing && (
+          <>
+            <div className="col-span-12 row-span-3 row-start-7">
+              <SourceSlider
+                invertControl={invertControl}
+                onSelect={
+                  invertControl ? handleProgramChange : handlePreviewChange
+                }
+                selectedSourceSlug={
+                  invertControl ? programSource?.slug : previewSource?.slug
+                }
+                onSourceSwap={handleSourceSwap}
+              />
+            </div>
+            <div
+              className={`col-span-4 row-span-2 col-start-13 row-start-7 aspect-video w-full h-full box-border ${
+                !invertControl ? 'border-slate-500 border-2' : ''
+              }`}
+            >
               {!!previewSource && (
-                <SourceOutput source={previewSource} muted={!invertAudio} />
+                <SourceOutput source={previewSource} muted={!invertControl} />
               )}
             </div>
+          </>
+        )}
+      </div>
+      <div className="flex">
+        <div className="mt-3 flex flex-col mw-300 mr-6">
+          <div>Keyboard shortcuts</div>
+          <div className="flex flex-row gap-3">
+            <div>
+              <span className="font-bold text-xl">E</span> Toggle Edit Mode
+            </div>
+            <div>
+              <span className="font-bold text-xl">Arrows</span> Preview
+              Next/Previous source
+            </div>
+            <div>
+              <span className="font-bold text-xl">Enter</span> Swap sources
+            </div>
+            <div>
+              <span className="font-bold text-xl">F</span> Toggle Full Screen
+            </div>
           </div>
-        </>
-      )}
+          <ZappingConfig />
+        </div>
+      </div>
     </div>
   );
 };
