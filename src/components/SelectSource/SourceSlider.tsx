@@ -7,8 +7,9 @@ import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../app/duo/DuoPage';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { sourcesCategories, SourceType } from '../../sources';
-import { zappingSources } from './ZappingSelector/ZappingConfig';
+import { SourceType } from '../../sources';
+import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
+import { useZappingToken } from '../../hooks/useZappingConfig';
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -37,15 +38,17 @@ export function SourceSlider({
 
   const { createSource } = useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
+  const [tvSources, setTvSources] = useState<SourceType[]>([]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
     if (activeCategory === 'tv') {
-      return sourcesCategories.flatMap(cat => Object.values(cat.sources));
+      return tvSources;
+      // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
     } else if (activeCategory === 'twitch') {
       return twitchSources;
     }
     return zappingSources;
-  }, [activeCategory, twitchSources]);
+  }, [activeCategory, tvSources, twitchSources]);
 
   const selectedIndex = activeCategorySources.findIndex(
     src => src.slug === selectedSourceSlug
@@ -152,6 +155,46 @@ export function SourceSlider({
     getFollowing();
   }, [accessToken, createSource]);
 
+  useEffect(() => {
+    const loadSources = async () => {
+      const response = await fetch(
+        'https://raw.githubusercontent.com/Alplox/json-teles/main/canales.json'
+      );
+      const listaCanales: Record<
+        string,
+        {
+          nombre: string;
+          logo: string;
+          señales: {
+            iframe_url?: string[];
+            m3u8_url?: string[];
+            yt_id?: string;
+            yt_embed?: string;
+            yt_playlist?: string;
+            twitch_id?: string;
+          };
+          sitio_oficial: string;
+          país: string;
+          categoría: string;
+        }
+      > = await response.json();
+      const sources: SourceType[] = Object.entries(listaCanales).map(
+        ([slug, canal]) => ({
+          slug: `custom_${slug}`,
+          iframeSrc: canal.señales.iframe_url?.[0],
+          name: canal.nombre,
+          imageUrl: canal.logo,
+          youtubeVideoId: canal.señales.yt_id,
+          m3u8Url: canal.señales.m3u8_url?.[0]
+        })
+      );
+      sources.forEach(createSource);
+      setTvSources(sources);
+    };
+    loadSources();
+  }, [createSource]);
+  const [zappingToken] = useZappingToken();
+
   return (
     <div className="w-full h-full flex flex-col justify-center">
       <div className="grid grid-cols-12">
@@ -191,9 +234,13 @@ export function SourceSlider({
               Connect with Twitch
             </a>
           )}
-          {isLoadingTwitch && 'Cargando...'}
+          {activeCategory === 'zapping' && !zappingToken && <ZappingConfig />}
+          {((activeCategory === 'twitch' && isLoadingTwitch) ||
+            (activeCategory === 'tv' && !tvSources.length)) &&
+            'Cargando...'}
           {activeCategorySources.map((source, canalIndex) => {
             if (canalIndex < startIndex || canalIndex > endIndex) return null;
+            if (activeCategory === 'zapping' && !zappingToken) return null;
             const isActive = source.slug === selectedSourceSlug;
 
             return (
