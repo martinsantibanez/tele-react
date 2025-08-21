@@ -4,7 +4,8 @@ import { ClientProviders } from './ClientProviders';
 
 export const metadata: Metadata = {
   title: 'Ver Tele',
-  description: 'Visor de canales de TV chilena'
+  description: 'Visor de canales de TV chilena',
+  referrer: 'no-referrer'
 };
 
 export default function RootLayout({
