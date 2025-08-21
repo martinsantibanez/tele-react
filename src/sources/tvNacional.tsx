@@ -153,9 +153,14 @@ export const tvNacionalYoutubeSources: SourcesMap = {
 };
 
 export const tvNacionalSources: SourcesMap = {
+  'ZAPPING': {
+    slug: 'ZAPPING',
+    name: 'Zapping',
+    iframeSrc: 'https://app.zapping.com/webplayer'
+  },
   '24HTVN': {
     slug: '24HTVN',
-    name: '24 Horas',
+    name: '24 Horass',
     titleIcons: [
       <img
         style={{ maxHeight: 30 }}

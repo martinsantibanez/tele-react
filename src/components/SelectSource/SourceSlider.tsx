@@ -46,6 +46,14 @@ export function SourceSlider({
       // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
     } else if (activeCategory === 'twitch') {
       return twitchSources;
+    } else if (activeCategory === 'zapping') {
+      return [
+        {
+          slug: `custom_zapipng`,
+          iframeSrc: 'https://app.zapping.com/webplayer',
+          name: 'Zapping'
+        }
+      ];
     }
     return zappingSources;
   }, [activeCategory, tvSources, twitchSources]);
@@ -234,13 +242,13 @@ export function SourceSlider({
               Connect with Twitch
             </a>
           )}
-          {activeCategory === 'zapping' && !zappingToken && <ZappingConfig />}
+          {/* {activeCategory === 'zapping' && !zappingToken && <ZappingConfig />} */}
           {((activeCategory === 'twitch' && isLoadingTwitch) ||
             (activeCategory === 'tv' && !tvSources.length)) &&
             'Cargando...'}
           {activeCategorySources.map((source, canalIndex) => {
             if (canalIndex < startIndex || canalIndex > endIndex) return null;
-            if (activeCategory === 'zapping' && !zappingToken) return null;
+            // if (activeCategory === 'zapping' && !zappingToken) return null;
             const isActive = source.slug === selectedSourceSlug;
 
             return (
