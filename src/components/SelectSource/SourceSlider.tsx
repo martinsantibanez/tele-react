@@ -158,7 +158,7 @@ export function SourceSlider({
   useEffect(() => {
     const loadSources = async () => {
       const response = await fetch(
-        'https://raw.githubusercontent.com/Alplox/json-teles/main/canales.json'
+        'https://github.com/Alplox/json-teles/blob/543c9595138d9c4fba52823460afc73e58a3a7e0/canales.json'
       );
       const listaCanales: Record<
         string,
