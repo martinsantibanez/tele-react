@@ -22,7 +22,7 @@ import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
 
 const arrayCanales = Object.values(canalesZapping);
-export const zappingSources = arrayCanales.map(canal => {
+export const zappingSources = arrayCanales.sort((a, b) => a.number - b.number).map(canal => {
   const imageName = canal.image;
   const imageUrl = `https://davinci.zappingtv.com/gato/media/62/canales/white/${imageName}.png`;
   const source: SourceType = {

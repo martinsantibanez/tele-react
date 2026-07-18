@@ -35,7 +35,7 @@ export function ZappingSelector({
     <AccordionItem value={accordionEventKey}>
       <AccordionTrigger>Zapping</AccordionTrigger>
       <AccordionContent>
-        {Object.values(canalesZapping).map(canal => {
+        {Object.values(canalesZapping).sort((a, b) => a.number - b.number).map(canal => {
           const source: SourceType = {
             slug: `custom_zapping_${canal.id}`,
             zappingChannel: canal.url,
