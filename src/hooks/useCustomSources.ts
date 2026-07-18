@@ -17,5 +17,20 @@ export function useCustomSources() {
     [setCustomSources]
   );
 
-  return { customSources, setCustomSources, createSource, customSourcesMeta };
+  const updateSource = useCallback(
+    (slug: string, patch: Partial<SourceType>) => {
+      setCustomSources(v =>
+        v.map(source => (source.slug === slug ? { ...source, ...patch } : source))
+      );
+    },
+    [setCustomSources]
+  );
+
+  return {
+    customSources,
+    setCustomSources,
+    createSource,
+    updateSource,
+    customSourcesMeta
+  };
 }

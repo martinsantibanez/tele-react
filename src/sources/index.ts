@@ -32,6 +32,8 @@ export interface SourceInput {
   zappingChannel?: string;
 }
 
+export type SignalType = 'iframe' | 'm3u8' | 'youtube' | 'twitch';
+
 export interface SourceType extends SourceInput {
   slug: string;
   name?: string;
@@ -39,11 +41,25 @@ export interface SourceType extends SourceInput {
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
   imageUrl?: string;
+  activeSignalType?: SignalType;
 
   // TODO
   // inputs?: SourceInput[];
 
   fuente?: string;
+}
+
+const signalTypeField: Record<SignalType, keyof SourceInput> = {
+  iframe: 'iframeSrc',
+  m3u8: 'm3u8Url',
+  youtube: 'youtubeVideoId',
+  twitch: 'twitchAccount'
+};
+
+export function getAvailableSignals(source: SourceType): SignalType[] {
+  return (Object.keys(signalTypeField) as SignalType[]).filter(
+    type => !!source[signalTypeField[type]]
+  );
 }
 
 export type SourcesMap = {

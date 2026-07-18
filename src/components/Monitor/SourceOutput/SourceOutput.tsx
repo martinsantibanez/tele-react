@@ -21,7 +21,24 @@ type Props = {
 };
 
 export function SourceOutput({ source, muted = true }: Props) {
-  if (source.iframeSrc) {
+  if (source.activeSignalType === 'iframe' && source.iframeSrc) {
+    return <IframeOutput name={source.name} src={source.iframeSrc} />;
+  } else if (
+    source.activeSignalType === 'm3u8' &&
+    source.m3u8Url &&
+    typeof window !== 'undefined'
+  ) {
+    return <VideoPlayer src={source.m3u8Url} muted={muted} />;
+  } else if (source.activeSignalType === 'youtube' && source.youtubeVideoId) {
+    return (
+      <IframeOutput
+        name={source.name}
+        src={`https://www.youtube-nocookie.com/embed/${source.youtubeVideoId}?autoplay=1&mute=1&modestbranding=1&showinfo=0`}
+      />
+    );
+  } else if (source.activeSignalType === 'twitch' && source.twitchAccount) {
+    return <TwitchSource channel={source.twitchAccount} muted={muted} />;
+  } else if (source.iframeSrc) {
     return <IframeOutput name={source.name} src={source.iframeSrc} />;
   } else if (source.codeHtml) {
     return (

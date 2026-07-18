@@ -1,5 +1,6 @@
 import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
+import { Tv, Video, YoutubeIcon, TwitchIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import screenfull from 'screenfull';
@@ -7,9 +8,16 @@ import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../app/duo/DuoPage';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { SourceType } from '../../sources';
+import { getAvailableSignals, SignalType, SourceType } from '../../sources';
 import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
 import { useZappingToken } from '../../hooks/useZappingConfig';
+
+const signalIcons: Record<SignalType, typeof Tv> = {
+  iframe: Tv,
+  m3u8: Video,
+  youtube: YoutubeIcon,
+  twitch: TwitchIcon
+};
 
 type Props = {
   selectedSourceSlug: string | undefined;
@@ -49,7 +57,7 @@ export function SourceSlider({
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken] = useTwitchToken();
 
-  const { createSource } = useCustomSources();
+  const { createSource, updateSource, customSources } = useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const [tvSources, setTvSources] = useState<SourceType[]>([]);
 
@@ -71,6 +79,34 @@ export function SourceSlider({
     const source = activeCategorySources[index];
     createSource(source);
     onSelect(source);
+  };
+
+  const selectedSource = activeCategorySources[selectedIndex] as
+    | SourceType
+    | undefined;
+  // The persisted copy is what MonitorSource actually plays, so it's the
+  // source of truth for which signal is currently active.
+  const persistedSelectedSource = customSources.find(
+    src => src.slug === selectedSource?.slug
+  );
+  const availableSignals = selectedSource
+    ? getAvailableSignals(selectedSource)
+    : [];
+  const activeSignalType =
+    persistedSelectedSource?.activeSignalType ?? availableSignals[0];
+
+  const selectSignal = (type: SignalType) => {
+    if (!selectedSource) return;
+    updateSource(selectedSource.slug, { activeSignalType: type });
+  };
+
+  const cycleSignal = () => {
+    if (!selectedSource || availableSignals.length < 2) return;
+    const currentIdx = activeSignalType
+      ? availableSignals.indexOf(activeSignalType)
+      : -1;
+    const nextType = availableSignals[(currentIdx + 1) % availableSignals.length];
+    selectSignal(nextType);
   };
 
   const next = () => {
@@ -113,6 +149,7 @@ export function SourceSlider({
   useHotkeys('f', () => {
     if (screenfull.isEnabled) screenfull.toggle();
   });
+  useHotkeys('tab', () => cycleSignal(), { preventDefault: true });
 
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(
@@ -246,14 +283,40 @@ export function SourceSlider({
                 key={`zp_${source.slug}`}
               >
                 <div className="flex flex-col items-center gap-4 p-6">
-                  {source.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={source.imageUrl}
-                      className="w-[62px] "
-                      alt={source.name || ''}
-                    />
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {source.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={source.imageUrl}
+                        className="w-[62px] "
+                        alt={source.name || ''}
+                      />
+                    )}
+                    {isActive && availableSignals.length > 1 && (
+                      <div className="flex flex-col gap-1 rounded bg-black/70 p-1">
+                        {availableSignals.map(type => {
+                          const Icon = signalIcons[type];
+                          return (
+                            <button
+                              key={type}
+                              title={type}
+                              onClick={e => {
+                                e.stopPropagation();
+                                selectSignal(type);
+                              }}
+                              className={`rounded p-0.5 ${
+                                type === activeSignalType
+                                  ? 'bg-white text-black'
+                                  : 'text-white'
+                              }`}
+                            >
+                              <Icon size={14} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                   <div className="text-lg font-semibold">{source.name}</div>
                 </div>
               </div>
