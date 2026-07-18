@@ -138,8 +138,8 @@ importers:
         specifier: ^19.0.1
         version: 19.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^14.0.0
+        version: 14.0.0
       video.js:
         specifier: ^7.21.7
         version: 7.21.7
@@ -3724,9 +3724,8 @@ packages:
       '@types/react':
         optional: true
 
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   video.js@7.21.7:
@@ -7665,7 +7664,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.2
 
-  uuid@9.0.1: {}
+  uuid@14.0.0: {}
 
   video.js@7.21.7:
     dependencies:
