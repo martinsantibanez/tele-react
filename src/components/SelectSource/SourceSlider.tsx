@@ -1,9 +1,8 @@
 import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
-import { Tv, Video, YoutubeIcon, TwitchIcon } from 'lucide-react';
+import { Heart, Tv, Video, YoutubeIcon, TwitchIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import screenfull from 'screenfull';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../app/duo/DuoPage';
@@ -26,7 +25,14 @@ type Props = {
   invertControl?: boolean;
 };
 
-type SelectorCategories = 'tv' | 'zapping' | 'twitch';
+type SelectorCategories = 'tv' | 'twitch' | 'zapping' | 'favourites';
+
+const categoryOrder: SelectorCategories[] = [
+  'tv',
+  'twitch',
+  'zapping',
+  'favourites'
+];
 
 type Channel = {
   id: string;
@@ -57,7 +63,8 @@ export function SourceSlider({
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken] = useTwitchToken();
 
-  const { createSource, updateSource, customSources } = useCustomSources();
+  const { createSource, updateSource, toggleFavourite, customSources } =
+    useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const [tvSources, setTvSources] = useState<SourceType[]>([]);
 
@@ -67,9 +74,11 @@ export function SourceSlider({
       // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
     } else if (activeCategory === 'twitch') {
       return twitchSources;
+    } else if (activeCategory === 'favourites') {
+      return customSources.filter(source => source.favourite);
     }
     return zappingSources;
-  }, [activeCategory, tvSources, twitchSources]);
+  }, [activeCategory, tvSources, twitchSources, customSources]);
 
   const selectedIndex = activeCategorySources.findIndex(
     src => src.slug === selectedSourceSlug
@@ -120,22 +129,14 @@ export function SourceSlider({
   };
 
   const nextCategory = () => {
-    if (activeCategory === 'tv') {
-      setActiveCategory('twitch');
-    } else if (activeCategory === 'twitch') {
-      setActiveCategory('zapping');
-    } else {
-      setActiveCategory('tv');
-    }
+    const currentIdx = categoryOrder.indexOf(activeCategory);
+    setActiveCategory(categoryOrder[(currentIdx + 1) % categoryOrder.length]);
   };
   const prevCategory = () => {
-    if (activeCategory === 'tv') {
-      setActiveCategory('zapping');
-    } else if (activeCategory === 'twitch') {
-      setActiveCategory('tv');
-    } else {
-      setActiveCategory('twitch');
-    }
+    const currentIdx = categoryOrder.indexOf(activeCategory);
+    setActiveCategory(
+      categoryOrder[(currentIdx - 1 + categoryOrder.length) % categoryOrder.length]
+    );
   };
 
   useHotkeys('up', () => prevCategory(), { preventDefault: true });
@@ -146,9 +147,14 @@ export function SourceSlider({
   useHotkeys('enter', () => (onSourceSwap ? onSourceSwap() : undefined), {
     preventDefault: true
   });
-  useHotkeys('f', () => {
-    if (screenfull.isEnabled) screenfull.toggle();
-  });
+  useHotkeys(
+    'f',
+    () => {
+      if (!selectedSource) return;
+      toggleFavourite(selectedSource);
+    },
+    { preventDefault: true }
+  );
   useHotkeys('tab', () => cycleSignal(), { preventDefault: true });
 
   const startIndex = Math.max(selectedIndex - 2, 0);
@@ -248,6 +254,12 @@ export function SourceSlider({
           >
             Zapping
           </Button>
+          <Button
+            variant={activeCategory === 'favourites' ? 'default' : 'outline'}
+            onClick={() => setActiveCategory('favourites')}
+          >
+            Favourites
+          </Button>
         </div>
         <div className="flex justify-between items-center col-span-10 w-full">
           <Button
@@ -269,10 +281,17 @@ export function SourceSlider({
           {((activeCategory === 'twitch' && isLoadingTwitch) ||
             (activeCategory === 'tv' && !tvSources.length)) &&
             'Cargando...'}
+          {activeCategory === 'favourites' &&
+            !activeCategorySources.length &&
+            'Sin favoritos'}
           {activeCategorySources.map((source, canalIndex) => {
             if (canalIndex < startIndex || canalIndex > endIndex) return null;
             if (activeCategory === 'zapping' && !zappingToken) return null;
             const isActive = source.slug === selectedSourceSlug;
+            const isFavourite =
+              source.favourite ??
+              customSources.find(s => s.slug === source.slug)?.favourite ??
+              false;
 
             return (
               <div
@@ -284,16 +303,39 @@ export function SourceSlider({
               >
                 <div className="flex flex-col items-center gap-4 p-6">
                   <div className="flex items-center gap-1.5">
-                    {source.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={source.imageUrl}
-                        className="w-[62px] "
-                        alt={source.name || ''}
-                      />
-                    )}
+                    <div className="relative">
+                      {source.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={source.imageUrl}
+                          className="w-[62px] "
+                          alt={source.name || ''}
+                        />
+                      )}
+                      <button
+                        title={
+                          isFavourite
+                            ? 'Quitar de favoritos'
+                            : 'Agregar a favoritos'
+                        }
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleFavourite(source);
+                        }}
+                        className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
+                      >
+                        <Heart
+                          size={14}
+                          className={
+                            isFavourite
+                              ? 'fill-red-500 text-red-500'
+                              : 'text-white'
+                          }
+                        />
+                      </button>
+                    </div>
                     {isActive && availableSignals.length > 1 && (
-                      <div className="flex flex-col gap-1 rounded bg-black/70 p-1">
+                      <div className="flex flex-col items-center gap-1 rounded bg-black/70 p-1 ml-5">
                         {availableSignals.map(type => {
                           const Icon = signalIcons[type];
                           return (
@@ -314,6 +356,9 @@ export function SourceSlider({
                             </button>
                           );
                         })}
+                        <span className="text-[9px] leading-none text-gray-300 mt-0.5">
+                          TAB
+                        </span>
                       </div>
                     )}
                   </div>

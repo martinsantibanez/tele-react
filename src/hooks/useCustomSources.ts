@@ -26,11 +26,26 @@ export function useCustomSources() {
     [setCustomSources]
   );
 
+  const toggleFavourite = useCallback(
+    (source: SourceType) => {
+      setCustomSources(v => {
+        if (!v.some(s => s.slug === source.slug)) {
+          return [...v, { ...source, favourite: true }];
+        }
+        return v.map(s =>
+          s.slug === source.slug ? { ...s, favourite: !s.favourite } : s
+        );
+      });
+    },
+    [setCustomSources]
+  );
+
   return {
     customSources,
     setCustomSources,
     createSource,
     updateSource,
+    toggleFavourite,
     customSourcesMeta
   };
 }

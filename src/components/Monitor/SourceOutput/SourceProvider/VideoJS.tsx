@@ -1,7 +1,6 @@
 'use client';
 import qualitySelector from 'videojs-hls-quality-selector';
-import Script from 'next/script';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 
@@ -9,22 +8,34 @@ type Props = {
   src: string;
   muted?: boolean;
 };
+let hlsQualitySelectorRegistered = false;
+
 const VideoPlayer = ({ src, muted = true }: Props) => {
-  const videoRef = useRef<any>(undefined);
-  const [player, setPlayer] = useState<any>(undefined);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<any>(undefined);
+  const currentSrcRef = useRef<string>(src);
 
   useEffect(() => {
-    if (player) {
-      player.src([src]);
+    if (!containerRef.current) return;
+
+    if (!hlsQualitySelectorRegistered) {
+      videojs.registerPlugin('hlsQualitySelector', qualitySelector);
+      hlsQualitySelectorRegistered = true;
     }
-  }, [src, player]);
 
-  useEffect(() => {
-    if (player) return;
+    const videoElement = document.createElement('video-js');
+    videoElement.classList.add(
+      'video-js',
+      'vjs-default-skin',
+      'vjs-big-play-centered',
+      'vjs-fill'
+    );
+    containerRef.current.appendChild(videoElement);
+
     const videoJsOptions: videojs.PlayerOptions = {
       preload: 'auto',
       autoplay: 'any',
-      techOrder: ['html5', 'hls', 'flash'],
+      techOrder: ['html5'],
       controls: true,
       muted,
       responsive: true,
@@ -45,29 +56,35 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       ]
     };
 
-    videojs.registerPlugin('hlsQualitySelector', qualitySelector);
-    if (!videoRef.current) return;
     const p = videojs(
-      videoRef.current,
+      videoElement,
       videoJsOptions,
       function onPlayerReaady() {
         // console.log('onPlayerReady');
       }
     );
-    setPlayer(p);
+    playerRef.current = p;
+    currentSrcRef.current = src;
     return () => {
-      if (player) player.dispose();
+      if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.dispose();
+      }
+      playerRef.current = undefined;
     };
-  }, [muted, player, src]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return (
-    <div data-vjs-player>
-      <video
-        ref={videoRef}
-        className="video-js vjs-default-skin vjs-big-play-centered vjs-fill"
-      ></video>
-    </div>
-  );
+  useEffect(() => {
+    if (!playerRef.current || currentSrcRef.current === src) return;
+    currentSrcRef.current = src;
+    playerRef.current.src([{ src, type: 'application/vnd.apple.mpegurl' }]);
+  }, [src]);
+
+  useEffect(() => {
+    playerRef.current?.muted(muted);
+  }, [muted]);
+
+  return <div ref={containerRef} data-vjs-player className="w-full h-full" />;
 };
 
 export default VideoPlayer;
