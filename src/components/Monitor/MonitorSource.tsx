@@ -61,27 +61,36 @@ export function MonitorSource({
 
   return (
     <div className="w-full h-full">
-      <div className={`w-full h-full relative`}>
+      <div
+        className={`w-full h-full relative box-border ${
+          isBeingEdited ? 'border-2 border-slate-400' : ''
+        }`}
+      >
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
         {isEditing && (
-          <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-end w-full opacity-100 z-[2]">
-            {onChangeClick && (
+          <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-between w-full opacity-100 z-[2]">
+            <span className="ml-1 rounded bg-black/70 px-2 font-bold text-white">
+              {idx + 1}
+            </span>
+            <div className="flex">
+              {onChangeClick && (
               <>
-                <Button
-                  variant={isBeingEdited ? 'outline' : 'default'}
-                  onClick={handleChangeClick}
-                >
-                  Cambiar
+                  <Button
+                    variant={isBeingEdited ? 'outline' : 'default'}
+                    onClick={handleChangeClick}
+                  >
+                    Cambiar
+                  </Button>
+                </>
+              )}
+              {onRemove && (
+                <Button variant={'destructive'} onClick={onRemove}>
+                  Quitar
                 </Button>
-              </>
-            )}
-            {onRemove && (
-              <Button variant={'destructive'} onClick={onRemove}>
-                Quitar
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>

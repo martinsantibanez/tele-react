@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { SourceOutput } from '../../components/Monitor/SourceOutput/SourceOutput';
 import { SourceSlider } from '../../components/SelectSource/SourceSlider';
@@ -19,6 +19,25 @@ export const useTwitchToken = () =>
 export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);
   const [invertControl, setInvertControl] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const hintTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handlePointerMove = useCallback(() => {
+    if (isEditing) return;
+    setShowHint(true);
+    if (hintTimeout.current) clearTimeout(hintTimeout.current);
+    hintTimeout.current = setTimeout(() => setShowHint(false), 2000);
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditing) setShowHint(false);
+  }, [isEditing]);
+
+  useEffect(() => {
+    return () => {
+      if (hintTimeout.current) clearTimeout(hintTimeout.current);
+    };
+  }, []);
 
   const [, setTwitchToken] = useTwitchToken();
 
@@ -79,19 +98,36 @@ export const DuoPage = () => {
   const previewSource = getSource(sources.preview);
   return (
     <div className="flex flex-col items-center">
-      <div className="grid grid-cols-16 h-screen aspect-video max-w-full">
+      <div
+        className="relative grid grid-cols-16 h-screen aspect-video max-w-full"
+        onMouseMove={handlePointerMove}
+      >
+        {!isEditing && showHint && (
+          <div className="absolute top-2 left-2 z-20 flex items-center gap-2 text-xs bg-black/60 text-white rounded px-2 py-1 pointer-events-none">
+            <span>
+              <span className="font-bold">E</span> Ver controles
+            </span>
+          </div>
+        )}
         <div
           className={`${
             isEditing ? `col-span-12 row-auto` : 'col-span-16 row-span-9'
           } aspect-video`}
         >
           <div
-            className={`w-full h-full box-border ${
+            className={`relative w-full h-full box-border ${
               invertControl ? 'border-slate-500 border-2' : ''
             }`}
           >
+            {isEditing && !invertControl && (
+              <div className="absolute top-2 left-2 z-10 flex items-center gap-2 text-xs bg-black/60 text-white rounded px-2 py-1">
+                <span>
+                  <span className="font-bold">I</span> controlar
+                </span>
+              </div>
+            )}
             {!!programSource && (
-              <SourceOutput source={programSource} muted={invertControl} />
+              <SourceOutput source={programSource} muted={false} />
             )}
           </div>
         </div>
@@ -116,35 +152,30 @@ export const DuoPage = () => {
               />
             </div>
             <div
-              className={`col-span-4 row-span-2 col-start-13 row-start-7 aspect-video w-full h-full box-border ${
+              className={`relative col-span-4 row-span-2 col-start-13 row-start-7 aspect-video w-full h-full box-border ${
                 !invertControl ? 'border-slate-500 border-2' : ''
               }`}
             >
-              {!!previewSource && (
-                <SourceOutput source={previewSource} muted={!invertControl} />
-              )}
+              <div className="absolute top-1 left-1 z-10 flex flex-col gap-0.5 text-[9px] leading-none bg-black/60 text-white rounded px-1 py-0.5">
+                {invertControl && (
+                  <span>
+                    <span className="font-bold">I</span> controlar
+                  </span>
+                )}
+                <span>
+                  <span className="font-bold">Enter</span> ver en grande
+                </span>
+                <span>
+                  <span className="font-bold">E</span> Ocultar
+                </span>
+              </div>
+              {!!previewSource && <SourceOutput source={previewSource} muted />}
             </div>
           </>
         )}
       </div>
       <div className="flex">
         <div className="mt-3 flex flex-col mw-300 mr-6">
-          <div>Keyboard shortcuts</div>
-          <div className="flex flex-row gap-3">
-            <div>
-              <span className="font-bold text-xl">E</span> Toggle Edit Mode
-            </div>
-            <div>
-              <span className="font-bold text-xl">Arrows</span> Preview
-              Next/Previous source
-            </div>
-            <div>
-              <span className="font-bold text-xl">Enter</span> Swap sources
-            </div>
-            <div>
-              <span className="font-bold text-xl">F</span> Toggle Full Screen
-            </div>
-          </div>
           <ZappingConfig />
         </div>
       </div>

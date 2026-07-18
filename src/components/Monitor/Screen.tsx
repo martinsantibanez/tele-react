@@ -27,9 +27,13 @@ export function Screen({
   onSwitch
 }: Props) {
   const { config, sources } = screen;
-  if (config.mode === DisplayMode.Grid)
+  if (config.mode === DisplayMode.Grid) {
+    const rows = Math.ceil((sources?.length ?? 0) / config.grid.size) || 1;
     return (
-      <div className={`grid ${gridSizeClass[config.grid.size]}`}>
+      <div
+        className={`grid h-full w-full ${gridSizeClass[config.grid.size]}`}
+        style={{ gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
+      >
         <GridDisplay
           size={config.grid?.size}
           sources={sources}
@@ -40,6 +44,7 @@ export function Screen({
         />
       </div>
     );
+  }
   else if (config.mode === DisplayMode.Layout)
     return (
       <Layout

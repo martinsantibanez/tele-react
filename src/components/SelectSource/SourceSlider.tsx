@@ -114,7 +114,8 @@ export function SourceSlider({
     const currentIdx = activeSignalType
       ? availableSignals.indexOf(activeSignalType)
       : -1;
-    const nextType = availableSignals[(currentIdx + 1) % availableSignals.length];
+    const nextType =
+      availableSignals[(currentIdx + 1) % availableSignals.length];
     selectSignal(nextType);
   };
 
@@ -135,7 +136,9 @@ export function SourceSlider({
   const prevCategory = () => {
     const currentIdx = categoryOrder.indexOf(activeCategory);
     setActiveCategory(
-      categoryOrder[(currentIdx - 1 + categoryOrder.length) % categoryOrder.length]
+      categoryOrder[
+        (currentIdx - 1 + categoryOrder.length) % categoryOrder.length
+      ]
     );
   };
 
@@ -185,9 +188,8 @@ export function SourceSlider({
         const currentUser = await currentUserResponse.json();
         const userId = currentUser.data[0].id;
 
-        const followedResponse = await apiClient.streams.getFollowedStreams(
-          userId
-        );
+        const followedResponse =
+          await apiClient.streams.getFollowedStreams(userId);
 
         setTwitchSources(
           await Promise.all(
@@ -236,6 +238,9 @@ export function SourceSlider({
     <div className="w-full h-full flex flex-col justify-center">
       <div className="grid grid-cols-12">
         <div className="w-full flex flex-col gap-3 justify-center pl-3 col-span-2">
+          <div className="text-[9px] leading-none text-gray-400 text-center">
+            ↑ ↓ usa las flechas para navegar ← →
+          </div>
           <Button
             variant={activeCategory === 'tv' ? 'default' : 'outline'}
             onClick={() => setActiveCategory('tv')}
@@ -265,10 +270,10 @@ export function SourceSlider({
           <Button
             onClick={() => prev()}
             variant="ghost"
-            className="h-full"
+            className="h-full flex flex-col items-center gap-0.5"
             disabled={selectedIndex === 0}
           >
-            {'<'}
+            <span>{'<'}</span>
           </Button>
           {activeCategory === 'twitch' && !accessToken && (
             <a
@@ -312,27 +317,34 @@ export function SourceSlider({
                           alt={source.name || ''}
                         />
                       )}
-                      <button
-                        title={
-                          isFavourite
-                            ? 'Quitar de favoritos'
-                            : 'Agregar a favoritos'
-                        }
-                        onClick={e => {
-                          e.stopPropagation();
-                          toggleFavourite(source);
-                        }}
-                        className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
-                      >
-                        <Heart
-                          size={14}
-                          className={
+                      <div className="flex flex-col">
+                        <button
+                          title={
                             isFavourite
-                              ? 'fill-red-500 text-red-500'
-                              : 'text-white'
+                              ? 'Quitar de favoritos'
+                              : 'Agregar a favoritos'
                           }
-                        />
-                      </button>
+                          onClick={e => {
+                            e.stopPropagation();
+                            toggleFavourite(source);
+                          }}
+                          className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
+                        >
+                          <Heart
+                            size={14}
+                            className={
+                              isFavourite
+                                ? 'fill-red-500 text-red-500'
+                                : 'text-white'
+                            }
+                          />
+                        </button>
+                        {isActive && (
+                          <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
+                            F
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {isActive && availableSignals.length > 1 && (
                       <div className="flex flex-col items-center gap-1 rounded bg-black/70 p-1 ml-5">
@@ -370,10 +382,10 @@ export function SourceSlider({
           <Button
             onClick={() => next()}
             variant="ghost"
-            className="h-full"
+            className="h-full flex flex-col items-center gap-0.5"
             disabled={selectedIndex === activeCategorySources.length - 1}
           >
-            {'>'}
+            <span>{'>'}</span>
           </Button>
         </div>
       </div>
