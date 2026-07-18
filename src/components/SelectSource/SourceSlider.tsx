@@ -20,6 +20,19 @@ type Props = {
 
 type SelectorCategories = 'tv' | 'zapping' | 'twitch';
 
+type Channel = {
+  id: string;
+  name: string;
+  logo: string;
+  signals: { type: 'm3u8' | 'iframe' | 'audio'; url: string }[];
+  youtube: string | null;
+  last_youtube_livestreams?: string[];
+  twitch: string | null;
+  website: string;
+  country: string;
+  category: string;
+};
+
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
 
 export const useActiveCategory = () => {
@@ -157,37 +170,18 @@ export function SourceSlider({
 
   useEffect(() => {
     const loadSources = async () => {
-      const response = await fetch(
-        'https://github.com/Alplox/json-teles/blob/543c9595138d9c4fba52823460afc73e58a3a7e0/canales.json'
-      );
-      const listaCanales: Record<
-        string,
-        {
-          nombre: string;
-          logo: string;
-          señales: {
-            iframe_url?: string[];
-            m3u8_url?: string[];
-            yt_id?: string;
-            yt_embed?: string;
-            yt_playlist?: string;
-            twitch_id?: string;
-          };
-          sitio_oficial: string;
-          país: string;
-          categoría: string;
-        }
-      > = await response.json();
-      const sources: SourceType[] = Object.entries(listaCanales).map(
-        ([slug, canal]) => ({
-          slug: `custom_${slug}`,
-          iframeSrc: canal.señales.iframe_url?.[0],
-          name: canal.nombre,
-          imageUrl: canal.logo,
-          youtubeVideoId: canal.señales.yt_id,
-          m3u8Url: canal.señales.m3u8_url?.[0]
-        })
-      );
+      const response = await fetch('/api/channels');
+      if (!response.ok) return;
+      const { channels }: { channels: Channel[] } = await response.json();
+      const sources: SourceType[] = channels.map(canal => ({
+        slug: `custom_${canal.id}`,
+        name: canal.name,
+        imageUrl: canal.logo,
+        iframeSrc: canal.signals.find(s => s.type === 'iframe')?.url,
+        m3u8Url: canal.signals.find(s => s.type === 'm3u8')?.url,
+        youtubeVideoId: canal.last_youtube_livestreams?.[0],
+        twitchAccount: canal.twitch ?? undefined
+      }));
       sources.forEach(createSource);
       setTvSources(sources);
     };
