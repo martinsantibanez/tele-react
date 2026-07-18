@@ -11,7 +11,7 @@ export function TwitchSource({ channel, muted = true }: Props) {
       channel={channel}
       id={channel}
       muted={muted}
-      className="w-full h-full aspect-video"
+      className="w-full h-full"
       height="100%"
       width="100%"
     />

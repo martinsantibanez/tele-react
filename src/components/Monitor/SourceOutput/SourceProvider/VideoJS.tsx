@@ -45,7 +45,6 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
           inline: true
         }
       },
-      aspectRatio: '16:9',
       poster: '/imagenes/SinSenal.png',
       sources: [
         {

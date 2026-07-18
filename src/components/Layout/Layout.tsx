@@ -50,7 +50,7 @@ export function Layout({
   onSwitch
 }: Props) {
   return (
-    <div className="grid grid-cols-16 grid-rows-9">
+    <div className="grid h-full w-full grid-cols-16 grid-rows-9">
       {layout.map((col, idx) => {
         const colClass = col.cols ? colSizeClass[col.cols] : undefined;
         const rowClass = col.rows ? rowSizeClass[col.rows] : undefined;

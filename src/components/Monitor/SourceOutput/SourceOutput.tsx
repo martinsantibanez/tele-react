@@ -6,13 +6,7 @@ import VideoPlayer from './SourceProvider/VideoJS';
 import { ZappingSource } from './SourceProvider/ZappingSource';
 
 export function IframeOutput({ name, src }: { src: string; name?: string }) {
-  return (
-    <div className="w-full h-full">
-      <div className="aspect-video">
-        <iframe src={src} className="aspect-video w-full h-full" frameBorder="0" />
-      </div>
-    </div>
-  );
+  return <iframe src={src} className="w-full h-full" frameBorder="0" />;
 }
 
 type Props = {
