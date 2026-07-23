@@ -12,8 +12,14 @@ import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
-import { findLayoutIndex, possibleLayouts } from './layoutOptions';
+import {
+  findLayoutIndex,
+  possibleLayouts,
+  PossibleLayout
+} from './layoutOptions';
 import Image from 'next/image';
+import { RowSlider, sliderRow } from '../RowSlider/RowSlider';
+import { useSavedScreensRow } from './SavedScreensRow';
 
 const signalIcons: Record<SignalType, typeof Tv> = {
   iframe: Tv,
@@ -74,6 +80,19 @@ export function SourceSlider({
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const isLayouts = activeCategory === 'layouts';
+  const {
+    row: savedScreensRow,
+    startSave,
+    namePrompt,
+    isNaming,
+    startDelete,
+    confirmDelete,
+    cancelDelete,
+    deletePrompt,
+    isConfirmingDelete
+  } = useSavedScreensRow();
+  // Which RowSlider row Tab is on, so D only deletes from the saved row.
+  const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
 
   const { createSource, updateSource, toggleFavourite, customSources } =
     useCustomSources();
@@ -175,8 +194,13 @@ export function SourceSlider({
   useHotkeys('up', () => prevCategory(), { preventDefault: true });
   useHotkeys('down', () => nextCategory(), { preventDefault: true });
 
-  useHotkeys('left', () => prev(), { preventDefault: true });
-  useHotkeys('right', () => next(), { preventDefault: true });
+  // Layouts are driven by the RowSlider, which owns its own arrow handling.
+  useHotkeys('left', () => (isLayouts ? undefined : prev()), {
+    preventDefault: true
+  });
+  useHotkeys('right', () => (isLayouts ? undefined : next()), {
+    preventDefault: true
+  });
   useHotkeys('enter', () => (onSourceSwap ? onSourceSwap() : undefined), {
     preventDefault: true
   });
@@ -187,6 +211,37 @@ export function SourceSlider({
       toggleFavourite(selectedSource);
     },
     { preventDefault: true }
+  );
+  useHotkeys(
+    's',
+    () => {
+      if (!isLayouts || isNaming || isConfirmingDelete) return;
+      startSave();
+    },
+    { preventDefault: true },
+    [isLayouts, isNaming, isConfirmingDelete, startSave]
+  );
+  useHotkeys(
+    'd',
+    () => {
+      if (!isLayouts || isNaming || isConfirmingDelete) return;
+      if (activeRowKey !== 'saved') return;
+      startDelete();
+    },
+    { preventDefault: true },
+    [isLayouts, isNaming, isConfirmingDelete, activeRowKey, startDelete]
+  );
+  useHotkeys(
+    'y',
+    () => (isConfirmingDelete ? confirmDelete() : undefined),
+    { preventDefault: true },
+    [isConfirmingDelete, confirmDelete]
+  );
+  useHotkeys(
+    'n',
+    () => (isConfirmingDelete ? cancelDelete() : undefined),
+    { preventDefault: true },
+    [isConfirmingDelete, cancelDelete]
   );
   const isZapping = activeCategory === 'zapping';
   const zappingConfigRef = useRef<HTMLDivElement>(null);
@@ -205,6 +260,8 @@ export function SourceSlider({
   useHotkeys(
     'tab',
     e => {
+      // In layouts Tab switches rows inside the RowSlider.
+      if (isLayouts) return;
       const config = zappingConfigRef.current;
       // Inside the config controls Tab keeps its native meaning.
       if (isZapping && config && !config.contains(document.activeElement)) {
@@ -217,11 +274,40 @@ export function SourceSlider({
       cycleSignal();
     },
     { preventDefault: false },
-    [isZapping, selectedSource, availableSignals, activeSignalType]
+    [isLayouts, isZapping, selectedSource, availableSignals, activeSignalType]
   );
 
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
+
+  const layoutRows = [
+    sliderRow<PossibleLayout>({
+      key: 'layouts',
+      items: possibleLayouts,
+      selectedIndex: selectedLayoutIndex,
+      onSelect: index => selectLayout(index),
+      getItemKey: layout => layout.imgName,
+      renderItem: (layout, { isSelected }) => (
+        <div
+          className={`cursor-pointer p-3 ${isSelected ? 'bg-gray-800' : ''}`}
+        >
+          <div className="flex flex-col items-center gap-2">
+            <Image
+              alt={layout.name}
+              src={`/img/layout/${layout.imgName}`}
+              width="160"
+              height="90"
+              className={
+                isSelected ? 'ring-2 ring-white rounded-sm' : undefined
+              }
+            />
+            <div className="text-sm font-semibold">{layout.name}</div>
+          </div>
+        </div>
+      )
+    }),
+    savedScreensRow
+  ];
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
 
@@ -327,42 +413,35 @@ export function SourceSlider({
           >
             Layouts
           </Button>
+          {isLayouts && (
+            <div className="text-[9px] leading-none text-gray-400 text-center">
+              S guarda la pantalla actual · D elimina la guardada
+            </div>
+          )}
         </div>
         <div className="flex justify-between items-center col-span-10 w-full">
-          <Button
-            onClick={() => prev()}
-            variant="ghost"
-            className="h-full flex flex-col items-center gap-0.5"
-            disabled={!canNavigate || selectedIndex <= 0}
-          >
-            <span>{'<'}</span>
-          </Button>
-          {isLayouts &&
-            possibleLayouts.map((layout, layoutIndex) => {
-              if (layoutIndex < startIndex || layoutIndex > endIndex)
-                return null;
-              const isActive = layoutIndex === selectedLayoutIndex;
-              return (
-                <div
-                  key={layout.imgName}
-                  className={`cursor-pointer p-3 ${isActive ? 'bg-gray-800' : ''}`}
-                  onClick={() => selectLayout(layoutIndex)}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Image
-                      alt={layout.name}
-                      src={`/img/layout/${layout.imgName}`}
-                      width="160"
-                      height="90"
-                      className={
-                        isActive ? 'ring-2 ring-white rounded-sm' : undefined
-                      }
-                    />
-                    <div className="text-sm font-semibold">{layout.name}</div>
-                  </div>
-                </div>
-              );
-            })}
+          {isLayouts && (
+            <div className="flex w-full flex-col gap-2">
+              {namePrompt}
+              {deletePrompt}
+              {/* While a prompt is open the keys belong to it, not the rows. */}
+              <RowSlider
+                rows={layoutRows}
+                enabled={!isNaming && !isConfirmingDelete}
+                onActiveRowChange={setActiveRowKey}
+              />
+            </div>
+          )}
+          {!isLayouts && (
+            <Button
+              onClick={() => prev()}
+              variant="ghost"
+              className="h-full flex flex-col items-center gap-0.5"
+              disabled={!canNavigate || selectedIndex <= 0}
+            >
+              <span>{'<'}</span>
+            </Button>
+          )}
           {!isLayouts && noScreenSelected && (
             <div className="p-6 text-center text-gray-400">
               Selecciona una pantalla con las teclas 1-9 o con el botón Cambiar
@@ -494,14 +573,16 @@ export function SourceSlider({
               )}
             </>
           )}
-          <Button
-            onClick={() => next()}
-            variant="ghost"
-            className="h-full flex flex-col items-center gap-0.5"
-            disabled={!canNavigate || selectedIndex === itemCount - 1}
-          >
-            <span>{'>'}</span>
-          </Button>
+          {!isLayouts && (
+            <Button
+              onClick={() => next()}
+              variant="ghost"
+              className="h-full flex flex-col items-center gap-0.5"
+              disabled={!canNavigate || selectedIndex === itemCount - 1}
+            >
+              <span>{'>'}</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

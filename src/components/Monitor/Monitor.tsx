@@ -2,7 +2,6 @@
 import axios from 'axios';
 import { useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import useLocalStorageState from 'use-local-storage-state';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import {
@@ -18,16 +17,6 @@ import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
 import { OnSwitchCb } from './MonitorSource';
 import { Screen } from './Screen';
-
-type SavedScreen = {
-  name: string;
-  screen: ScreenType;
-};
-export const useSavedScreens = () => {
-  return useLocalStorageState<SavedScreen[]>('_saved_screens_', {
-    defaultValue: []
-  });
-};
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
   <div>
