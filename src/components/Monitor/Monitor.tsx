@@ -12,7 +12,6 @@ import {
 } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
-import { useZappingToken } from '../../hooks/useZappingConfig';
 import { SourceType } from '../../sources';
 import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
 import { uuid } from '../../utils/uuid';
@@ -69,7 +68,7 @@ export const Monitor = () => {
   const visibleScreenCount =
     displayConfig.mode === DisplayMode.Layout
       ? displayConfig.layout.length
-      : selectedSources?.length ?? 0;
+      : (selectedSources?.length ?? 0);
 
   const handlePromote = () => {
     setFeaturedMonitor(screen);
@@ -131,6 +130,15 @@ export const Monitor = () => {
     });
   };
 
+  const handleToggleMute = (idx: number) => {
+    setSelectedSources(sources => {
+      if (!sources) return sources;
+      return sources.map((src, index) =>
+        index === idx ? { ...src, muted: !(src.muted ?? true) } : src
+      );
+    });
+  };
+
   const handleSourceEdit = (newIdx: number) => {
     // if it's already being edited, unselect it
     setEditingSourceIdx(current => (current !== newIdx ? newIdx : undefined));
@@ -169,6 +177,14 @@ export const Monitor = () => {
     [isEditing, visibleScreenCount]
   );
   useHotkeys('escape', () => setEditingSourceIdx(undefined));
+  useHotkeys(
+    'm',
+    () => {
+      if (editingSourceIdx === undefined) return;
+      handleToggleMute(editingSourceIdx);
+    },
+    [editingSourceIdx]
+  );
   useHotkeys('c', () => (isEditing ? setActiveTab('sources') : undefined), [
     isEditing
   ]);
@@ -236,6 +252,16 @@ export const Monitor = () => {
             <Shortcut keys="1-9" label="Select Screen" />
             <Shortcut keys="Esc" label="Deselect" />
             <Shortcut keys="C / L" label="Canales/Layouts" />
+            {editingSourceIdx !== undefined && (
+              <Shortcut
+                keys="M"
+                label={
+                  (selectedSources?.[editingSourceIdx]?.muted ?? true)
+                    ? 'Activar Audio'
+                    : 'Silenciar'
+                }
+              />
+            )}
             {editingSourceIdx !== undefined && activeTab === 'sources' && (
               <>
                 <Shortcut keys="↑ ↓" label="Switch Category" />

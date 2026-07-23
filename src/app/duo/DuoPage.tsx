@@ -20,6 +20,8 @@ export const DuoPage = () => {
   const [isEditing, setIsEditing] = useState(true);
   const [invertControl, setInvertControl] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [programMuted, setProgramMuted] = useState(false);
+  const [previewMuted, setPreviewMuted] = useState(true);
   const hintTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handlePointerMove = useCallback(() => {
@@ -52,6 +54,16 @@ export const DuoPage = () => {
 
   useHotkeys('i', () => setInvertControl(v => !v), { preventDefault: true });
   useHotkeys('e', () => setIsEditing(v => !v), { preventDefault: true });
+  // when the panel is hidden there's no preview on screen, so M always
+  // targets the program
+  const controlsProgram = !isEditing || invertControl;
+  useHotkeys(
+    'm',
+    () =>
+      controlsProgram ? setProgramMuted(v => !v) : setPreviewMuted(v => !v),
+    { preventDefault: true },
+    [controlsProgram]
+  );
 
   const [sources, setSources] = useDuoState();
 
@@ -119,15 +131,23 @@ export const DuoPage = () => {
               invertControl ? 'border-slate-500 border-2' : ''
             }`}
           >
-            {isEditing && !invertControl && (
+            {isEditing && (
               <div className="absolute top-2 left-2 z-10 flex items-center gap-2 text-xs bg-black/60 text-white rounded px-2 py-1">
-                <span>
-                  <span className="font-bold">I</span> controlar
-                </span>
+                {!invertControl && (
+                  <span>
+                    <span className="font-bold">I</span> controlar
+                  </span>
+                )}
+                {invertControl && (
+                  <span>
+                    <span className="font-bold">M</span>{' '}
+                    {programMuted ? 'activar audio' : 'silenciar'}
+                  </span>
+                )}
               </div>
             )}
             {!!programSource && (
-              <SourceOutput source={programSource} muted={false} />
+              <SourceOutput source={programSource} muted={programMuted} />
             )}
           </div>
         </div>
@@ -162,6 +182,12 @@ export const DuoPage = () => {
                     <span className="font-bold">I</span> controlar
                   </span>
                 )}
+                {!invertControl && (
+                  <span>
+                    <span className="font-bold">M</span>{' '}
+                    {previewMuted ? 'activar audio' : 'silenciar'}
+                  </span>
+                )}
                 <span>
                   <span className="font-bold">Enter</span> ver en grande
                 </span>
@@ -169,7 +195,9 @@ export const DuoPage = () => {
                   <span className="font-bold">E</span> Ocultar
                 </span>
               </div>
-              {!!previewSource && <SourceOutput source={previewSource} muted />}
+              {!!previewSource && (
+                <SourceOutput source={previewSource} muted={previewMuted} />
+              )}
             </div>
           </>
         )}
