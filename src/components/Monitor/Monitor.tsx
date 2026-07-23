@@ -12,6 +12,10 @@ import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { SourceType } from '../../sources';
 import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
+import {
+  getIndexFromKeyEvent,
+  getSourceShortcutLabel
+} from '../../utils/sourceShortcut';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
@@ -175,10 +179,13 @@ export const Monitor = () => {
 
   useHotkeys('e', () => toggleEditting());
   useHotkeys(
-    '1,2,3,4,5,6,7,8,9',
+    [
+      '1,2,3,4,5,6,7,8,9',
+      'shift+1,shift+2,shift+3,shift+4,shift+5,shift+6,shift+7,shift+8,shift+9'
+    ].join(','),
     e => {
-      const idx = Number(e.key) - 1;
-      if (idx >= visibleScreenCount) return;
+      const idx = getIndexFromKeyEvent(e);
+      if (idx === undefined || idx >= visibleScreenCount) return;
       setEditingSourceIdx(idx);
       if (!isEditing) {
         if (swapSourceIdx === undefined) handleSoloAudio(idx);
@@ -284,14 +291,14 @@ export const Monitor = () => {
 
           <div className="mt-3 flex flex-row flex-wrap gap-3 text-sm">
             <Shortcut keys="E" label="Toggle Edit Mode" />
-            <Shortcut keys="1-9" label="Select Screen" />
+            <Shortcut keys="1-9 / ⇧1-9" label="Select Screen" />
             <Shortcut keys="Esc" label="Deselect" />
             <Shortcut
               keys="Enter"
               label={
                 swapSourceIdx === undefined
                   ? 'Marcar para Intercambiar'
-                  : `Intercambiar con ${swapSourceIdx + 1}`
+                  : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
               }
             />
             <Shortcut keys="C / L" label="Canales/Layouts" />

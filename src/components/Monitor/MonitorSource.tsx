@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getSource } from '../../sources';
+import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
 export type OnSwitchCb = (left: number, right: number) => void;
@@ -89,7 +90,7 @@ export function MonitorSource({
         {isEditing && (
           <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-between w-full opacity-100 z-[2]">
             <span className="ml-1 rounded bg-black/70 px-2 font-bold text-white">
-              {idx + 1}
+              {getSourceShortcutLabel(idx)}
             </span>
             <div className="flex">
               {onChangeClick && (
