@@ -10,7 +10,7 @@ export const defaultDisplayConfig: DisplayConfig = {
   grid: { size: DEFAULT_GRID_SIZE }
 };
 export function useDisplayConfig() {
-  return useLocalStorageState<DisplayConfig>('_tele_display_config_', {
+  return useLocalStorageState<DisplayConfig>('_tele_display_config_v2_', {
     defaultValue: defaultDisplayConfig
   });
 }
