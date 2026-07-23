@@ -46,7 +46,6 @@ export const Monitor = () => {
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
-  const [zappingToken] = useZappingToken();
   const [, setFeaturedMonitor] = useFeaturedScreen();
   const [activeTab, setActiveTab] = useState<PanelTab>('sources');
 
@@ -54,10 +53,9 @@ export const Monitor = () => {
     () => ({
       config: displayConfig,
       sources: selectedSources,
-      zappingToken,
       customSources
     }),
-    [displayConfig, selectedSources, zappingToken, customSources]
+    [displayConfig, selectedSources, customSources]
   );
 
   const selectedSourceSlug = useMemo(
