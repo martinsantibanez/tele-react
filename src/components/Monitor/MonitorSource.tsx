@@ -64,7 +64,7 @@ export function MonitorSource({
       <div
         className={`w-full h-full relative box-border ${
           isBeingEdited ? 'border-2 border-slate-400' : ''
-        }`}
+        } ${isEditing && !muted ? 'ring-2 ring-inset ring-emerald-400' : ''}`}
       >
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}

@@ -124,6 +124,14 @@ export const Monitor = () => {
     });
   };
 
+  // Solo: only the given screen keeps its audio, everything else is muted.
+  const handleSoloAudio = (idx: number) => {
+    setSelectedSources(sources => {
+      if (!sources) return sources;
+      return sources.map((src, index) => ({ ...src, muted: index !== idx }));
+    });
+  };
+
   // Leaving the layouts category falls back to the channels list.
   const showSources = () =>
     setActiveCategory(category => (category === 'layouts' ? 'tv' : category));
@@ -157,9 +165,12 @@ export const Monitor = () => {
   useHotkeys(
     '1,2,3,4,5,6,7,8,9',
     e => {
-      if (!isEditing) return;
       const idx = Number(e.key) - 1;
       if (idx >= visibleScreenCount) return;
+      if (!isEditing) {
+        handleSoloAudio(idx);
+        return;
+      }
       setEditingSourceIdx(idx);
       showSources();
     },
