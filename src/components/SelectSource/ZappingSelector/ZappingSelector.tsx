@@ -6,7 +6,7 @@ import {
   AccordionTrigger
 } from '../../../../components/ui/accordion';
 import { useCustomSources } from '../../../hooks/useCustomSources';
-import { useZappingToken } from '../../../hooks/useZappingConfig';
+import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
 import { canalesZapping } from './canales';
@@ -21,7 +21,7 @@ export function ZappingSelector({
   selectedSourceSlug,
   accordionEventKey
 }: Props) {
-  const [, setZappingToken] = useZappingToken();
+  const [, setZappingLoginToken] = useZappingLoginToken();
   const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();
@@ -54,7 +54,7 @@ export function ZappingSelector({
           <div className="w-full">
             Pega esto en la consola en{' '}
             <a
-              href="https://app.zappingtv.com/player/"
+              href="https://app.zapping.com/webplayer"
               target="_blank"
               rel="noopener noreferrer"
               style={{ textDecoration: 'underline' }}
@@ -65,7 +65,7 @@ export function ZappingSelector({
               className="w-full"
               readOnly
               rows={2}
-              defaultValue={`console.log( JSON.stringify({ token: document.querySelector('#loginToken').value }) )`}
+              defaultValue={`copy(window.sessionStorage.loginToken)`}
             />
             Introduce el resultado:
             <textarea
@@ -75,7 +75,7 @@ export function ZappingSelector({
               value={jsonInput}
             />
             <button
-              onClick={() => setZappingToken(JSON.parse(jsonInput))}
+              onClick={() => setZappingLoginToken(jsonInput.trim())}
               className="btn btn-primary mt-2"
             >
               Configurar

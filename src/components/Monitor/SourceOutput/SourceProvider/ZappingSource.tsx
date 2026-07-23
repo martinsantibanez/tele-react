@@ -9,7 +9,6 @@ type Props = {
 
 export function ZappingSource({ channelId, muted = true }: Props) {
   const [zappingToken] = useZappingToken();
-  console.log('zt', zappingToken)
 
   const href = `${channelId}?token=${zappingToken}`;
   if (!zappingToken) return <Barras />;

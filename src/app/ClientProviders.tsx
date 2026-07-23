@@ -3,6 +3,7 @@
 import { PropsWithChildren } from 'react';
 import { TeleProvider } from '../context/TeleContext';
 import dynamic from 'next/dynamic';
+import { useZappingSession } from '../hooks/useZappingConfig';
 
 const ThemeProvider = dynamic(
   () => import('../components/theme-provider').then(c => c.ThemeProvider),
@@ -10,6 +11,12 @@ const ThemeProvider = dynamic(
     ssr: false
   }
 );
+
+// Keeps the Zapping play session alive for the whole app (mounted once).
+const ZappingSessionManager = () => {
+  useZappingSession();
+  return null;
+};
 
 export const ClientProviders = ({
   children
@@ -21,6 +28,7 @@ export const ClientProviders = ({
       enableSystem
       disableTransitionOnChange
     >
+      <ZappingSessionManager />
       <TeleProvider>{children}</TeleProvider>
     </ThemeProvider>
   );

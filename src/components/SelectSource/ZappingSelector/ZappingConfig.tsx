@@ -17,7 +17,7 @@ import {
   FormMessage
 } from '../../../../components/ui/form';
 import { Input } from '../../../../components/ui/input';
-import { useZappingToken } from '../../../hooks/useZappingConfig';
+import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
 
@@ -39,7 +39,7 @@ const formSchema = z.object({
 });
 
 export function ZappingConfig() {
-  const [, setZappingToken] = useZappingToken();
+  const [, setZappingLoginToken] = useZappingLoginToken();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,13 +49,14 @@ export function ZappingConfig() {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const tokenValue = values.jsonInput.replaceAll("'", '');
-    setZappingToken(tokenValue);
+    const tokenValue = values.jsonInput.replaceAll("'", '').trim();
+    setZappingLoginToken(tokenValue);
   };
 
   const handleImportToken = () => {
-    console.log(window.sessionStorage.getItem('playToken') || undefined);
-    setZappingToken(window.sessionStorage.getItem('playToken') || undefined);
+    setZappingLoginToken(
+      window.sessionStorage.getItem('loginToken') || undefined
+    );
   };
 
   return (
@@ -69,17 +70,18 @@ export function ZappingConfig() {
             <div className="space-y-2">
               <h4 className="font-medium leading-none">Zapping</h4>
               <p className="text-sm text-muted-foreground">
-                Copia esto en la consola de tu navegador (F12) en{' '}
+                Inicia sesión en{' '}
                 <a
-                  href="https://app.zappingtv.com/player/"
+                  href="https://app.zapping.com/webplayer"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ textDecoration: 'underline' }}
                 >
                   Zapping
                 </a>
-                :<pre>{`window.sessionStorage.playToken`}</pre>
-                Pega el resultado a continuación:
+                , reproduce un canal, y copia esto en la consola (F12):
+                <pre>{`window.sessionStorage.loginToken`}</pre>
+                Pega el resultado a continuación (se renueva solo):
               </p>
             </div>
             <div>
