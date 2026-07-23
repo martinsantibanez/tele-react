@@ -7,6 +7,7 @@ type Props = {
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   swapSourceIdx?: number;
+  fullscreenIdx?: number;
 };
 
 export function GridDisplay({
@@ -14,7 +15,8 @@ export function GridDisplay({
   onEdit,
   onRemove,
   editingSourceIdx,
-  swapSourceIdx
+  swapSourceIdx,
+  fullscreenIdx
 }: Props) {
   return (
     <>
@@ -28,6 +30,7 @@ export function GridDisplay({
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
           isBeingEdited={idx === editingSourceIdx}
           isMarkedForSwap={idx === swapSourceIdx}
+          fullscreen={idx === fullscreenIdx}
         />
       ))}
     </>

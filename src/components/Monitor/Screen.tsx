@@ -10,6 +10,7 @@ type Props = {
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   swapSourceIdx?: number;
+  fullscreenIdx?: number;
   onSwitch?: OnSwitchCb;
 };
 
@@ -25,7 +26,8 @@ export function Screen({
   onEdit,
   onRemove,
   editingSourceIdx,
-  swapSourceIdx
+  swapSourceIdx,
+  fullscreenIdx
 }: Props) {
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Grid) {
@@ -41,6 +43,7 @@ export function Screen({
           onRemove={onRemove}
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
+          fullscreenIdx={fullscreenIdx}
         />
       </div>
     );
@@ -52,6 +55,7 @@ export function Screen({
         onEdit={onEdit}
         editingSourceIdx={editingSourceIdx}
         swapSourceIdx={swapSourceIdx}
+        fullscreenIdx={fullscreenIdx}
         onRemove={onRemove}
       />
     );

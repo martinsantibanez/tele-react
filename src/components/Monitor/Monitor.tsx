@@ -1,6 +1,6 @@
 'use client';
 import axios from 'axios';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
@@ -38,6 +38,7 @@ export const Monitor = () => {
   const { customSources } = useCustomSources();
   const [, setFeaturedMonitor] = useFeaturedScreen();
   const [activeCategory, setActiveCategory] = useActiveCategory();
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const screen: ScreenType = useMemo(
     () => ({
@@ -47,6 +48,11 @@ export const Monitor = () => {
     }),
     [displayConfig, selectedSources, customSources]
   );
+
+  const fullscreenIdx =
+    isFullscreen && typeof editingSourceIdx === 'number'
+      ? editingSourceIdx
+      : undefined;
 
   const selectedSourceSlug = useMemo(
     () =>
@@ -198,10 +204,29 @@ export const Monitor = () => {
     },
     [editingSourceIdx, swapSourceIdx]
   );
-  useHotkeys('escape', () => {
-    setSwapSourceIdx(undefined);
-    setEditingSourceIdx(undefined);
-  });
+  useHotkeys(
+    'g',
+    () => {
+      if (editingSourceIdx === undefined) {
+        setIsFullscreen(false);
+        return;
+      }
+      setIsFullscreen(current => !current);
+    },
+    [editingSourceIdx]
+  );
+  useHotkeys(
+    'escape',
+    () => {
+      if (isFullscreen) {
+        setIsFullscreen(false);
+        return;
+      }
+      setSwapSourceIdx(undefined);
+      setEditingSourceIdx(undefined);
+    },
+    [isFullscreen]
+  );
   useHotkeys(
     'm',
     () => {
@@ -226,6 +251,7 @@ export const Monitor = () => {
           onRemove={handleSourceRemove}
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
+          fullscreenIdx={fullscreenIdx}
           onSwitch={handleSwitch}
         />
       </div>
@@ -269,6 +295,14 @@ export const Monitor = () => {
               }
             />
             <Shortcut keys="C / L" label="Canales/Layouts" />
+            {editingSourceIdx !== undefined && (
+              <Shortcut
+                keys="G"
+                label={
+                  isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
+                }
+              />
+            )}
             {editingSourceIdx !== undefined && (
               <Shortcut
                 keys="M"

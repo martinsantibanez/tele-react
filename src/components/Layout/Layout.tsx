@@ -8,6 +8,7 @@ type Props = {
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   swapSourceIdx?: number;
+  fullscreenIdx?: number;
 };
 
 const colSizeClass = {
@@ -47,7 +48,8 @@ export function Layout({
   onRemove,
   sources,
   editingSourceIdx,
-  swapSourceIdx
+  swapSourceIdx,
+  fullscreenIdx
 }: Props) {
   return (
     <div className="grid h-full w-full grid-cols-12 grid-rows-9">
@@ -65,6 +67,7 @@ export function Layout({
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}
+              fullscreen={idx === fullscreenIdx}
               muted={source.muted ?? true}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />

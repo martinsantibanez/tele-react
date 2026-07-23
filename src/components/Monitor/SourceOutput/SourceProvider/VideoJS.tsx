@@ -59,13 +59,9 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       ]
     };
 
-    const p = videojs(
-      videoElement,
-      videoJsOptions,
-      function onPlayerReaady() {
-        // console.log('onPlayerReady');
-      }
-    );
+    const p = videojs(videoElement, videoJsOptions, function onPlayerReaady() {
+      // console.log('onPlayerReady');
+    });
     playerRef.current = p;
     currentSrcRef.current = src;
     return () => {
@@ -85,6 +81,26 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
   useEffect(() => {
     playerRef.current?.muted(muted);
+  }, [muted]);
+
+  useEffect(() => {
+    if (muted) return;
+    const unlock = () => {
+      const player = playerRef.current;
+      if (!player || player.isDisposed()) return;
+      player.muted(false);
+      const playPromise = player.play();
+      if (playPromise?.catch) playPromise.catch(() => {});
+    };
+    const events = ['pointerdown', 'keydown'] as const;
+    events.forEach(e =>
+      document.addEventListener(e, unlock, { once: true, capture: true })
+    );
+    return () => {
+      events.forEach(e =>
+        document.removeEventListener(e, unlock, { capture: true } as never)
+      );
+    };
   }, [muted]);
 
   return <div ref={containerRef} data-vjs-player className="w-full h-full" />;

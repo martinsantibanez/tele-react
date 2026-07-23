@@ -15,6 +15,7 @@ type Props = {
   onRemove?: () => void;
   isBeingEdited?: boolean;
   isMarkedForSwap?: boolean;
+  fullscreen?: boolean;
   idx: number;
 };
 
@@ -25,6 +26,7 @@ export function MonitorSource({
   onRemove,
   isBeingEdited,
   isMarkedForSwap,
+  fullscreen,
   idx
 }: Props) {
   const { isEditing, swapSourceIdx } = useTeleContext();
@@ -59,7 +61,9 @@ export function MonitorSource({
   };
 
   return (
-    <div className="w-full h-full">
+    <div
+      className={fullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}
+    >
       <div
         className={`w-full h-full relative box-border ${
           showFocus ? 'border-2 border-slate-400' : ''
