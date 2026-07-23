@@ -21,10 +21,40 @@ export const ZAPPING_MINT_URL =
   'https://drhouse.zappingtv.com/login/v20/webplayer';
 export const ZAPPING_HEARTBEAT_URL =
   'https://drhouse.zappingtv.com/hb/v1/webplayer/';
+export const ZAPPING_CHANNELS_URL =
+  'https://alquinta.zappingtv.com/v31/webplayer/channelswithurl';
+
+/** A channel as returned by `channelswithurl` (and by the bundled fallback). */
+export type ZappingChannel = {
+  id: number;
+  name: string;
+  /** Logo slug, see `zappingLogoUrl`. */
+  image: string;
+  desc_short: string;
+  package_id: number;
+  /** Channel number; the natural ordering of the catalogue. */
+  number: number;
+  has_sub: boolean;
+  has_hd: boolean;
+  catch_up: number;
+  reverse_epg: number;
+  start_over: boolean;
+  /** Always the placeholder `"a"` — the real token is appended client-side. */
+  token: string;
+  url: string;
+  url_sub: string;
+  parental: number;
+  locked: boolean;
+};
 
 type MintResponse = {
   status: boolean;
   data?: { playToken?: string; uuid?: string; askForLocation?: boolean };
+};
+
+type ChannelsResponse = {
+  status: boolean;
+  data?: Record<string, ZappingChannel>;
 };
 
 type HeartbeatResponse = {
@@ -81,3 +111,29 @@ export async function sendHeartbeat(
   }));
   return typeof json?.data?.nextHB === 'number' ? json.data.nextHB : 15;
 }
+
+export async function fetchZappingChannels(
+  loginToken?: string
+): Promise<Record<string, ZappingChannel>> {
+  const res = await fetch(ZAPPING_CHANNELS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form({
+      token: loginToken || '',
+      quality: 'high',
+      hevc: '0',
+      is3g: '0',
+      lowLatency: '0'
+    })
+  });
+  const json: ChannelsResponse = await res.json();
+  const channels = json?.data;
+  if (!json?.status || !channels || typeof channels !== 'object') {
+    throw new Error('Zapping: no se pudo obtener la lista de canales');
+  }
+  return channels;
+}
+
+/** Logo for a channel's `image` slug, at one of Zapping's rendered sizes. */
+export const zappingLogoUrl = (image: string, size = 62) =>
+  `https://davinci.zappingtv.com/gato/media/${size}/canales/white/${image}.png`;

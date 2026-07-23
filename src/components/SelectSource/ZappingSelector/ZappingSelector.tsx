@@ -6,10 +6,10 @@ import {
   AccordionTrigger
 } from '../../../../components/ui/accordion';
 import { useCustomSources } from '../../../hooks/useCustomSources';
+import { useZappingSources } from '../../../hooks/useZappingChannels';
 import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
-import { canalesZapping } from './canales';
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
@@ -25,6 +25,7 @@ export function ZappingSelector({
   const [jsonInput, setJsonInput] = useState('');
 
   const { createSource } = useCustomSources();
+  const zappingSources = useZappingSources();
 
   const updateSelectedChannel = (source: SourceType) => {
     createSource(source);
@@ -35,12 +36,7 @@ export function ZappingSelector({
     <AccordionItem value={accordionEventKey}>
       <AccordionTrigger>Zapping</AccordionTrigger>
       <AccordionContent>
-        {Object.values(canalesZapping).sort((a, b) => a.number - b.number).map(canal => {
-          const source: SourceType = {
-            slug: `custom_zapping_${canal.id}`,
-            zappingChannel: canal.url,
-            titleHtml: canal.name
-          };
+        {zappingSources.map(source => {
           return (
             <SourceButton
               onSelect={() => updateSelectedChannel(source)}

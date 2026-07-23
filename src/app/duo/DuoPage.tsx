@@ -3,15 +3,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { SourceOutput } from '../../components/Monitor/SourceOutput/SourceOutput';
 import { SourceSlider } from '../../components/SelectSource/SourceSlider';
-import { canalesZapping } from '../../components/SelectSource/ZappingSelector/canales';
-import {
-  ZappingConfig,
-  zappingSources
-} from '../../components/SelectSource/ZappingSelector/ZappingConfig';
+import { ZappingConfig } from '../../components/SelectSource/ZappingSelector/ZappingConfig';
 import { useCustomSources } from '../../hooks/useCustomSources';
+import {
+  useZappingChannels,
+  useZappingSources,
+  zappingSlug
+} from '../../hooks/useZappingChannels';
 import { useDuoState } from '../../hooks/useDuoState';
 import { sourcesCategories, SourceType } from '../../sources';
 import useLocalStorageState from 'use-local-storage-state';
+import { zappingLogoUrl } from '@/lib/zapping';
 
 export const useTwitchToken = () =>
   useLocalStorageState<string>('_tele_twitch_token_');
@@ -66,6 +68,8 @@ export const DuoPage = () => {
   );
 
   const [sources, setSources] = useDuoState();
+  const { channels } = useZappingChannels();
+  const zappingSources = useZappingSources();
 
   const handlePreviewChange = (source: SourceType) => {
     setSources(prev => ({ ...prev, preview: source.slug }));
@@ -84,10 +88,9 @@ export const DuoPage = () => {
       return newSources;
     });
   };
-  const index = zappingSources.findIndex(s => s.slug === sources.program);
-  const image = Object.values(canalesZapping)[index]?.image;
-  const activeImg = image
-    ? `https://davinci.zappingtv.com/gato/media/128/canales/white/${image}.png`
+  const activeChannel = channels.find(c => zappingSlug(c) === sources.program);
+  const activeImg = activeChannel
+    ? zappingLogoUrl(activeChannel.image, 128)
     : undefined;
   const { customSources } = useCustomSources();
 
@@ -104,7 +107,7 @@ export const DuoPage = () => {
         ].find(src => src.slug === slug);
       }
     },
-    [customSources]
+    [customSources, zappingSources]
   );
   const programSource = getSource(sources.program);
   const previewSource = getSource(sources.preview);

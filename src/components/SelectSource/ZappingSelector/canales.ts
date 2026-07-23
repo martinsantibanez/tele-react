@@ -1,4 +1,11 @@
-export const canalesZapping = {
+import { ZappingChannel } from '@/lib/zapping';
+
+/**
+ * Offline snapshot of the Zapping catalogue, used as the seed/fallback for
+ * `useZappingChannels` (which refreshes it from `channelswithurl`). Only read
+ * before the first successful fetch, or if the endpoint is unreachable.
+ */
+export const canalesZapping: Record<string, ZappingChannel> = {
   "10": {
     id: 10,
     name: "Cámara de Diputados TV",

@@ -8,8 +8,12 @@ import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../app/duo/DuoPage';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getAvailableSignals, SignalType, SourceType } from '../../sources';
-import { ZappingConfig, zappingSources } from './ZappingSelector/ZappingConfig';
+import { ZappingConfig } from './ZappingSelector/ZappingConfig';
+import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
+import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import { findLayoutIndex, possibleLayouts } from './layoutOptions';
+import Image from 'next/image';
 
 const signalIcons: Record<SignalType, typeof Tv> = {
   iframe: Tv,
@@ -23,15 +27,19 @@ type Props = {
   onSelect: (source: SourceType) => void;
   onSourceSwap?: () => void;
   invertControl?: boolean;
+  /** No screen is being edited, so only the layouts category is usable. */
+  noScreenSelected?: boolean;
 };
 
-type SelectorCategories = 'tv' | 'twitch' | 'zapping' | 'favourites';
+type SelectorCategories =
+  'tv' | 'twitch' | 'zapping' | 'favourites' | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
   'twitch',
   'zapping',
-  'favourites'
+  'favourites',
+  'layouts'
 ];
 
 type Channel = {
@@ -58,14 +66,18 @@ export const useActiveCategory = () => {
 export function SourceSlider({
   onSelect,
   selectedSourceSlug,
-  onSourceSwap
+  onSourceSwap,
+  noScreenSelected
 }: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken] = useTwitchToken();
+  const [displayConfig, setDisplayConfig] = useDisplayConfig();
+  const isLayouts = activeCategory === 'layouts';
 
   const { createSource, updateSource, toggleFavourite, customSources } =
     useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
+  const zappingSources = useZappingSources();
   const [tvSources, setTvSources] = useState<SourceType[]>([]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
@@ -76,23 +88,38 @@ export function SourceSlider({
       return twitchSources;
     } else if (activeCategory === 'favourites') {
       return customSources.filter(source => source.favourite);
+    } else if (activeCategory === 'layouts') {
+      return [];
     }
     return zappingSources;
-  }, [activeCategory, tvSources, twitchSources, customSources]);
+  }, [activeCategory, tvSources, twitchSources, customSources, zappingSources]);
 
-  const selectedIndex = activeCategorySources.findIndex(
-    src => src.slug === selectedSourceSlug
-  );
+  const selectedLayoutIndex = findLayoutIndex(displayConfig);
+
+  // The slider navigates either sources or layouts, depending on the category.
+  const selectedIndex = isLayouts
+    ? selectedLayoutIndex
+    : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
+  const itemCount = isLayouts
+    ? possibleLayouts.length
+    : activeCategorySources.length;
+
+  const selectLayout = (index: number) => {
+    setDisplayConfig(possibleLayouts[index].config);
+  };
 
   const updateSelectedChannel = (index: number) => {
+    if (isLayouts) {
+      selectLayout(index);
+      return;
+    }
     const source = activeCategorySources[index];
     createSource(source);
     onSelect(source);
   };
 
   const selectedSource = activeCategorySources[selectedIndex] as
-    | SourceType
-    | undefined;
+    SourceType | undefined;
   // The persisted copy is what MonitorSource actually plays, so it's the
   // source of truth for which signal is currently active.
   const persistedSelectedSource = customSources.find(
@@ -119,13 +146,15 @@ export function SourceSlider({
     selectSignal(nextType);
   };
 
+  const canNavigate = isLayouts || !noScreenSelected;
+
   const next = () => {
-    updateSelectedChannel(
-      Math.min(selectedIndex + 1, activeCategorySources.length - 1)
-    );
+    if (!canNavigate || !itemCount) return;
+    updateSelectedChannel(Math.min(selectedIndex + 1, itemCount - 1));
   };
 
   const prev = () => {
+    if (!canNavigate || !itemCount) return;
     updateSelectedChannel(Math.max(selectedIndex - 1, 0));
   };
 
@@ -161,10 +190,7 @@ export function SourceSlider({
   useHotkeys('tab', () => cycleSignal(), { preventDefault: true });
 
   const startIndex = Math.max(selectedIndex - 2, 0);
-  const endIndex = Math.min(
-    activeCategorySources.length - 1,
-    selectedIndex + 2
-  );
+  const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
 
@@ -265,125 +291,169 @@ export function SourceSlider({
           >
             Favourites
           </Button>
+          <Button
+            variant={isLayouts ? 'default' : 'outline'}
+            onClick={() => setActiveCategory('layouts')}
+          >
+            Layouts
+          </Button>
         </div>
         <div className="flex justify-between items-center col-span-10 w-full">
           <Button
             onClick={() => prev()}
             variant="ghost"
             className="h-full flex flex-col items-center gap-0.5"
-            disabled={selectedIndex === 0}
+            disabled={!canNavigate || selectedIndex <= 0}
           >
             <span>{'<'}</span>
           </Button>
-          {activeCategory === 'twitch' && !accessToken && (
-            <a
-              href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
-            >
-              Connect with Twitch
-            </a>
+          {isLayouts &&
+            possibleLayouts.map((layout, layoutIndex) => {
+              if (layoutIndex < startIndex || layoutIndex > endIndex)
+                return null;
+              const isActive = layoutIndex === selectedLayoutIndex;
+              return (
+                <div
+                  key={layout.imgName}
+                  className={`cursor-pointer p-3 ${isActive ? 'bg-gray-800' : ''}`}
+                  onClick={() => selectLayout(layoutIndex)}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Image
+                      alt={layout.name}
+                      src={`/img/layout/${layout.imgName}`}
+                      width="160"
+                      height="90"
+                      className={
+                        isActive ? 'ring-2 ring-white rounded-sm' : undefined
+                      }
+                    />
+                    <div className="text-sm font-semibold">{layout.name}</div>
+                  </div>
+                </div>
+              );
+            })}
+          {!isLayouts && noScreenSelected && (
+            <div className="p-6 text-center text-gray-400">
+              Selecciona una pantalla con las teclas 1-9 o con el botón Cambiar
+            </div>
           )}
-          {activeCategory === 'zapping' && !zappingToken && <ZappingConfig />}
-          {((activeCategory === 'twitch' && isLoadingTwitch) ||
-            (activeCategory === 'tv' && !tvSources.length)) &&
-            'Cargando...'}
-          {activeCategory === 'favourites' &&
-            !activeCategorySources.length &&
-            'Sin favoritos'}
-          {activeCategorySources.map((source, canalIndex) => {
-            if (canalIndex < startIndex || canalIndex > endIndex) return null;
-            if (activeCategory === 'zapping' && !zappingToken) return null;
-            const isActive = source.slug === selectedSourceSlug;
-            const isFavourite =
-              source.favourite ??
-              customSources.find(s => s.slug === source.slug)?.favourite ??
-              false;
+          {!isLayouts && !noScreenSelected && (
+            <>
+              {activeCategory === 'twitch' && !accessToken && (
+                <a
+                  href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
+                >
+                  Connect with Twitch
+                </a>
+              )}
+              {activeCategory === 'zapping' && !zappingToken && (
+                <ZappingConfig />
+              )}
+              {((activeCategory === 'twitch' && isLoadingTwitch) ||
+                (activeCategory === 'tv' && !tvSources.length)) &&
+                'Cargando...'}
+              {activeCategory === 'favourites' &&
+                !activeCategorySources.length &&
+                'Sin favoritos'}
+              {activeCategorySources.map((source, canalIndex) => {
+                if (canalIndex < startIndex || canalIndex > endIndex)
+                  return null;
+                if (activeCategory === 'zapping' && !zappingToken) return null;
+                const isActive = source.slug === selectedSourceSlug;
+                const isFavourite =
+                  source.favourite ??
+                  customSources.find(s => s.slug === source.slug)?.favourite ??
+                  false;
 
-            return (
-              <div
-                className={isActive ? 'bg-gray-800' : ''}
-                onClick={() => {
-                  updateSelectedChannel(canalIndex);
-                }}
-                key={`zp_${source.slug}`}
-              >
-                <div className="flex flex-col items-center gap-4 p-6">
-                  <div className="flex items-center gap-1.5">
-                    <div className="relative">
-                      {source.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={source.imageUrl}
-                          className="w-[62px] "
-                          alt={source.name || ''}
-                        />
-                      )}
-                      <div className="flex flex-col">
-                        <button
-                          title={
-                            isFavourite
-                              ? 'Quitar de favoritos'
-                              : 'Agregar a favoritos'
-                          }
-                          onClick={e => {
-                            e.stopPropagation();
-                            toggleFavourite(source);
-                          }}
-                          className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
-                        >
-                          <Heart
-                            size={14}
-                            className={
-                              isFavourite
-                                ? 'fill-red-500 text-red-500'
-                                : 'text-white'
-                            }
-                          />
-                        </button>
-                        {isActive && (
-                          <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
-                            F
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {isActive && availableSignals.length > 1 && (
-                      <div className="flex flex-col items-center gap-1 rounded bg-black/70 p-1 ml-5">
-                        {availableSignals.map(type => {
-                          const Icon = signalIcons[type];
-                          return (
+                return (
+                  <div
+                    className={isActive ? 'bg-gray-800' : ''}
+                    onClick={() => {
+                      updateSelectedChannel(canalIndex);
+                    }}
+                    key={`zp_${source.slug}`}
+                  >
+                    <div className="flex flex-col items-center gap-4 p-6">
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative">
+                          {source.imageUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={source.imageUrl}
+                              className="w-[62px] "
+                              alt={source.name || ''}
+                            />
+                          )}
+                          <div className="flex flex-col">
                             <button
-                              key={type}
-                              title={type}
+                              title={
+                                isFavourite
+                                  ? 'Quitar de favoritos'
+                                  : 'Agregar a favoritos'
+                              }
                               onClick={e => {
                                 e.stopPropagation();
-                                selectSignal(type);
+                                toggleFavourite(source);
                               }}
-                              className={`rounded p-0.5 ${
-                                type === activeSignalType
-                                  ? 'bg-white text-black'
-                                  : 'text-white'
-                              }`}
+                              className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
                             >
-                              <Icon size={14} />
+                              <Heart
+                                size={14}
+                                className={
+                                  isFavourite
+                                    ? 'fill-red-500 text-red-500'
+                                    : 'text-white'
+                                }
+                              />
                             </button>
-                          );
-                        })}
-                        <span className="text-[9px] leading-none text-gray-300 mt-0.5">
-                          TAB
-                        </span>
+                            {isActive && (
+                              <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
+                                F
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isActive && availableSignals.length > 1 && (
+                          <div className="flex flex-col items-center gap-1 rounded bg-black/70 p-1 ml-5">
+                            {availableSignals.map(type => {
+                              const Icon = signalIcons[type];
+                              return (
+                                <button
+                                  key={type}
+                                  title={type}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    selectSignal(type);
+                                  }}
+                                  className={`rounded p-0.5 ${
+                                    type === activeSignalType
+                                      ? 'bg-white text-black'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  <Icon size={14} />
+                                </button>
+                              );
+                            })}
+                            <span className="text-[9px] leading-none text-gray-300 mt-0.5">
+                              TAB
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="text-lg font-semibold">{source.name}</div>
+                    </div>
                   </div>
-                  <div className="text-lg font-semibold">{source.name}</div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </>
+          )}
           <Button
             onClick={() => next()}
             variant="ghost"
             className="h-full flex flex-col items-center gap-0.5"
-            disabled={selectedIndex === activeCategorySources.length - 1}
+            disabled={!canNavigate || selectedIndex === itemCount - 1}
           >
             <span>{'>'}</span>
           </Button>

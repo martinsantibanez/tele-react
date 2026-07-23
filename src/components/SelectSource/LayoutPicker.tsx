@@ -1,55 +1,7 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import {
-  defaultDisplayConfig,
-  useDisplayConfig
-} from '../../hooks/useDisplayConfig';
-import { DisplayConfig, DisplayMode } from '../../types/Monitor';
-import { initialLayout, twoBigLayout } from '../Monitor/predefinedLayouts';
-
-type PossibleLayout = {
-  config: DisplayConfig;
-  imgName: string;
-};
-
-const possibleLayouts: PossibleLayout[] = [
-  {
-    config: defaultDisplayConfig,
-    imgName: 'layout1.png'
-  },
-  {
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 3 }
-    },
-    imgName: 'layout2.png'
-  },
-  {
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 2 }
-    },
-    imgName: 'layout3.png'
-  },
-  {
-    config: {
-      mode: DisplayMode.Layout,
-      layout: twoBigLayout,
-      grid: { size: 1 }
-    },
-    imgName: 'layout4.png'
-  },
-  {
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 4 }
-    },
-    imgName: 'layout5.png'
-  }
-];
+import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import { possibleLayouts } from './layoutOptions';
 
 export function LayoutPicker() {
   const [, setDisplayConfig] = useDisplayConfig();
@@ -64,7 +16,7 @@ export function LayoutPicker() {
           className="h-auto w-auto p-0"
         >
           <Image
-            alt=""
+            alt={layout.name}
             src={`/img/layout/${layout.imgName}`}
             width="160"
             height="90"

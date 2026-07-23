@@ -1,7 +1,6 @@
 'use client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { useTeleContext } from '../../context/TeleContext';
@@ -16,8 +15,7 @@ import { SourceType } from '../../sources';
 import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { LayoutPicker } from '../SelectSource/LayoutPicker';
-import { SourceSlider } from '../SelectSource/SourceSlider';
+import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
 import { OnSwitchCb } from './MonitorSource';
 import { Screen } from './Screen';
 
@@ -30,8 +28,6 @@ export const useSavedScreens = () => {
     defaultValue: []
   });
 };
-
-type PanelTab = 'sources' | 'layouts';
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
   <div>
@@ -46,7 +42,7 @@ export const Monitor = () => {
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
   const [, setFeaturedMonitor] = useFeaturedScreen();
-  const [activeTab, setActiveTab] = useState<PanelTab>('sources');
+  const [activeCategory, setActiveCategory] = useActiveCategory();
 
   const screen: ScreenType = useMemo(
     () => ({
@@ -139,10 +135,14 @@ export const Monitor = () => {
     });
   };
 
+  // Leaving the layouts category falls back to the channels list.
+  const showSources = () =>
+    setActiveCategory(category => (category === 'layouts' ? 'tv' : category));
+
   const handleSourceEdit = (newIdx: number) => {
     // if it's already being edited, unselect it
     setEditingSourceIdx(current => (current !== newIdx ? newIdx : undefined));
-    setActiveTab('sources');
+    showSources();
   };
 
   const handleShare = async () => {
@@ -172,7 +172,7 @@ export const Monitor = () => {
       const idx = Number(e.key) - 1;
       if (idx >= visibleScreenCount) return;
       setEditingSourceIdx(idx);
-      setActiveTab('sources');
+      showSources();
     },
     [isEditing, visibleScreenCount]
   );
@@ -185,12 +185,12 @@ export const Monitor = () => {
     },
     [editingSourceIdx]
   );
-  useHotkeys('c', () => (isEditing ? setActiveTab('sources') : undefined), [
-    isEditing
-  ]);
-  useHotkeys('l', () => (isEditing ? setActiveTab('layouts') : undefined), [
-    isEditing
-  ]);
+  useHotkeys('c', () => (isEditing ? showSources() : undefined), [isEditing]);
+  useHotkeys(
+    'l',
+    () => (isEditing ? setActiveCategory('layouts') : undefined),
+    [isEditing]
+  );
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -206,46 +206,29 @@ export const Monitor = () => {
 
       {isEditing && (
         <div className="flex-none overflow-y-auto p-3">
-          <Tabs
-            value={activeTab}
-            onValueChange={value => setActiveTab(value as PanelTab)}
-          >
-            <TabsList>
-              <TabsTrigger value="sources">Canales</TabsTrigger>
-              <TabsTrigger value="layouts">Layouts</TabsTrigger>
-            </TabsList>
-            <TabsContent value="sources">
-              {editingSourceIdx !== undefined ? (
-                <SourceSlider
-                  onSelect={handleSourceChange}
-                  selectedSourceSlug={selectedSourceSlug}
-                />
-              ) : (
-                <div className="p-6 text-center text-gray-400">
-                  Selecciona una pantalla con las teclas 1-9 o con el botón
-                  Cambiar
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="layouts">
-              <div className="flex flex-wrap items-start gap-6">
-                <LayoutPicker />
-                <ScreenOptions
-                  onSizeChange={handleSizeChange}
-                  onSourceAdd={
-                    displayConfig.mode === DisplayMode.Grid
-                      ? handleSourceAdd
-                      : undefined
-                  }
-                  onModeChange={handleModeChange}
-                  onPromote={handlePromote}
-                  onShare={handleShare}
-                  mode={displayConfig.mode}
-                  size={displayConfig.grid.size}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+          <SourceSlider
+            onSelect={handleSourceChange}
+            selectedSourceSlug={selectedSourceSlug}
+            noScreenSelected={editingSourceIdx === undefined}
+          />
+
+          {activeCategory === 'layouts' && (
+            <div className="mt-3">
+              <ScreenOptions
+                onSizeChange={handleSizeChange}
+                onSourceAdd={
+                  displayConfig.mode === DisplayMode.Grid
+                    ? handleSourceAdd
+                    : undefined
+                }
+                onModeChange={handleModeChange}
+                onPromote={handlePromote}
+                onShare={handleShare}
+                mode={displayConfig.mode}
+                size={displayConfig.grid.size}
+              />
+            </div>
+          )}
 
           <div className="mt-3 flex flex-row flex-wrap gap-3 text-sm">
             <Shortcut keys="E" label="Toggle Edit Mode" />
@@ -262,13 +245,17 @@ export const Monitor = () => {
                 }
               />
             )}
-            {editingSourceIdx !== undefined && activeTab === 'sources' && (
-              <>
-                <Shortcut keys="↑ ↓" label="Switch Category" />
-                <Shortcut keys="← →" label="Previous/Next Source" />
-                <Shortcut keys="F" label="Toggle Favourite" />
-                <Shortcut keys="Tab" label="Cycle Signal" />
-              </>
+            <Shortcut keys="↑ ↓" label="Switch Category" />
+            {activeCategory === 'layouts' ? (
+              <Shortcut keys="← →" label="Previous/Next Layout" />
+            ) : (
+              editingSourceIdx !== undefined && (
+                <>
+                  <Shortcut keys="← →" label="Previous/Next Source" />
+                  <Shortcut keys="F" label="Toggle Favourite" />
+                  <Shortcut keys="Tab" label="Cycle Signal" />
+                </>
+              )
             )}
           </div>
         </div>
