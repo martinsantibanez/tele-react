@@ -1,5 +1,5 @@
 'use client'
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { PropsWithChildren, useState } from 'react';
 
 function useValue() {
   const [isEditing, setIsEditing] = useState(
@@ -9,17 +9,15 @@ function useValue() {
   const [editingSourceIdx, setEditingSourceIdx] = useState<
     number | undefined
   >();
+  const [swapSourceIdx, setSwapSourceIdx] = useState<number | undefined>();
 
-  useEffect(() => {
-    if (!isEditing) {
-      setEditingSourceIdx(undefined);
-    }
-  }, [isEditing]);
   return {
     isEditing,
     toggleEditting,
     editingSourceIdx,
-    setEditingSourceIdx
+    setEditingSourceIdx,
+    swapSourceIdx,
+    setSwapSourceIdx
   };
 }
 

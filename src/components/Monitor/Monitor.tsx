@@ -25,8 +25,14 @@ const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
 );
 
 export const Monitor = () => {
-  const { toggleEditting, isEditing, editingSourceIdx, setEditingSourceIdx } =
-    useTeleContext();
+  const {
+    toggleEditting,
+    isEditing,
+    editingSourceIdx,
+    setEditingSourceIdx,
+    swapSourceIdx,
+    setSwapSourceIdx
+  } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
@@ -92,6 +98,7 @@ export const Monitor = () => {
   };
 
   const handleSourceRemove = (idx: number) => {
+    setSwapSourceIdx(undefined);
     setSelectedSources(sources => {
       if (!sources) return sources;
       return sources.filter((src, index) => index !== idx);
@@ -154,9 +161,8 @@ export const Monitor = () => {
     setSelectedSources(sources => {
       if (!sources) return sources;
       const newSources = [...sources];
-      const leftBackup = { ...newSources[left] };
-      newSources[left] = newSources[right];
-      newSources[right] = leftBackup;
+      newSources[left] = { ...sources[right], muted: sources[left].muted };
+      newSources[right] = { ...sources[left], muted: sources[right].muted };
       return newSources;
     });
   };
@@ -167,23 +173,42 @@ export const Monitor = () => {
     e => {
       const idx = Number(e.key) - 1;
       if (idx >= visibleScreenCount) return;
+      setEditingSourceIdx(idx);
       if (!isEditing) {
-        handleSoloAudio(idx);
+        if (swapSourceIdx === undefined) handleSoloAudio(idx);
         return;
       }
-      setEditingSourceIdx(idx);
       showSources();
     },
-    [isEditing, visibleScreenCount]
+    [isEditing, visibleScreenCount, swapSourceIdx]
   );
-  useHotkeys('escape', () => setEditingSourceIdx(undefined));
+  useHotkeys(
+    'enter',
+    () => {
+      if (editingSourceIdx === undefined) return;
+      if (swapSourceIdx === undefined) {
+        setSwapSourceIdx(editingSourceIdx);
+        return;
+      }
+      if (swapSourceIdx !== editingSourceIdx) {
+        handleSwitch(swapSourceIdx, editingSourceIdx);
+        setEditingSourceIdx(swapSourceIdx);
+      }
+      setSwapSourceIdx(undefined);
+    },
+    [editingSourceIdx, swapSourceIdx]
+  );
+  useHotkeys('escape', () => {
+    setSwapSourceIdx(undefined);
+    setEditingSourceIdx(undefined);
+  });
   useHotkeys(
     'm',
     () => {
-      if (editingSourceIdx === undefined) return;
+      if (editingSourceIdx === undefined || swapSourceIdx !== undefined) return;
       handleToggleMute(editingSourceIdx);
     },
-    [editingSourceIdx]
+    [editingSourceIdx, swapSourceIdx]
   );
   useHotkeys('c', () => (isEditing ? showSources() : undefined), [isEditing]);
   useHotkeys(
@@ -200,6 +225,7 @@ export const Monitor = () => {
           onEdit={handleSourceEdit}
           onRemove={handleSourceRemove}
           editingSourceIdx={editingSourceIdx}
+          swapSourceIdx={swapSourceIdx}
           onSwitch={handleSwitch}
         />
       </div>
@@ -234,6 +260,14 @@ export const Monitor = () => {
             <Shortcut keys="E" label="Toggle Edit Mode" />
             <Shortcut keys="1-9" label="Select Screen" />
             <Shortcut keys="Esc" label="Deselect" />
+            <Shortcut
+              keys="Enter"
+              label={
+                swapSourceIdx === undefined
+                  ? 'Marcar para Intercambiar'
+                  : `Intercambiar con ${swapSourceIdx + 1}`
+              }
+            />
             <Shortcut keys="C / L" label="Canales/Layouts" />
             {editingSourceIdx !== undefined && (
               <Shortcut

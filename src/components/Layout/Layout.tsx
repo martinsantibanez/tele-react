@@ -1,5 +1,5 @@
 import { LayoutType, SourceNode } from '../../types/Monitor';
-import { OnSwitchCb, MonitorSource } from '../Monitor/MonitorSource';
+import { MonitorSource } from '../Monitor/MonitorSource';
 
 type Props = {
   layout: LayoutType;
@@ -7,7 +7,7 @@ type Props = {
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
-  onSwitch?: OnSwitchCb;
+  swapSourceIdx?: number;
 };
 
 const colSizeClass = {
@@ -47,7 +47,7 @@ export function Layout({
   onRemove,
   sources,
   editingSourceIdx,
-  onSwitch
+  swapSourceIdx
 }: Props) {
   return (
     <div className="grid h-full w-full grid-cols-12 grid-rows-9">
@@ -64,8 +64,8 @@ export function Layout({
               sourceSlug={source.sourceSlug}
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
               isBeingEdited={idx === editingSourceIdx}
+              isMarkedForSwap={idx === swapSourceIdx}
               muted={source.muted ?? true}
-              onSwitch={onSwitch}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />
           </div>

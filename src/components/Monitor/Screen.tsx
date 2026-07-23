@@ -9,6 +9,7 @@ type Props = {
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
+  swapSourceIdx?: number;
   onSwitch?: OnSwitchCb;
 };
 
@@ -16,7 +17,7 @@ const gridSizeClass = {
   [1]: 'grid-cols-1',
   [2]: 'grid-cols-2',
   [3]: 'grid-cols-3',
-  [4]: 'grid-cols-4',
+  [4]: 'grid-cols-4'
 };
 
 export function Screen({
@@ -24,7 +25,7 @@ export function Screen({
   onEdit,
   onRemove,
   editingSourceIdx,
-  onSwitch
+  swapSourceIdx
 }: Props) {
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Grid) {
@@ -35,24 +36,22 @@ export function Screen({
         style={{ gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
       >
         <GridDisplay
-          size={config.grid?.size}
           sources={sources}
           onEdit={onEdit}
           onRemove={onRemove}
           editingSourceIdx={editingSourceIdx}
-          onSwitch={onSwitch}
+          swapSourceIdx={swapSourceIdx}
         />
       </div>
     );
-  }
-  else if (config.mode === DisplayMode.Layout)
+  } else if (config.mode === DisplayMode.Layout)
     return (
       <Layout
         layout={config.layout}
         sources={sources}
         onEdit={onEdit}
         editingSourceIdx={editingSourceIdx}
-        onSwitch={onSwitch}
+        swapSourceIdx={swapSourceIdx}
         onRemove={onRemove}
       />
     );

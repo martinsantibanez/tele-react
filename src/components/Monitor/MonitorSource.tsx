@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { getSource } from '../../sources';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
@@ -15,8 +14,8 @@ type Props = {
   onChangeClick?: () => void;
   onRemove?: () => void;
   isBeingEdited?: boolean;
+  isMarkedForSwap?: boolean;
   idx: number;
-  onSwitch?: OnSwitchCb;
 };
 
 export function MonitorSource({
@@ -25,11 +24,11 @@ export function MonitorSource({
   onChangeClick,
   onRemove,
   isBeingEdited,
-  idx,
-  onSwitch
+  isMarkedForSwap,
+  idx
 }: Props) {
-  const { isEditing } = useTeleContext();
-  const [, setFeaturedScreen] = useFeaturedScreen();
+  const { isEditing, swapSourceIdx } = useTeleContext();
+  const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
   const { customSources } = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
@@ -63,12 +62,15 @@ export function MonitorSource({
     <div className="w-full h-full">
       <div
         className={`w-full h-full relative box-border ${
-          isBeingEdited ? 'border-2 border-slate-400' : ''
+          showFocus ? 'border-2 border-slate-400' : ''
         }`}
       >
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
+        {isMarkedForSwap && (
+          <div className="pointer-events-none absolute inset-0 z-[3] bg-slate-500/40" />
+        )}
         {/* Drawn as an overlay: the player covers any border on the wrapper. */}
         {!muted && (
           <div
@@ -87,7 +89,7 @@ export function MonitorSource({
             </span>
             <div className="flex">
               {onChangeClick && (
-              <>
+                <>
                   <Button
                     variant={isBeingEdited ? 'outline' : 'default'}
                     onClick={handleChangeClick}

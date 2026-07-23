@@ -1,22 +1,20 @@
 import { SourceNode } from '../../types/Monitor';
-import { OnSwitchCb, MonitorSource } from '../Monitor/MonitorSource';
+import { MonitorSource } from '../Monitor/MonitorSource';
 
 type Props = {
-  size: number;
   sources: SourceNode[];
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
-  onSwitch?: OnSwitchCb;
+  swapSourceIdx?: number;
 };
 
 export function GridDisplay({
-  size,
   sources,
   onEdit,
   onRemove,
   editingSourceIdx,
-  onSwitch
+  swapSourceIdx
 }: Props) {
   return (
     <>
@@ -29,7 +27,7 @@ export function GridDisplay({
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
           isBeingEdited={idx === editingSourceIdx}
-          onSwitch={onSwitch}
+          isMarkedForSwap={idx === swapSourceIdx}
         />
       ))}
     </>
