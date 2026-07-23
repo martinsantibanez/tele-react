@@ -10,8 +10,11 @@ import { useCustomSources } from '../../hooks/useCustomSources';
 import { getAvailableSignals, SignalType, SourceType } from '../../sources';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
+import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
+import { useYoutubeAuth } from '../../hooks/useYoutubeAuth';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
+import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
 import {
   findLayoutIndex,
   possibleLayouts,
@@ -38,16 +41,13 @@ type Props = {
 };
 
 type SelectorCategories =
-  | 'tv'
-  | 'twitch'
-  | 'zapping'
-  | 'favourites'
-  | 'layouts';
+  'tv' | 'twitch' | 'zapping' | 'youtube' | 'favourites' | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
   'twitch',
   'zapping',
+  'youtube',
   'favourites',
   'layouts'
 ];
@@ -102,6 +102,8 @@ export function SourceSlider({
     useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const zappingSources = useZappingSources();
+  const youtubeSources = useYoutubeLiveSources();
+  const { isConnected: youtubeConnected } = useYoutubeAuth();
   const [tvSources, setTvSources] = useState<SourceType[]>([]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
@@ -110,13 +112,22 @@ export function SourceSlider({
       // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
     } else if (activeCategory === 'twitch') {
       return twitchSources;
+    } else if (activeCategory === 'youtube') {
+      return youtubeSources;
     } else if (activeCategory === 'favourites') {
       return customSources.filter(source => source.favourite);
     } else if (activeCategory === 'layouts') {
       return [];
     }
     return zappingSources;
-  }, [activeCategory, tvSources, twitchSources, customSources, zappingSources]);
+  }, [
+    activeCategory,
+    tvSources,
+    twitchSources,
+    customSources,
+    zappingSources,
+    youtubeSources
+  ]);
 
   const selectedLayoutIndex = findLayoutIndex(displayConfig);
 
@@ -249,7 +260,13 @@ export function SourceSlider({
     [isConfirmingDelete, cancelDelete]
   );
   const isZapping = activeCategory === 'zapping';
+  const isYoutube = activeCategory === 'youtube';
+  // Zapping and YouTube both put a connect/disconnect panel where the signals
+  // TAB would otherwise be.
+  const isConfigCategory = isZapping || isYoutube;
   const zappingConfigRef = useRef<HTMLDivElement>(null);
+  const youtubeConfigRef = useRef<HTMLDivElement>(null);
+  const activeConfigRef = isYoutube ? youtubeConfigRef : zappingConfigRef;
 
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -257,35 +274,49 @@ export function SourceSlider({
     selectedItemRef.current?.focus({ preventScroll: true });
   }, [selectedSourceSlug, activeCategory, isLayouts, noScreenSelected]);
 
-  const focusZappingConfig = () => {
-    zappingConfigRef.current?.querySelector('button')?.focus();
+  const focusActiveConfig = () => {
+    activeConfigRef.current?.querySelector('button')?.focus();
   };
 
-  // Without a token there is nothing to browse, so the config is the only
+  const configNeedsAuth = isYoutube ? !youtubeConnected : !zappingToken;
+
+  // Without a connection there is nothing to browse, so the config is the only
   // thing worth reaching: put the caret on it as soon as the tab opens.
   useEffect(() => {
-    if (!isZapping || zappingToken) return;
-    focusZappingConfig();
-  }, [isZapping, zappingToken]);
+    if (!isConfigCategory || !configNeedsAuth) return;
+    focusActiveConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfigCategory, configNeedsAuth]);
 
   useHotkeys(
     'tab',
     e => {
       // In layouts Tab switches rows inside the RowSlider.
       if (isLayouts) return;
-      const config = zappingConfigRef.current;
+      const config = activeConfigRef.current;
       // Inside the config controls Tab keeps its native meaning.
-      if (isZapping && config && !config.contains(document.activeElement)) {
+      if (
+        isConfigCategory &&
+        config &&
+        !config.contains(document.activeElement)
+      ) {
         e.preventDefault();
-        focusZappingConfig();
+        focusActiveConfig();
         return;
       }
-      if (isZapping) return;
+      if (isConfigCategory) return;
       e.preventDefault();
       cycleSignal();
     },
     { preventDefault: false },
-    [isLayouts, isZapping, selectedSource, availableSignals, activeSignalType]
+    [
+      isLayouts,
+      isConfigCategory,
+      isYoutube,
+      selectedSource,
+      availableSignals,
+      activeSignalType
+    ]
   );
 
   const startIndex = Math.max(selectedIndex - 2, 0);
@@ -413,6 +444,12 @@ export function SourceSlider({
             Zapping
           </Button>
           <Button
+            variant={activeCategory === 'youtube' ? 'default' : 'outline'}
+            onClick={() => setActiveCategory('youtube')}
+          >
+            YouTube en vivo
+          </Button>
+          <Button
             variant={activeCategory === 'favourites' ? 'default' : 'outline'}
             onClick={() => setActiveCategory('favourites')}
           >
@@ -473,10 +510,16 @@ export function SourceSlider({
               {activeCategory === 'favourites' &&
                 !activeCategorySources.length &&
                 'Sin favoritos'}
+              {activeCategory === 'youtube' &&
+                youtubeConnected &&
+                !activeCategorySources.length &&
+                'Ningún canal suscrito está en vivo'}
               {activeCategorySources.map((source, canalIndex) => {
                 if (canalIndex < startIndex || canalIndex > endIndex)
                   return null;
                 if (activeCategory === 'zapping' && !zappingToken) return null;
+                if (activeCategory === 'youtube' && !youtubeConnected)
+                  return null;
                 const isActive = source.slug === selectedSourceSlug;
                 const isFavourite =
                   source.favourite ??
@@ -581,6 +624,24 @@ export function SourceSlider({
                   )}
                   <ZappingConfig />
                   {!!zappingToken && (
+                    <span className="text-[9px] leading-none text-gray-400">
+                      TAB
+                    </span>
+                  )}
+                </div>
+              )}
+              {isYoutube && (
+                <div
+                  ref={youtubeConfigRef}
+                  className="flex flex-col items-center gap-2 p-3 shrink-0"
+                >
+                  {!youtubeConnected && (
+                    <span className="text-center text-gray-400">
+                      Conecta tu cuenta para ver tus canales en vivo
+                    </span>
+                  )}
+                  <YoutubeConfig />
+                  {youtubeConnected && (
                     <span className="text-[9px] leading-none text-gray-400">
                       TAB
                     </span>
