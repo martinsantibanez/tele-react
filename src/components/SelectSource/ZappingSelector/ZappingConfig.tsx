@@ -5,6 +5,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2, LogOut } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
@@ -17,29 +18,40 @@ import {
   FormMessage
 } from '../../../../components/ui/form';
 import { Input } from '../../../../components/ui/input';
-import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
+import {
+  useZappingLoginToken,
+  useZappingSessionStatus,
+  useZappingToken
+} from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { canalesZapping } from './canales';
 
 const arrayCanales = Object.values(canalesZapping);
-export const zappingSources = arrayCanales.sort((a, b) => a.number - b.number).map(canal => {
-  const imageName = canal.image;
-  const imageUrl = `https://davinci.zappingtv.com/gato/media/62/canales/white/${imageName}.png`;
-  const source: SourceType = {
-    slug: `custom_zapping_${canal.id}`,
-    zappingChannel: canal.url,
-    name: canal.name,
-    imageUrl
-  };
-  return source;
-});
+export const zappingSources = arrayCanales
+  .sort((a, b) => a.number - b.number)
+  .map(canal => {
+    const imageName = canal.image;
+    const imageUrl = `https://davinci.zappingtv.com/gato/media/62/canales/white/${imageName}.png`;
+    const source: SourceType = {
+      slug: `custom_zapping_${canal.id}`,
+      zappingChannel: canal.url,
+      name: canal.name,
+      imageUrl
+    };
+    return source;
+  });
 
 const formSchema = z.object({
   jsonInput: z.string()
 });
 
 export function ZappingConfig() {
-  const [, setZappingLoginToken] = useZappingLoginToken();
+  const [loginToken, setZappingLoginToken] = useZappingLoginToken();
+  const [sessionStatus, setSessionStatus] = useZappingSessionStatus();
+  const [playToken, setPlayToken] = useZappingToken();
+
+  const isStarting = sessionStatus === 'starting';
+  const isConnected = Boolean(loginToken || playToken);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,16 +59,29 @@ export function ZappingConfig() {
       jsonInput: ''
     }
   });
+  const applyToken = (token: string | undefined) => {
+    if (!token || token === loginToken) return;
+    setSessionStatus('starting');
+    setZappingLoginToken(token);
+  };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const tokenValue = values.jsonInput.replaceAll("'", '').trim();
-    setZappingLoginToken(tokenValue);
+    applyToken(values.jsonInput.replaceAll("'", '').trim());
   };
 
   const handleImportToken = () => {
-    setZappingLoginToken(
-      window.sessionStorage.getItem('loginToken') || undefined
-    );
+    applyToken(window.sessionStorage.getItem('loginToken') || undefined);
+  };
+
+  /**
+   * Drops the stored credential, which unmounts the heartbeat loop in
+   * `useZappingSession`, and clears the live token so nothing keeps playing.
+   */
+  const handleDisconnect = () => {
+    setZappingLoginToken(undefined);
+    setPlayToken(undefined);
+    setSessionStatus('idle');
+    form.reset();
   };
 
   return (
@@ -83,6 +108,20 @@ export function ZappingConfig() {
                 <pre>{`window.sessionStorage.loginToken`}</pre>
                 Pega el resultado a continuación (se renueva solo):
               </p>
+              <p className="text-xs text-muted-foreground">
+                Tu token se guarda solo en este navegador y se usa únicamente
+                para pedirle el stream a Zapping: nunca se envía ni se guarda.
+                Puedes revisar el código en{' '}
+                <a
+                  href="https://github.com/martinsantibanez/tele-react"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  GitHub
+                </a>
+                .
+              </p>
             </div>
             <div>
               <Form {...form}>
@@ -99,7 +138,7 @@ export function ZappingConfig() {
                         <FormLabel>Token</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="..."
+                            type="password"
                             {...field}
                             className="col-span-2 h-8"
                           />
@@ -109,8 +148,23 @@ export function ZappingConfig() {
                     )}
                   />
 
-                  <div className="text-right">
-                    <Button type="submit">Guardar</Button>
+                  <div className="flex items-center justify-end gap-2">
+                    {sessionStatus === 'error' && (
+                      <span className="text-xs text-destructive">
+                        No se pudo iniciar la sesión
+                      </span>
+                    )}
+                    {sessionStatus === 'ready' && (
+                      <span className="text-xs text-muted-foreground">
+                        Sesión lista
+                      </span>
+                    )}
+                    <Button type="submit" disabled={isStarting}>
+                      {isStarting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isStarting ? 'Conectando...' : 'Guardar'}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -118,9 +172,24 @@ export function ZappingConfig() {
           </div>
         </PopoverContent>
       </Popover>
-      <Button variant="outline" onClick={() => handleImportToken()}>
-        Importar
+      <Button
+        variant="outline"
+        onClick={() => handleImportToken()}
+        disabled={isStarting}
+      >
+        {isStarting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isStarting ? 'Conectando...' : 'Importar'}
       </Button>
+      {isConnected && (
+        <Button
+          variant="outline"
+          onClick={handleDisconnect}
+          title="Borrar el token guardado en este navegador"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Desconectar
+        </Button>
+      )}
     </>
   );
 }

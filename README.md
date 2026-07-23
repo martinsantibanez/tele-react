@@ -15,15 +15,9 @@ NodeJS >16
 ## Getting started
 
 ```
-yarn install
-yarn dev
+pnpm install
+pnpm dev
 ```
-
-## Key Features:
-
-- Programatically created layouts (see `src/pages/layout/initialLayout.ts`)
-- Layouts are stored in the browser using localStorage
-- Promote a source to its own monitor
 
 ## Credits
 

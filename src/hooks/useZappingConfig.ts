@@ -26,6 +26,19 @@ export function useZappingLoginToken() {
   });
 }
 
+export type ZappingSessionStatus = 'idle' | 'starting' | 'ready' | 'error';
+
+/**
+ * Status of the play session managed by `useZappingSession`. Shared through
+ * sessionStorage so the config UI can show progress while the session warms up
+ * (minting + heartbeats take a few seconds).
+ */
+export function useZappingSessionStatus() {
+  return useSessionStorageState<ZappingSessionStatus>('zappingSessionStatus', {
+    defaultValue: 'idle'
+  });
+}
+
 /** Stable per-device id used to mint/keep-alive the play session. */
 export function useZappingUuid() {
   const [uuid, setUuid] = useLocalStorageState<string | undefined>(
@@ -50,11 +63,13 @@ export function useZappingSession() {
   const [loginToken] = useZappingLoginToken();
   const uuid = useZappingUuid();
   const [, setPlayToken] = useZappingToken();
+  const [, setStatus] = useZappingSessionStatus();
 
   useEffect(() => {
     if (!loginToken || !uuid) return;
 
     let cancelled = false;
+    setStatus('starting');
     let timer: ReturnType<typeof setTimeout> | undefined;
     let playToken: string | undefined;
 
@@ -90,9 +105,11 @@ export function useZappingSession() {
         const nextHb = await sendHeartbeat(playToken, uuid);
         if (cancelled) return;
         setPlayToken(playToken);
+        setStatus('ready');
         timer = setTimeout(beat, Math.max(5, nextHb) * 1000);
       } catch (err) {
         console.error('[zapping] session start failed', err);
+        if (!cancelled) setStatus('error');
       }
     };
 
@@ -102,5 +119,5 @@ export function useZappingSession() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [loginToken, uuid, setPlayToken]);
+  }, [loginToken, uuid, setPlayToken, setStatus]);
 }

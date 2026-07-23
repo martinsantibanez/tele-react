@@ -3,6 +3,7 @@
 import { PropsWithChildren } from 'react';
 import { TeleProvider } from '../context/TeleContext';
 import dynamic from 'next/dynamic';
+import { useZappingSourceSync } from '../hooks/useZappingChannels';
 import { useZappingSession } from '../hooks/useZappingConfig';
 
 const ThemeProvider = dynamic(
@@ -12,9 +13,11 @@ const ThemeProvider = dynamic(
   }
 );
 
-// Keeps the Zapping play session alive for the whole app (mounted once).
+// Keeps the Zapping play session alive and the channel catalogue fresh for the
+// whole app (mounted once).
 const ZappingSessionManager = () => {
   useZappingSession();
+  useZappingSourceSync();
   return null;
 };
 
