@@ -38,6 +38,10 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       techOrder: ['html5'],
       controls: true,
       muted,
+      userActions: {
+        click: false,
+        doubleClick: false
+      },
       responsive: true,
       fill: true,
       controlBar: {
