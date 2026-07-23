@@ -242,6 +242,27 @@ export const Monitor = () => {
     },
     [editingSourceIdx, swapSourceIdx]
   );
+  useHotkeys(
+    'd',
+    () => {
+      if (editingSourceIdx === undefined || swapSourceIdx !== undefined) return;
+      handleSourceRemove(editingSourceIdx);
+      setIsFullscreen(false);
+      const newLength = (selectedSources?.length ?? 0) - 1;
+      setEditingSourceIdx(
+        newLength <= 0 ? undefined : Math.min(editingSourceIdx, newLength - 1)
+      );
+    },
+    [editingSourceIdx, swapSourceIdx, selectedSources]
+  );
+  useHotkeys(
+    'a',
+    () => {
+      if (displayConfig.mode !== DisplayMode.Grid) return;
+      handleSourceAdd();
+    },
+    [displayConfig.mode]
+  );
   useHotkeys('c', () => (isEditing ? showSources() : undefined), [isEditing]);
   useHotkeys(
     'l',
@@ -319,6 +340,12 @@ export const Monitor = () => {
                     : 'Silenciar'
                 }
               />
+            )}
+            {editingSourceIdx !== undefined && (
+              <Shortcut keys="D" label="Quitar" />
+            )}
+            {displayConfig.mode === DisplayMode.Grid && (
+              <Shortcut keys="A" label="Agregar" />
             )}
             <Shortcut keys="↑ ↓" label="Switch Category" />
             {activeCategory === 'layouts' ? (

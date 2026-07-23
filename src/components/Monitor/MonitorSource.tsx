@@ -87,28 +87,30 @@ export function MonitorSource({
             }}
           />
         )}
-        {isEditing && (
+        {(isEditing || swapSourceIdx !== undefined) && (
           <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-between w-full opacity-100 z-[2]">
             <span className="ml-1 rounded bg-black/70 px-2 font-bold text-white">
               {getSourceShortcutLabel(idx)}
             </span>
-            <div className="flex">
-              {onChangeClick && (
-                <>
-                  <Button
-                    variant={isBeingEdited ? 'outline' : 'default'}
-                    onClick={handleChangeClick}
-                  >
-                    Cambiar
+            {isEditing && (
+              <div className="flex">
+                {onChangeClick && (
+                  <>
+                    <Button
+                      variant={isBeingEdited ? 'outline' : 'default'}
+                      onClick={handleChangeClick}
+                    >
+                      Cambiar
+                    </Button>
+                  </>
+                )}
+                {onRemove && (
+                  <Button variant={'destructive'} onClick={onRemove}>
+                    Quitar
                   </Button>
-                </>
-              )}
-              {onRemove && (
-                <Button variant={'destructive'} onClick={onRemove}>
-                  Quitar
-                </Button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
