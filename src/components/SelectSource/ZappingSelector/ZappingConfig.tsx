@@ -52,10 +52,6 @@ export function ZappingConfig() {
     applyToken(values.jsonInput.replaceAll("'", '').trim());
   };
 
-  const handleImportToken = () => {
-    applyToken(window.sessionStorage.getItem('loginToken') || undefined);
-  };
-
   /**
    * Drops the stored credential, which unmounts the heartbeat loop in
    * `useZappingSession`, and clears the live token so nothing keeps playing.
@@ -155,13 +151,13 @@ export function ZappingConfig() {
           </div>
         </PopoverContent>
       </Popover>
-      <Button
-        variant="outline"
-        onClick={() => handleImportToken()}
-        disabled={isStarting}
-      >
+      <Button variant="outline" disabled>
         {isStarting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isStarting ? 'Conectando...' : 'Importar'}
+        {isStarting
+          ? 'Conectando...'
+          : sessionStatus === 'ready'
+            ? 'Conectado'
+            : 'Desconectado'}
       </Button>
       {isConnected && (
         <Button

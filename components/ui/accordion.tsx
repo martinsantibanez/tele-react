@@ -23,14 +23,40 @@ function AccordionItem({
   )
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 function AccordionTrigger({
   className,
   children,
+  onClick,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+
+  // When opened with the keyboard, move focus into the panel so the next Enter
+  // lands on its first control instead of collapsing the item again.
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event)
+    const openedByKeyboard =
+      event.detail === 0 &&
+      triggerRef.current?.getAttribute("data-state") === "closed"
+    if (!openedByKeyboard) return
+
+    requestAnimationFrame(() => {
+      const content = triggerRef.current
+        ?.closest('[data-slot="accordion-item"]')
+        ?.querySelector('[data-slot="accordion-content"]')
+      const first = content?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+      first?.focus()
+    })
+  }
+
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
+        ref={triggerRef}
+        onClick={handleClick}
         data-slot="accordion-trigger"
         className={cn(
           "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",

@@ -1,17 +1,17 @@
 import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
 import { Heart, Tv, Video, YoutubeIcon, TwitchIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../app/duo/DuoPage';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getAvailableSignals, SignalType, SourceType } from '../../sources';
-import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { findLayoutIndex, possibleLayouts } from './layoutOptions';
 import Image from 'next/image';
 
@@ -71,6 +71,7 @@ export function SourceSlider({
 }: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken] = useTwitchToken();
+  const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const isLayouts = activeCategory === 'layouts';
 
@@ -187,7 +188,37 @@ export function SourceSlider({
     },
     { preventDefault: true }
   );
-  useHotkeys('tab', () => cycleSignal(), { preventDefault: true });
+  const isZapping = activeCategory === 'zapping';
+  const zappingConfigRef = useRef<HTMLDivElement>(null);
+
+  const focusZappingConfig = () => {
+    zappingConfigRef.current?.querySelector('button')?.focus();
+  };
+
+  // Without a token there is nothing to browse, so the config is the only
+  // thing worth reaching: put the caret on it as soon as the tab opens.
+  useEffect(() => {
+    if (!isZapping || zappingToken) return;
+    focusZappingConfig();
+  }, [isZapping, zappingToken]);
+
+  useHotkeys(
+    'tab',
+    e => {
+      const config = zappingConfigRef.current;
+      // Inside the config controls Tab keeps its native meaning.
+      if (isZapping && config && !config.contains(document.activeElement)) {
+        e.preventDefault();
+        focusZappingConfig();
+        return;
+      }
+      if (isZapping) return;
+      e.preventDefault();
+      cycleSignal();
+    },
+    { preventDefault: false },
+    [isZapping, selectedSource, availableSignals, activeSignalType]
+  );
 
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
@@ -258,7 +289,6 @@ export function SourceSlider({
     };
     loadSources();
   }, [createSource]);
-  const [zappingToken] = useZappingToken();
 
   return (
     <div className="w-full h-full flex flex-col justify-center">
@@ -346,9 +376,6 @@ export function SourceSlider({
                 >
                   Connect with Twitch
                 </a>
-              )}
-              {activeCategory === 'zapping' && !zappingToken && (
-                <ZappingConfig />
               )}
               {((activeCategory === 'twitch' && isLoadingTwitch) ||
                 (activeCategory === 'tv' && !tvSources.length)) &&
@@ -447,6 +474,24 @@ export function SourceSlider({
                   </div>
                 );
               })}
+              {isZapping && (
+                <div
+                  ref={zappingConfigRef}
+                  className="flex flex-col items-center gap-2 p-3 shrink-0"
+                >
+                  {!zappingToken && (
+                    <span className="text-center text-gray-400">
+                      Conecta tu cuenta para ver los canales
+                    </span>
+                  )}
+                  <ZappingConfig />
+                  {!!zappingToken && (
+                    <span className="text-[9px] leading-none text-gray-400">
+                      TAB
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           )}
           <Button
