@@ -29,6 +29,19 @@ const TOKEN_SECRET = process.env.YOUTUBE_TOKEN_SECRET;
 export const REFRESH_COOKIE = 'yt_refresh';
 export const STATE_COOKIE = 'yt_oauth_state';
 export const VERIFIER_COOKIE = 'yt_oauth_verifier';
+/** Where to send the user back to after the OAuth round-trip. */
+export const RETURN_COOKIE = 'yt_oauth_return';
+
+/**
+ * Only allow same-origin relative paths as a return target, so the OAuth
+ * redirect can't be turned into an open redirect. Rejects protocol-relative
+ * (`//host`) and absolute URLs; falls back to `/`.
+ */
+export function safeReturnPath(value: string | undefined | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+  if (value.includes('\\')) return '/';
+  return value;
+}
 
 /** Redirect URI Google calls back on; must be registered verbatim. */
 export const redirectUri = (origin: string) =>

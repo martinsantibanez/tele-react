@@ -95,7 +95,11 @@ export function useYoutubeAuth() {
   }, [getAccessToken]);
 
   const connect = useCallback(() => {
-    window.location.assign('/api/youtube/login');
+    // Come back to the page the user launched the connect from (e.g. /monitor).
+    const returnTo = window.location.pathname + window.location.search;
+    window.location.assign(
+      `/api/youtube/login?returnTo=${encodeURIComponent(returnTo)}`
+    );
   }, []);
 
   const disconnect = useCallback(async () => {

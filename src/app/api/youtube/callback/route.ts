@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   REFRESH_COOKIE,
+  RETURN_COOKIE,
   STATE_COOKIE,
   VERIFIER_COOKIE,
   exchangeCode,
   isConfigured,
+  safeReturnPath,
   sealRefreshToken
 } from '../oauth';
 
@@ -15,7 +17,11 @@ import {
 // token on demand. No server-side storage involved.
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
-  const home = new URL('/', origin);
+  // Return the user to wherever they launched the connect from (e.g. /monitor).
+  const home = new URL(
+    safeReturnPath(request.cookies.get(RETURN_COOKIE)?.value),
+    origin
+  );
 
   if (!isConfigured()) {
     home.searchParams.set('youtube', 'error');
@@ -30,6 +36,7 @@ export async function GET(request: NextRequest) {
   const clearOauthCookies = (res: NextResponse) => {
     res.cookies.delete(STATE_COOKIE);
     res.cookies.delete(VERIFIER_COOKIE);
+    res.cookies.delete(RETURN_COOKIE);
     return res;
   };
 

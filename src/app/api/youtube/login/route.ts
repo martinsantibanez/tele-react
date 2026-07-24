@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   AUTH_ENDPOINT,
   CLIENT_ID,
+  RETURN_COOKIE,
   STATE_COOKIE,
   VERIFIER_COOKIE,
   SCOPE,
   codeChallenge,
   isConfigured,
   randomToken,
-  redirectUri
+  redirectUri,
+  safeReturnPath
 } from '../oauth';
 
 // Kicks off the OAuth dance. access_type=offline + prompt=consent are what make
@@ -51,5 +53,10 @@ export async function GET(request: NextRequest) {
   };
   res.cookies.set(STATE_COOKIE, state, cookie);
   res.cookies.set(VERIFIER_COOKIE, verifier, cookie);
+  res.cookies.set(
+    RETURN_COOKIE,
+    safeReturnPath(request.nextUrl.searchParams.get('returnTo')),
+    cookie
+  );
   return res;
 }
