@@ -38,7 +38,11 @@ type Props = {
 };
 
 type SelectorCategories =
-  'tv' | 'twitch' | 'zapping' | 'favourites' | 'layouts';
+  | 'tv'
+  | 'twitch'
+  | 'zapping'
+  | 'favourites'
+  | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
@@ -139,7 +143,8 @@ export function SourceSlider({
   };
 
   const selectedSource = activeCategorySources[selectedIndex] as
-    SourceType | undefined;
+    | SourceType
+    | undefined;
   // The persisted copy is what MonitorSource actually plays, so it's the
   // source of truth for which signal is currently active.
   const persistedSelectedSource = customSources.find(
@@ -245,6 +250,12 @@ export function SourceSlider({
   );
   const isZapping = activeCategory === 'zapping';
   const zappingConfigRef = useRef<HTMLDivElement>(null);
+
+  const selectedItemRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isLayouts || noScreenSelected) return;
+    selectedItemRef.current?.focus({ preventScroll: true });
+  }, [selectedSourceSlug, activeCategory, isLayouts, noScreenSelected]);
 
   const focusZappingConfig = () => {
     zappingConfigRef.current?.querySelector('button')?.focus();
@@ -474,7 +485,12 @@ export function SourceSlider({
 
                 return (
                   <div
-                    className={isActive ? 'bg-gray-800' : ''}
+                    ref={isActive ? selectedItemRef : undefined}
+                    tabIndex={isActive ? 0 : -1}
+                    aria-current={isActive}
+                    className={`cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                      isActive ? 'bg-gray-800' : ''
+                    }`}
                     onClick={() => {
                       updateSelectedChannel(canalIndex);
                     }}

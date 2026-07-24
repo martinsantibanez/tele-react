@@ -31,7 +31,6 @@ export function MonitorSource({
   idx
 }: Props) {
   const { isEditing, swapSourceIdx } = useTeleContext();
-  const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
   const { customSources } = useCustomSources();
   const source = useMemo(() => {
     if (sourceSlug) {
@@ -65,11 +64,7 @@ export function MonitorSource({
     <div
       className={fullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}
     >
-      <div
-        className={`w-full h-full relative box-border ${
-          showFocus ? 'border-2 border-slate-400' : ''
-        }`}
-      >
+      <div className="w-full h-full relative box-border">
         <div className="w-full h-full">
           {!!source && <SourceOutput source={source} muted={muted} />}
         </div>
