@@ -23,7 +23,9 @@ type CachedLive = { live: YoutubeLiveVideo[]; fetchedAt: number };
 // don't stampede the API, and don't retry in a tight loop when it's down.
 let subsInFlight: Promise<Subscription[]> | undefined;
 let subsLastAttempt = 0;
-let liveInFlight: Promise<YoutubeLiveVideo[]> | undefined;
+// `undefined` from the in-flight promise means the fetch could not run (no
+// token / transient failure) — distinct from a real, empty "nobody is live".
+let liveInFlight: Promise<YoutubeLiveVideo[] | undefined> | undefined;
 let liveLastAttempt = 0;
 
 /**
@@ -103,9 +105,15 @@ export function useYoutubeLiveSubs() {
       liveInFlight ??
       withFreshToken(getAccessToken, token =>
         fetchLiveFromChannels(token, channelIds)
-      ).then(live => live ?? []);
+      );
     liveInFlight
-      .then(live => setLiveCache({ live, fetchedAt: Date.now() }))
+      .then(live => {
+        // Only overwrite the cache with a real result. `undefined` means the
+        // fetch never ran (token unavailable / transient failure); caching it
+        // as `[]` would hide genuinely-live channels for a full LIVE_TTL_MS.
+        // Leaving the cache stale instead lets the 60s RETRY_MS re-attempt.
+        if (live) setLiveCache({ live, fetchedAt: Date.now() });
+      })
       .catch(err => console.error('[youtube] live fetch failed', err))
       .finally(() => {
         liveInFlight = undefined;
