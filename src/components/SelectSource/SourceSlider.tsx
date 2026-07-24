@@ -280,6 +280,12 @@ export function SourceSlider({
 
   const configNeedsAuth = isYoutube ? !youtubeConnected : !zappingToken;
 
+  // When nothing is selected we normally show the generic "pick a screen"
+  // hint. But if the user is on the YouTube tab and hasn't connected yet,
+  // there's nothing to pick — surface the config so they can connect instead.
+  const showYoutubeConfigInsteadOfHint =
+    noScreenSelected && isYoutube && !youtubeConnected;
+
   // Without a connection there is nothing to browse, so the config is the only
   // thing worth reaching: put the caret on it as soon as the tab opens.
   useEffect(() => {
@@ -419,6 +425,23 @@ export function SourceSlider({
     loadSources();
   }, [createSource]);
 
+  const youtubeConfigPanel = (
+    <div
+      ref={youtubeConfigRef}
+      className="flex flex-col items-center gap-2 p-3 shrink-0"
+    >
+      {!youtubeConnected && (
+        <span className="text-center text-gray-400">
+          Conecta tu cuenta para ver tus canales en vivo
+        </span>
+      )}
+      <YoutubeConfig />
+      {youtubeConnected && (
+        <span className="text-[9px] leading-none text-gray-400">TAB</span>
+      )}
+    </div>
+  );
+
   return (
     <div className="w-full h-full flex flex-col justify-center">
       <div className="grid grid-cols-12">
@@ -491,9 +514,17 @@ export function SourceSlider({
               <span>{'<'}</span>
             </Button>
           )}
-          {!isLayouts && noScreenSelected && (
-            <div className="p-6 text-center text-gray-400">
-              Selecciona una pantalla con las teclas 1-9 o con el botón Cambiar
+          {!isLayouts &&
+            noScreenSelected &&
+            !showYoutubeConfigInsteadOfHint && (
+              <div className="p-6 text-center text-gray-400">
+                Selecciona una pantalla con las teclas 1-9 o con el botón
+                Cambiar
+              </div>
+            )}
+          {!isLayouts && showYoutubeConfigInsteadOfHint && (
+            <div className="flex w-full justify-center">
+              {youtubeConfigPanel}
             </div>
           )}
           {!isLayouts && !noScreenSelected && (
@@ -631,24 +662,7 @@ export function SourceSlider({
                   )}
                 </div>
               )}
-              {isYoutube && (
-                <div
-                  ref={youtubeConfigRef}
-                  className="flex flex-col items-center gap-2 p-3 shrink-0"
-                >
-                  {!youtubeConnected && (
-                    <span className="text-center text-gray-400">
-                      Conecta tu cuenta para ver tus canales en vivo
-                    </span>
-                  )}
-                  <YoutubeConfig />
-                  {youtubeConnected && (
-                    <span className="text-[9px] leading-none text-gray-400">
-                      TAB
-                    </span>
-                  )}
-                </div>
-              )}
+              {isYoutube && youtubeConfigPanel}
             </>
           )}
           {!isLayouts && (
