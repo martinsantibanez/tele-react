@@ -1,10 +1,8 @@
-'use client'
+'use client';
 import React, { PropsWithChildren, useState } from 'react';
 
 function useValue() {
-  const [isEditing, setIsEditing] = useState(
-    process.env.NODE_ENV === 'development'
-  );
+  const [isEditing, setIsEditing] = useState(true);
   const toggleEditting = () => setIsEditing(e => !e);
   const [editingSourceIdx, setEditingSourceIdx] = useState<
     number | undefined
