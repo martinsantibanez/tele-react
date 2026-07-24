@@ -1,6 +1,6 @@
 'use client';
 import axios from 'axios';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
@@ -176,6 +176,22 @@ export const Monitor = () => {
       return newSources;
     });
   };
+
+  // Keyboard shortcuts listen on `document`, but embedded players (YouTube,
+  // Twitch...) live inside <iframe>s that swallow keystrokes once they grab
+  // focus — on click, and especially when a source fills the screen. Bounce
+  // focus back to the page so the shortcuts keep working.
+  useEffect(() => {
+    const refocus = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLIFrameElement) {
+        active.blur();
+        window.focus();
+      }
+    };
+    window.addEventListener('blur', refocus);
+    return () => window.removeEventListener('blur', refocus);
+  }, []);
 
   useHotkeys('e', () => toggleEditting());
   useHotkeys(
