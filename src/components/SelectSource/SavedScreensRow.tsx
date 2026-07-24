@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { X } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import { Button } from '../../../components/ui/button';
@@ -8,6 +7,7 @@ import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { SavedScreen, useSavedScreens } from '../../hooks/useSavedScreens';
 import { ErasedSliderRow, sliderRow } from '../RowSlider/RowSlider';
 import { findLayoutIndex, possibleLayouts } from './layoutOptions';
+import { ScreenThumbnail } from './ScreenThumbnail';
 
 /**
  * Second row of the layouts category: the screens the user has stored, so a
@@ -96,30 +96,18 @@ export function useSavedScreensRow(): {
       </div>
     ),
     renderItem: (saved, { index, isSelected }) => {
-      const layout = possibleLayouts[findLayoutIndex(saved.screen.config)];
       return (
         <div
           className={`cursor-pointer p-3 ${isSelected ? 'bg-gray-800' : ''}`}
         >
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
-              {layout ? (
-                <Image
-                  alt={saved.name}
-                  src={`/img/layout/${layout.imgName}`}
-                  width="160"
-                  height="90"
-                  className={
-                    isSelected ? 'ring-2 ring-white rounded-sm' : undefined
-                  }
-                />
-              ) : (
-                <div
-                  className={`h-[90px] w-[160px] rounded-sm bg-gray-700 ${
-                    isSelected ? 'ring-2 ring-white' : ''
-                  }`}
-                />
-              )}
+              <ScreenThumbnail
+                screen={saved.screen}
+                className={
+                  isSelected ? 'ring-2 ring-white' : undefined
+                }
+              />
               <button
                 title="Eliminar"
                 onClick={event => {
