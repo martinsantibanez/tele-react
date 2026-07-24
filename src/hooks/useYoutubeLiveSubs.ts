@@ -127,13 +127,61 @@ export function useYoutubeLiveSubs() {
 export const youtubeLiveSlug = (channelId: string) =>
   `custom_yt_live_${channelId}`;
 
+/**
+ * Assign a unique, stable slug to every live video. A channel almost always has
+ * a single live, which keeps the canonical `custom_yt_live_<channelId>` slug so
+ * a saved layout keeps following the channel across stream restarts. When a
+ * channel runs several simultaneous lives the channel-keyed slug alone would
+ * collide, so the earliest-started stream keeps the canonical slug (the channel
+ * "slot") and the rest are disambiguated with their videoId. Both consumers
+ * (source list + sync) call this so their slugs always agree.
+ */
+export function assignLiveSlugs(
+  live: YoutubeLiveVideo[]
+): Array<YoutubeLiveVideo & { slug: string }> {
+  const byChannel = new Map<string, YoutubeLiveVideo[]>();
+  for (const v of live) {
+    const list = byChannel.get(v.channelId) ?? [];
+    list.push(v);
+    byChannel.set(v.channelId, list);
+  }
+
+  const withSlugs: Array<YoutubeLiveVideo & { slug: string }> = [];
+  byChannel.forEach((videos, channelId) => {
+    if (videos.length === 1) {
+      withSlugs.push({ ...videos[0], slug: youtubeLiveSlug(channelId) });
+      return;
+    }
+    // Deterministic order so the same stream keeps the same slug across polls
+    // (the API does not return live videos in a stable order): earliest start
+    // first, videoId as a tie-break. The primary (longest-running) stream keeps
+    // the canonical channel slot; extras are addressed per-video.
+    const sorted = [...videos].sort((a, b) => {
+      const at = a.actualStartTime ?? '';
+      const bt = b.actualStartTime ?? '';
+      if (at !== bt) return at < bt ? -1 : 1;
+      return a.videoId < b.videoId ? -1 : 1;
+    });
+    sorted.forEach((v, i) => {
+      withSlugs.push({
+        ...v,
+        slug:
+          i === 0
+            ? youtubeLiveSlug(channelId)
+            : `${youtubeLiveSlug(channelId)}_${v.videoId}`
+      });
+    });
+  });
+  return withSlugs;
+}
+
 /** The live subs mapped onto the app's `SourceType`. */
 export function useYoutubeLiveSources(): SourceType[] {
   const { live } = useYoutubeLiveSubs();
   return useMemo(
     () =>
-      live.map(v => ({
-        slug: youtubeLiveSlug(v.channelId),
+      assignLiveSlugs(live).map(v => ({
+        slug: v.slug,
         youtubeVideoId: v.videoId,
         youtubeChatVideoId: v.videoId,
         name: v.channelTitle,
@@ -158,7 +206,7 @@ export function useYoutubeLiveSourceSync() {
   useEffect(() => {
     if (!live.length) return;
     const videoBySlug = new Map(
-      live.map(v => [youtubeLiveSlug(v.channelId), v.videoId])
+      assignLiveSlugs(live).map(v => [v.slug, v.videoId])
     );
     const needsUpdate = customSources.some(src => {
       const videoId = videoBySlug.get(src.slug);
