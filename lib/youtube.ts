@@ -186,7 +186,7 @@ export async function fetchLiveFromChannels(
           {
             part: 'contentDetails',
             playlistId: uploadsPlaylistId(channelId),
-            maxResults: '3'
+            maxResults: '15'
           }
         );
         return (json.items ?? [])
