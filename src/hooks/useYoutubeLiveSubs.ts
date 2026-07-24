@@ -8,6 +8,7 @@ import {
   YoutubeLiveVideo
 } from '@/lib/youtube';
 import { SourceType } from '../sources';
+import { SourceNode } from '../types/Monitor';
 import { useCustomSources } from './useCustomSources';
 import { useYoutubeAuth } from './useYoutubeAuth';
 
@@ -198,6 +199,40 @@ export function useYoutubeLiveSources(): SourceType[] {
       })),
     [live]
   );
+}
+
+/**
+ * Feeds the dynamic YouTube layout: every live channel as a grid node, in a
+ * stable order (channel title, slug as tie-break) so tiles don't shuffle on
+ * every poll. The underlying `SourceType`s are registered in `customSources`
+ * here so `MonitorSource` can resolve their `custom_yt_live_*` slugs — the live
+ * source list alone is never persisted there.
+ */
+export function useYoutubeGridSources() {
+  const sources = useYoutubeLiveSources();
+  const { createSource } = useCustomSources();
+
+  const ordered = useMemo(
+    () =>
+      [...sources].sort((a, b) => {
+        const an = a.name ?? '';
+        const bn = b.name ?? '';
+        if (an !== bn) return an < bn ? -1 : 1;
+        return a.slug < b.slug ? -1 : 1;
+      }),
+    [sources]
+  );
+
+  useEffect(() => {
+    ordered.forEach(createSource);
+  }, [ordered, createSource]);
+
+  const nodes = useMemo<SourceNode[]>(
+    () => ordered.map(src => ({ sourceSlug: src.slug, uuid: src.slug })),
+    [ordered]
+  );
+
+  return { nodes, count: nodes.length };
 }
 
 /**

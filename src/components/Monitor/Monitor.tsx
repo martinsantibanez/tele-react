@@ -10,8 +10,14 @@ import {
 } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { SourceType } from '../../sources';
-import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
+import {
+  DisplayMode,
+  GridSize,
+  ScreenType,
+  SourceNode
+} from '../../types/Monitor';
 import {
   getIndexFromKeyEvent,
   getSourceShortcutLabel
@@ -44,13 +50,31 @@ export const Monitor = () => {
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
+  const { nodes: youtubeNodes } = useYoutubeGridSources();
+  // Which YouTube tile currently keeps its audio (all muted by default).
+  const [youtubeSoloIdx, setYoutubeSoloIdx] = useState<number | undefined>();
+
+  // In the dynamic YouTube layout the tiles are the live channels, not the
+  // saved grid, and audio-solo is tracked locally instead of per saved node.
+  const youtubeSources = useMemo<SourceNode[]>(
+    () =>
+      youtubeNodes.map((node, idx) => ({
+        ...node,
+        muted: idx !== youtubeSoloIdx
+      })),
+    [youtubeNodes, youtubeSoloIdx]
+  );
+
+  const activeSources = isYoutubeMode ? youtubeSources : selectedSources;
+
   const screen: ScreenType = useMemo(
     () => ({
       config: displayConfig,
-      sources: selectedSources,
+      sources: activeSources,
       customSources
     }),
-    [displayConfig, selectedSources, customSources]
+    [displayConfig, activeSources, customSources]
   );
 
   const fullscreenIdx =
@@ -66,8 +90,9 @@ export const Monitor = () => {
     [editingSourceIdx, selectedSources]
   );
 
-  const visibleScreenCount =
-    displayConfig.mode === DisplayMode.Layout
+  const visibleScreenCount = isYoutubeMode
+    ? youtubeSources.length
+    : displayConfig.mode === DisplayMode.Layout
       ? displayConfig.layout.length
       : (selectedSources?.length ?? 0);
 
@@ -202,6 +227,12 @@ export const Monitor = () => {
     e => {
       const idx = getIndexFromKeyEvent(e);
       if (idx === undefined || idx >= visibleScreenCount) return;
+      // The YouTube grid is auto-managed: number keys only solo audio, there is
+      // no per-tile editing/swapping.
+      if (isYoutubeMode) {
+        setYoutubeSoloIdx(current => (current === idx ? undefined : idx));
+        return;
+      }
       setEditingSourceIdx(idx);
       if (!isEditing) {
         if (swapSourceIdx === undefined) handleSoloAudio(idx);
@@ -209,7 +240,7 @@ export const Monitor = () => {
       }
       showSources();
     },
-    [isEditing, visibleScreenCount, swapSourceIdx]
+    [isEditing, visibleScreenCount, swapSourceIdx, isYoutubeMode]
   );
   useHotkeys(
     'enter',
@@ -291,12 +322,12 @@ export const Monitor = () => {
       <div className="min-h-0 flex-1">
         <Screen
           screen={screen}
-          onEdit={handleSourceEdit}
-          onRemove={handleSourceRemove}
+          onEdit={isYoutubeMode ? undefined : handleSourceEdit}
+          onRemove={isYoutubeMode ? undefined : handleSourceRemove}
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
-          onSwitch={handleSwitch}
+          onSwitch={isYoutubeMode ? undefined : handleSwitch}
         />
       </div>
 

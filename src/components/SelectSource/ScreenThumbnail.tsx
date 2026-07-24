@@ -1,4 +1,5 @@
 'use client';
+import { YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getSource, SourceType } from '../../sources';
@@ -38,7 +39,13 @@ export function ScreenThumbnail({
       className={`overflow-hidden rounded-sm bg-black ${className ?? ''}`}
       style={{ width, height }}
     >
-      {config.mode === DisplayMode.Grid ? (
+      {config.mode === DisplayMode.Youtube ? (
+        // The tiles are derived live at render time, so a saved snapshot has no
+        // meaningful arrangement to preview — show what the layout is instead.
+        <div className="flex h-full w-full items-center justify-center bg-gray-900">
+          <YoutubeIcon size={40} className="text-red-500" />
+        </div>
+      ) : config.mode === DisplayMode.Grid ? (
         <GridPreview sources={sources} size={config.grid.size} resolve={resolve} />
       ) : (
         <LayoutPreview

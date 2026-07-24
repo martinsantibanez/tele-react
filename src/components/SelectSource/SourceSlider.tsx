@@ -335,21 +335,31 @@ export function SourceSlider({
       items: possibleLayouts,
       selectedIndex: selectedLayoutIndex,
       onSelect: index => selectLayout(index),
-      getItemKey: layout => layout.imgName,
+      getItemKey: layout => layout.name,
       renderItem: (layout, { isSelected }) => (
         <div
           className={`cursor-pointer p-3 ${isSelected ? 'bg-gray-800' : ''}`}
         >
           <div className="flex flex-col items-center gap-2">
-            <Image
-              alt={layout.name}
-              src={`/img/layout/${layout.imgName}`}
-              width="160"
-              height="90"
-              className={
-                isSelected ? 'ring-2 ring-white rounded-sm' : undefined
-              }
-            />
+            {layout.imgName ? (
+              <Image
+                alt={layout.name}
+                src={`/img/layout/${layout.imgName}`}
+                width="160"
+                height="90"
+                className={
+                  isSelected ? 'ring-2 ring-white rounded-sm' : undefined
+                }
+              />
+            ) : (
+              <div
+                className={`flex h-[90px] w-[160px] items-center justify-center rounded-sm bg-gray-900 ${
+                  isSelected ? 'ring-2 ring-white' : ''
+                }`}
+              >
+                <YoutubeIcon size={48} className="text-red-500" />
+              </div>
+            )}
             <div className="text-sm font-semibold">{layout.name}</div>
           </div>
         </div>

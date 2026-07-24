@@ -41,7 +41,11 @@ export type LayoutType = {
 
 export enum DisplayMode {
   Layout = 'Layout',
-  Grid = 'Grid'
+  Grid = 'Grid',
+  // Auto-tiles every currently-live YouTube subscription; the tiles are derived
+  // from the live channels, not from the saved grid, and the count follows how
+  // many channels are live right now.
+  Youtube = 'Youtube'
 }
 
 export type GridSize = 1 | 2 | 3 | 4;
