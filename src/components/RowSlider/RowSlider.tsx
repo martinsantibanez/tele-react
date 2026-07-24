@@ -45,7 +45,13 @@ const DEFAULT_WINDOW_RADIUS = 2;
  * switching back and forth doesn't lose the place.
  */
 export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
-  const [activeRowIndex, setActiveRowIndex] = useState(0);
+  // Start on the first row that actually has items, so an empty leading row
+  // (e.g. no saved screens yet) hands focus to the next one instead of
+  // stranding it on an empty carousel.
+  const [activeRowIndex, setActiveRowIndex] = useState(() => {
+    const firstFilled = rows.findIndex(row => row.items.length > 0);
+    return firstFilled === -1 ? 0 : firstFilled;
+  });
 
   // Rows can appear or disappear as the surrounding tab changes.
   useEffect(() => {

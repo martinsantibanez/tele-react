@@ -323,6 +323,7 @@ export function SourceSlider({
   const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
 
   const layoutRows = [
+    savedScreensRow,
     sliderRow<PossibleLayout>({
       key: 'layouts',
       items: possibleLayouts,
@@ -348,7 +349,7 @@ export function SourceSlider({
         </div>
       )
     }),
-    savedScreensRow
+    
   ];
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
