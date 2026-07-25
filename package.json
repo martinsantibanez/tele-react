@@ -54,7 +54,7 @@
     "uuid": "^14.0.0",
     "video.js": "^7.21.7",
     "videojs-contrib-quality-levels": "^2.2.1",
-    "videojs-hls-quality-selector": "^1.1.4",
+    "videojs-hls-quality-selector": "^2.0.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
