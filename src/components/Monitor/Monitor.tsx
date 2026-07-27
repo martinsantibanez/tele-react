@@ -207,15 +207,21 @@ export const Monitor = () => {
   // focus — on click, and especially when a source fills the screen. Bounce
   // focus back to the page so the shortcuts keep working.
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    // The window `blur` fires *while* the browser is still handing focus to
+    // the iframe, so blurring from inside the handler is undone as soon as it
+    // returns. Waiting a tick lets the transfer finish before we take it back.
     const refocus = () => {
-      const active = document.activeElement;
-      if (active instanceof HTMLIFrameElement) {
-        active.blur();
-        window.focus();
-      }
+      timer = setTimeout(() => {
+        const active = document.activeElement;
+        if (active instanceof HTMLIFrameElement) active.blur();
+      }, 0);
     };
     window.addEventListener('blur', refocus);
-    return () => window.removeEventListener('blur', refocus);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('blur', refocus);
+    };
   }, []);
 
   useHotkeys('e', () => toggleEditting());
