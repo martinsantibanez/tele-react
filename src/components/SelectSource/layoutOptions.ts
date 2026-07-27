@@ -5,8 +5,7 @@ import { initialLayout, twoBigLayout } from '../Monitor/predefinedLayouts';
 export type PossibleLayout = {
   name: string;
   config: DisplayConfig;
-  /** Preview image under /img/layout. Omitted for layouts drawn with an icon. */
-  imgName?: string;
+  imgName: string;
 };
 
 export const possibleLayouts: PossibleLayout[] = [
@@ -50,24 +49,25 @@ export const possibleLayouts: PossibleLayout[] = [
       grid: { size: 4 }
     },
     imgName: 'layout5.png'
-  },
-  {
-    name: 'YouTube en vivo',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Youtube,
-      grid: { size: 1 }
-    }
   }
 ];
 
+/**
+ * The dynamic YouTube layout lives next to the saved screens rather than in
+ * this list — its tiles come from the live channels, not a fixed arrangement.
+ * `grid` and `layout` are placeholders the mode never reads.
+ */
+export const YOUTUBE_LAYOUT_NAME = 'YouTube en vivo';
+export const youtubeLayoutConfig: DisplayConfig = {
+  mode: DisplayMode.Youtube,
+  grid: { size: 1 },
+  layout: initialLayout
+};
+
 export const findLayoutIndex = (config: DisplayConfig) =>
-  possibleLayouts.findIndex(layout =>
-    // The YouTube layout is fully dynamic (tiles come from the live channels),
-    // so mode alone identifies it — grid size and layout are just placeholders.
-    layout.config.mode === DisplayMode.Youtube
-      ? config.mode === DisplayMode.Youtube
-      : layout.config.mode === config.mode &&
-        layout.config.grid.size === config.grid.size &&
-        JSON.stringify(layout.config.layout) === JSON.stringify(config.layout)
+  possibleLayouts.findIndex(
+    layout =>
+      layout.config.mode === config.mode &&
+      layout.config.grid.size === config.grid.size &&
+      JSON.stringify(layout.config.layout) === JSON.stringify(config.layout)
   );

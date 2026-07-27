@@ -227,10 +227,11 @@ export const Monitor = () => {
     e => {
       const idx = getIndexFromKeyEvent(e);
       if (idx === undefined || idx >= visibleScreenCount) return;
-      // The YouTube grid is auto-managed: number keys only solo audio, there is
-      // no per-tile editing/swapping.
+      // The YouTube grid is auto-managed: a number key selects a tile (so G can
+      // fullscreen it) and solos its audio; there is no per-tile source editing.
       if (isYoutubeMode) {
-        setYoutubeSoloIdx(current => (current === idx ? undefined : idx));
+        setEditingSourceIdx(idx);
+        setYoutubeSoloIdx(idx);
         return;
       }
       setEditingSourceIdx(idx);
@@ -245,7 +246,7 @@ export const Monitor = () => {
   useHotkeys(
     'enter',
     () => {
-      if (editingSourceIdx === undefined) return;
+      if (isYoutubeMode || editingSourceIdx === undefined) return;
       if (swapSourceIdx === undefined) {
         setSwapSourceIdx(editingSourceIdx);
         return;
@@ -256,7 +257,7 @@ export const Monitor = () => {
       }
       setSwapSourceIdx(undefined);
     },
-    [editingSourceIdx, swapSourceIdx]
+    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
   );
   useHotkeys(
     'g',
@@ -285,14 +286,21 @@ export const Monitor = () => {
     'm',
     () => {
       if (editingSourceIdx === undefined || swapSourceIdx !== undefined) return;
+      if (isYoutubeMode) {
+        setYoutubeSoloIdx(current =>
+          current === editingSourceIdx ? undefined : editingSourceIdx
+        );
+        return;
+      }
       handleToggleMute(editingSourceIdx);
     },
-    [editingSourceIdx, swapSourceIdx]
+    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
   );
   useHotkeys(
     'd',
     () => {
-      if (editingSourceIdx === undefined || swapSourceIdx !== undefined) return;
+      if (isYoutubeMode || editingSourceIdx === undefined || swapSourceIdx !== undefined)
+        return;
       handleSourceRemove(editingSourceIdx);
       setIsFullscreen(false);
       const newLength = (selectedSources?.length ?? 0) - 1;
@@ -300,7 +308,7 @@ export const Monitor = () => {
         newLength <= 0 ? undefined : Math.min(editingSourceIdx, newLength - 1)
       );
     },
-    [editingSourceIdx, swapSourceIdx, selectedSources]
+    [editingSourceIdx, swapSourceIdx, selectedSources, isYoutubeMode]
   );
   useHotkeys(
     'a',
