@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
-import { useZappingToken } from '../../hooks/useZappingConfig';
 import { MainLayout } from '../../layout/MainLayout';
 import { ScreenType } from '../../types/Monitor';
 
@@ -41,7 +40,6 @@ const MonitorPage = ({
   console.log({ initialScreen });
   const [, setSelectedSources] = useSavedGrid();
   const [, setDisplayConfig] = useDisplayConfig();
-  const [, setZappingToken] = useZappingToken();
   const { setCustomSources } = useCustomSources();
   const router = useRouter();
   useEffect(() => {
@@ -59,7 +57,6 @@ const MonitorPage = ({
     router,
     setDisplayConfig,
     setSelectedSources,
-    setZappingToken,
     setCustomSources
   ]);
   return (

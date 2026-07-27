@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import {
   AccordionContent,
   AccordionItem,
@@ -10,6 +9,7 @@ import { useZappingSources } from '../../../hooks/useZappingChannels';
 import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
+import { ZappingConnect } from './ZappingConnect';
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
@@ -21,8 +21,7 @@ export function ZappingSelector({
   selectedSourceSlug,
   accordionEventKey
 }: Props) {
-  const [, setZappingLoginToken] = useZappingLoginToken();
-  const [jsonInput, setJsonInput] = useState('');
+  const [loginToken] = useZappingLoginToken();
 
   const { createSource } = useCustomSources();
   const zappingSources = useZappingSources();
@@ -46,38 +45,11 @@ export function ZappingSelector({
             />
           );
         })}
-        <div className="mb-2">
-          <div className="w-full">
-            Pega esto en la consola en{' '}
-            <a
-              href="https://app.zapping.com/webplayer"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'underline' }}
-            >
-              Zapping
-            </a>{' '}
-            <textarea
-              className="w-full"
-              readOnly
-              rows={2}
-              defaultValue={`copy(window.sessionStorage.loginToken)`}
-            />
-            Introduce el resultado:
-            <textarea
-              className="w-full"
-              rows={2}
-              onChange={e => setJsonInput(e.target.value)}
-              value={jsonInput}
-            />
-            <button
-              onClick={() => setZappingLoginToken(jsonInput.trim())}
-              className="btn btn-primary mt-2"
-            >
-              Configurar
-            </button>
+        {!loginToken && (
+          <div className="mb-2">
+            <ZappingConnect />
           </div>
-        </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );

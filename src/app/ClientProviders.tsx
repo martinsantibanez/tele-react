@@ -4,7 +4,10 @@ import { PropsWithChildren } from 'react';
 import { TeleProvider } from '../context/TeleContext';
 import dynamic from 'next/dynamic';
 import { useZappingSourceSync } from '../hooks/useZappingChannels';
-import { useZappingSession } from '../hooks/useZappingConfig';
+import {
+  useZappingActivationPolling,
+  useZappingSession
+} from '../hooks/useZappingConfig';
 import { useYoutubeLiveSourceSync } from '../hooks/useYoutubeLiveSubs';
 
 const ThemeProvider = dynamic(
@@ -15,8 +18,11 @@ const ThemeProvider = dynamic(
 );
 
 // Keeps the Zapping play session alive and the channel catalogue fresh for the
-// whole app (mounted once).
+// whole app (mounted once). The activation poll lives here too so a pending
+// pairing keeps running while the user is off linking the code, whatever part
+// of the UI they started it from.
 const ZappingSessionManager = () => {
+  useZappingActivationPolling();
   useZappingSession();
   useZappingSourceSync();
   return null;

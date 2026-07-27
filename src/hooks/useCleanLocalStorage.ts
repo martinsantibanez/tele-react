@@ -5,6 +5,7 @@ import { useFeaturedScreen } from './useFeaturedScreen';
 import { useSavedGrid } from './useSavedGrid';
 import { useSavedSelectedItem } from './useSavedSelectedItem';
 import {
+  useZappingActivationState,
   useZappingLoginToken,
   useZappingToken
 } from './useZappingConfig';
@@ -17,6 +18,7 @@ export const useCleanLocalStorage = () => {
   const [, , displayConfigStorage] = useDisplayConfig();
   const [, , zappingTokenMeta] = useZappingToken();
   const [, , zappingLoginTokenMeta] = useZappingLoginToken();
+  const [, , zappingActivationMeta] = useZappingActivationState();
 
   return () => {
     gridStorage.removeItem();
@@ -26,5 +28,6 @@ export const useCleanLocalStorage = () => {
     displayConfigStorage.removeItem();
     zappingTokenMeta.removeItem();
     zappingLoginTokenMeta.removeItem();
+    zappingActivationMeta.removeItem();
   };
 };

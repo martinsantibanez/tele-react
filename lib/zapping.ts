@@ -1,28 +1,18 @@
-// Zapping streaming-token service.
-//
-// Reverse-engineered from https://app.zapping.com/webplayer. The streaming
-// token model has two distinct tokens:
-//
-//   loginToken  — durable account credential (JWT { key }). Lives in the
-//                 webplayer's `sessionStorage.loginToken` / cookie `logintoken`.
-//                 This is what the user provides once; it does not rotate.
-//   playToken   — short-lived streaming token (JWT { userID, uuid }) that is
-//                 appended to every HLS URL as `?token=...`. It is GLOBAL across
-//                 all channels, and is only honoured by the CDN (`ringeling`)
-//                 while its `uuid` has an active, heart-beaten play session.
-//
-// The playToken is minted from the loginToken + a device uuid, and stays valid
-// only while we keep sending heartbeats. Stop heart-beating and the session
-// idles out within ~15-30s and the CDN starts returning 403 — which is exactly
-// why a manually-copied playToken "dies" after a short time / when switching
-// signals. All three endpoints are CORS-open, so this runs client-side.
-
 export const ZAPPING_MINT_URL =
   'https://drhouse.zappingtv.com/login/v20/webplayer';
 export const ZAPPING_HEARTBEAT_URL =
   'https://drhouse.zappingtv.com/hb/v1/webplayer/';
 export const ZAPPING_CHANNELS_URL =
   'https://alquinta.zappingtv.com/v31/webplayer/channelswithurl';
+
+export const ZAPPING_GETCODE_URL =
+  'https://benja.zappingtv.com/activation/v20/smarttv/getcode';
+export const ZAPPING_LINKED_URL =
+  'https://benja.zappingtv.com/activation/v20/smarttv/linked';
+export const zappingLinkUrl = (code: string) =>
+  `https://www.zapping.com/smart/${code}`;
+
+export const ZAPPING_ACTIVATION_TTL_MS = 600 * 1000;
 
 /** A channel as returned by `channelswithurl` (and by the bundled fallback). */
 export type ZappingChannel = {
@@ -62,10 +52,87 @@ type HeartbeatResponse = {
   data?: { platform?: string; nextHB?: number };
 };
 
+type ActivationCodeResponse = {
+  status: boolean;
+  data?: { code?: number | string; uuid?: string } | null;
+};
+
+type LinkedResponse = {
+  status: boolean;
+  data?: {
+    logged?: boolean;
+    /** Seconds until the device should poll again (~3s). */
+    nextQuery?: number;
+    /** The loginToken, once the code has been linked to an account. */
+    data?: string;
+    email?: string;
+    name?: string;
+  } | null;
+};
+
 const form = (params: Record<string, string>) =>
   Object.entries(params)
     .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
     .join('&');
+
+export type ZappingActivationCode = { code: string; uuid: string };
+
+/**
+ * Start a pairing: returns the code the user has to enter at
+ * `zappingLinkUrl(code)` and the device uuid the session should adopt. Pass the
+ * browser's current uuid to keep it, or nothing on a first run — either way the
+ * backend decides, and the linked account is bound to whatever it returns.
+ */
+export async function requestActivationCode(
+  uuid?: string
+): Promise<ZappingActivationCode> {
+  const res = await fetch(ZAPPING_GETCODE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form({ uuid: uuid || '', acquisition: 'smarttv' })
+  });
+  const json: ActivationCodeResponse = await res.json();
+  const code = json?.data?.code;
+  const issuedUuid = json?.data?.uuid;
+  if (!json?.status || code == null || !issuedUuid) {
+    throw new Error('Zapping: no se pudo obtener un código de vinculación');
+  }
+  return { code: String(code), uuid: issuedUuid };
+}
+
+export type ZappingLinkResult =
+  | { logged: false; nextQuery: number }
+  | { logged: true; loginToken: string; email?: string; name?: string };
+
+/**
+ * Poll a pending pairing code. Stays `logged: false` until the user completes
+ * the link, then yields the durable loginToken. An unknown/expired code answers
+ * `status: false`, which is reported as "not linked yet" — callers time the
+ * code out themselves with `ZAPPING_ACTIVATION_TTL_MS`, exactly as the TV app
+ * does.
+ */
+export async function checkLinkedCode(
+  code: string
+): Promise<ZappingLinkResult> {
+  const res = await fetch(ZAPPING_LINKED_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form({ code })
+  });
+  const json: LinkedResponse = await res.json();
+  const data = json?.data;
+  const nextQuery =
+    typeof data?.nextQuery === 'number' ? Math.max(2, data.nextQuery) : 3;
+  if (!json?.status || !data?.logged || !data?.data) {
+    return { logged: false, nextQuery };
+  }
+  return {
+    logged: true,
+    loginToken: data.data,
+    email: data.email,
+    name: data.name
+  };
+}
 
 /** Exchange the durable loginToken for a fresh streaming playToken. */
 export async function mintPlayToken(

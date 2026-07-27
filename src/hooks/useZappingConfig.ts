@@ -1,24 +1,30 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import useSessionStorageState from 'use-session-storage-state';
-import { v4 as uuidv4 } from 'uuid';
-import { mintPlayToken, sendHeartbeat } from '@/lib/zapping';
+import {
+  checkLinkedCode,
+  mintPlayToken,
+  requestActivationCode,
+  sendHeartbeat,
+  zappingLinkUrl,
+  ZAPPING_ACTIVATION_TTL_MS
+} from '@/lib/zapping';
 
 /**
- * The live streaming token appended to HLS URLs. It is auto-managed by
+ * The live streaming token appended to HLS URLs. Entirely owned by
  * `useZappingSession` (minted from the durable loginToken and kept alive by
- * heartbeats), so consumers just read it. Kept in sessionStorage for backwards
- * compatibility with shared screens that still carry a token.
+ * heartbeats), so consumers just read it. Session-scoped because it is only
+ * good for as long as this tab keeps heart-beating it.
  */
 export function useZappingToken() {
   return useSessionStorageState<string | undefined>('playToken', {
-    defaultValue: window.sessionStorage.getItem('playToken') || undefined
+    defaultValue: undefined
   });
 }
 
 /**
- * Durable Zapping credential the user provides once (from the webplayer's
- * `sessionStorage.loginToken`). Persisted in localStorage; does not rotate.
+ * Durable Zapping credential, obtained once by pairing this browser as a device
+ * (see `useZappingActivation`). Persisted in localStorage; does not rotate.
  */
 export function useZappingLoginToken() {
   return useLocalStorageState<string | undefined>('zappingLoginToken', {
@@ -39,16 +45,154 @@ export function useZappingSessionStatus() {
   });
 }
 
-/** Stable per-device id used to mint/keep-alive the play session. */
+/**
+ * Stable per-device id the play session is minted against. Always issued by
+ * Zapping — `getcode` returns it and the account gets linked to it — so the app
+ * never invents one. Undefined until this browser has been paired.
+ */
 export function useZappingUuid() {
-  const [uuid, setUuid] = useLocalStorageState<string | undefined>(
-    'zappingUuid',
+  return useLocalStorageState<string | undefined>('zappingUuid', {
+    defaultValue: undefined
+  });
+}
+
+/** A pairing code waiting to be linked by the user. */
+export type ZappingActivation = {
+  code: string;
+  /** The uuid the backend issued with the code; adopted once linked. */
+  uuid: string;
+  expiresAt: number;
+};
+
+/**
+ * The pending pairing, in sessionStorage because linking means sending the user
+ * off to zapping.com — the code has to survive leaving the page and coming
+ * back.
+ */
+export function useZappingActivationState() {
+  return useSessionStorageState<ZappingActivation | undefined>(
+    'zappingActivation',
     { defaultValue: undefined }
   );
+}
+
+/**
+ * Device pairing, the way Zapping's smart-TV app does it: ask for a code, send
+ * the user to `zappingLinkUrl(code)` to type it in while logged into their
+ * account, and `useZappingActivationPolling` picks up the loginToken from the
+ * other side. Replaces copying the token out of a devtools console, which is
+ * impossible on a phone.
+ */
+export function useZappingActivation() {
+  const [activation, setActivation] = useZappingActivationState();
+  const [uuid] = useZappingUuid();
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [error, setError] = useState<string>();
+  // Drives the countdown, and flips the pairing over to expired on its own.
+  const [, tick] = useState(0);
+
   useEffect(() => {
-    if (!uuid) setUuid(uuidv4());
-  }, [uuid, setUuid]);
-  return uuid;
+    if (!activation) return;
+    const id = setInterval(() => tick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [activation]);
+
+  const start = useCallback(async () => {
+    setError(undefined);
+    setIsRequesting(true);
+    try {
+      const { code, uuid: issuedUuid } = await requestActivationCode(uuid);
+      setActivation({
+        code,
+        uuid: issuedUuid,
+        expiresAt: Date.now() + ZAPPING_ACTIVATION_TTL_MS
+      });
+    } catch (err) {
+      console.error('[zapping] could not get an activation code', err);
+      setError('No se pudo obtener un código. Intenta de nuevo.');
+    } finally {
+      setIsRequesting(false);
+    }
+  }, [uuid, setActivation]);
+
+  const cancel = useCallback(() => {
+    setActivation(undefined);
+    setError(undefined);
+  }, [setActivation]);
+
+  const isExpired = !!activation && Date.now() >= activation.expiresAt;
+  const secondsLeft = activation
+    ? Math.max(0, Math.ceil((activation.expiresAt - Date.now()) / 1000))
+    : 0;
+
+  return {
+    activation: isExpired ? undefined : activation,
+    linkUrl: activation ? zappingLinkUrl(activation.code) : undefined,
+    isExpired,
+    isRequesting,
+    secondsLeft,
+    error,
+    start,
+    cancel
+  };
+}
+
+/**
+ * Mount once (see ClientProviders): while a pairing code is pending, polls
+ * Zapping until the user links it, then stores the loginToken and the uuid it
+ * was bound to — which is all `useZappingSession` needs to take over.
+ */
+export function useZappingActivationPolling() {
+  const [activation, setActivation] = useZappingActivationState();
+  const [loginToken, setLoginToken] = useZappingLoginToken();
+  const [, setUuid] = useZappingUuid();
+  const [, setStatus] = useZappingSessionStatus();
+
+  useEffect(() => {
+    if (!activation || loginToken) return;
+    if (Date.now() >= activation.expiresAt) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async () => {
+      if (cancelled) return;
+      if (Date.now() >= activation.expiresAt) return;
+      let retryIn = 5;
+      try {
+        const result = await checkLinkedCode(activation.code);
+        if (cancelled) return;
+        if (result.logged) {
+          // Order matters: the uuid the code was issued against is the one the
+          // account got linked to, so it has to be in place before the
+          // loginToken starts a session.
+          setUuid(activation.uuid);
+          setStatus('starting');
+          setLoginToken(result.loginToken);
+          setActivation(undefined);
+          return;
+        }
+        retryIn = result.nextQuery;
+      } catch (err) {
+        console.error('[zapping] activation poll failed', err);
+      }
+      if (!cancelled) timer = setTimeout(poll, retryIn * 1000);
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [
+    activation,
+    loginToken,
+    setActivation,
+    setLoginToken,
+    setStatus,
+    setUuid
+  ]);
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -61,7 +205,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 export function useZappingSession() {
   const [loginToken] = useZappingLoginToken();
-  const uuid = useZappingUuid();
+  const [uuid] = useZappingUuid();
   const [, setPlayToken] = useZappingToken();
   const [, setStatus] = useZappingSessionStatus();
 
