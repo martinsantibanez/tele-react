@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getSource } from '../../sources';
-import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
+import { SOURCE_IDX_ATTR } from '../../utils/spatialNavigation';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
 export type OnSwitchCb = (left: number, right: number) => void;
@@ -64,13 +64,17 @@ export function MonitorSource({
   };
 
   return (
-    <div
-      className={fullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}
-    >
+    // The wrapper keeps its slot in the grid even while the screen is blown up
+    // over everything else, so the arrows still know where this tile sits.
+    <div className="h-full w-full" {...{ [SOURCE_IDX_ATTR]: idx }}>
+      {/* Fullscreen positions the box itself, so it stays the containing block
+          the overlays below are laid out against. */}
       <div
-        className={`w-full h-full relative box-border ${
-          showFocus ? 'border-2 border-slate-400' : ''
-        }`}
+        className={`box-border ${
+          fullscreen
+            ? 'fixed inset-0 z-50 bg-black'
+            : 'relative h-full w-full'
+        } ${showFocus ? 'border-2 border-slate-400' : ''}`}
       >
         <div className="w-full h-full">
           {!!source && (
@@ -97,8 +101,10 @@ export function MonitorSource({
         )}
         {(isEditing || swapSourceIdx !== undefined) && (
           <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-between w-full opacity-100 z-[2]">
+            {/* The arrows pick a screen by where it is, so the number is only
+                a name for it — the one the swap hint refers to. */}
             <span className="ml-1 rounded bg-black/70 px-2 font-bold text-white">
-              {getSourceShortcutLabel(idx)}
+              {idx + 1}
             </span>
             {isEditing && (
               <div className="flex">

@@ -7,7 +7,17 @@ import { YoutubeSource } from './SourceProvider/YoutubeSource';
 import { ZappingSource } from './SourceProvider/ZappingSource';
 
 export function IframeOutput({ src }: { src: string }) {
-  return <iframe src={src} className="w-full h-full" frameBorder="0" />;
+  // Permissions are not inherited: a player nested inside the embedded page
+  // only gets autoplay and fullscreen if this frame passes them down.
+  return (
+    <iframe
+      src={src}
+      className="w-full h-full"
+      frameBorder="0"
+      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+      allowFullScreen
+    />
+  );
 }
 
 type Props = {
