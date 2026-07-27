@@ -832,23 +832,7 @@ export function SourceSlider({
         layoutsContent
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <Button
-            onClick={() => prev()}
-            variant="ghost"
-            className="h-6 w-full py-0"
-            disabled={selectedIndex <= 0}
-          >
-            <span>{'∧'}</span>
-          </Button>
           <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
-          <Button
-            onClick={() => next()}
-            variant="ghost"
-            className="h-6 w-full py-0"
-            disabled={selectedIndex === itemCount - 1}
-          >
-            <span>{'∨'}</span>
-          </Button>
         </div>
       )}
     </div>

@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Button } from '@/components/ui/button';
 import { VirtualList } from '../VirtualList/VirtualList';
 
 /**
@@ -123,14 +122,6 @@ function Row({
   isActive: boolean;
   showTabHint: boolean;
 }) {
-  const move = (delta: number) => {
-    const nextIndex = Math.min(
-      Math.max(row.selectedIndex + delta, 0),
-      row.items.length - 1
-    );
-    row.onSelect(nextIndex, row.items[nextIndex]);
-  };
-
   const renderItem = (item: never, index: number) => (
     <div className="h-full" onClick={() => row.onSelect(index, item)}>
       {row.renderItem(item, {
@@ -147,14 +138,6 @@ function Row({
         isActive ? 'opacity-100' : 'opacity-40'
       }`}
     >
-      <Button
-        onClick={() => move(-1)}
-        variant="ghost"
-        className="flex h-6 w-full shrink-0 flex-col items-center gap-0.5 py-0"
-        disabled={row.selectedIndex <= 0}
-      >
-        <span>{'∧'}</span>
-      </Button>
       {!row.items.length && row.emptyState}
       <VirtualList
         items={row.items}
@@ -176,14 +159,6 @@ function Row({
             TAB
           </span>
         )}
-        <Button
-          onClick={() => move(1)}
-          variant="ghost"
-          className="flex h-6 w-full flex-col items-center gap-0.5 py-0"
-          disabled={row.selectedIndex >= row.items.length - 1}
-        >
-          <span>{'∨'}</span>
-        </Button>
       </div>
     </div>
   );
