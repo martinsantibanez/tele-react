@@ -32,8 +32,11 @@ import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
 import {
   findLayoutIndex,
   possibleLayouts,
-  PossibleLayout
+  PossibleLayout,
+  YOUTUBE_LAYOUT_NAME,
+  youtubeLayoutConfig
 } from './layoutOptions';
+import { DisplayMode } from '../../types/Monitor';
 import Image from 'next/image';
 import {
   COMPACT_ITEM_HEIGHT,
@@ -71,6 +74,17 @@ type TvRow =
 const tvRowHeight = (row: TvRow) => {
   if (row.kind === 'source') return SIDEBAR_ROW_HEIGHT;
   return row.kind === 'country' ? COUNTRY_ROW_HEIGHT : TV_CATEGORY_ROW_HEIGHT;
+};
+
+/**
+ * The dynamic YouTube display heads that category's list. It rides along as a
+ * source so the arrows and the virtual list keep counting plain rows, but it
+ * plays nothing: picking it swaps the whole grid for the live tiles.
+ */
+const YOUTUBE_LIVE_SLUG = '_youtube_live_display_';
+const youtubeLiveEntry: SourceType = {
+  slug: YOUTUBE_LIVE_SLUG,
+  name: YOUTUBE_LAYOUT_NAME
 };
 
 const signalIcons: Record<SignalType, typeof Tv> = {
@@ -155,6 +169,17 @@ export function SourceSlider({
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const isLayouts = activeCategory === 'layouts';
+  const isTv = activeCategory === 'tv';
+  const isZapping = activeCategory === 'zapping';
+  const isYoutube = activeCategory === 'youtube';
+  // Picking the live display leaves the edited screen — and so `selectedSourceSlug`
+  // — untouched, so the list remembers the caret sat on it. The display mode has
+  // the last word: switching to a layout drops the highlight on its own.
+  const [youtubeLiveCaret, setYoutubeLiveCaret] = useState(
+    displayConfig.mode === DisplayMode.Youtube
+  );
+  const youtubeLiveSelected =
+    isYoutube && youtubeLiveCaret && displayConfig.mode === DisplayMode.Youtube;
   const {
     row: savedScreensRow,
     startSave,
@@ -226,7 +251,7 @@ export function SourceSlider({
     } else if (activeCategory === 'twitch') {
       return twitchSources;
     } else if (activeCategory === 'youtube') {
-      return youtubeSources;
+      return [youtubeLiveEntry, ...youtubeSources];
     } else if (activeCategory === 'favourites') {
       return customSources.filter(source => source.favourite);
     } else if (activeCategory === 'layouts') {
@@ -247,7 +272,9 @@ export function SourceSlider({
   // The slider navigates either sources or layouts, depending on the category.
   const selectedIndex = isLayouts
     ? selectedLayoutIndex
-    : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
+    : youtubeLiveSelected
+      ? 0
+      : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
   const itemCount = isLayouts
     ? possibleLayouts.length
     : activeCategorySources.length;
@@ -262,6 +289,14 @@ export function SourceSlider({
       return;
     }
     const source = activeCategorySources[index];
+    if (!source) return;
+    if (isYoutube) setYoutubeLiveCaret(source.slug === YOUTUBE_LIVE_SLUG);
+    // The live display is not a channel: it takes over the whole grid with the
+    // live tiles and leaves the edited screen alone.
+    if (source.slug === YOUTUBE_LIVE_SLUG) {
+      setDisplayConfig(youtubeLayoutConfig);
+      return;
+    }
     createSource(source);
     onSelect(source);
   };
@@ -346,7 +381,8 @@ export function SourceSlider({
   useHotkeys(
     'f',
     () => {
-      if (!selectedSource) return;
+      // The live display is not a channel, so there is nothing to favourite.
+      if (!selectedSource || selectedSource.slug === YOUTUBE_LIVE_SLUG) return;
       toggleFavourite(selectedSource);
     },
     { preventDefault: true }
@@ -382,9 +418,6 @@ export function SourceSlider({
     { preventDefault: true },
     [isConfirmingDelete, cancelDelete]
   );
-  const isTv = activeCategory === 'tv';
-  const isZapping = activeCategory === 'zapping';
-  const isYoutube = activeCategory === 'youtube';
   // Zapping and YouTube both put a connect/disconnect panel where the signals
   // TAB would otherwise be.
   const isConfigCategory = isZapping || isYoutube;
@@ -398,7 +431,7 @@ export function SourceSlider({
     // In the sidebar the VirtualList keeps the selected row mounted and in
     // view, so focusing it never needs to scroll.
     selectedItemRef.current?.focus({ preventScroll: true });
-  }, [selectedSourceSlug, activeCategory, isLayouts]);
+  }, [selectedSourceSlug, activeCategory, isLayouts, youtubeLiveSelected]);
 
   const focusActiveConfig = () => {
     activeConfigRef.current?.querySelector('button')?.focus();
@@ -589,8 +622,34 @@ export function SourceSlider({
     );
   });
 
+  // The live display shares the channels' rows but has no logo, no signals and
+  // nothing to favourite, so it gets a card of its own.
+  const renderYoutubeLiveCard = (index: number) => (
+    <div
+      ref={youtubeLiveSelected ? selectedItemRef : undefined}
+      tabIndex={youtubeLiveSelected ? 0 : -1}
+      aria-current={youtubeLiveSelected}
+      className={`h-full w-full cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
+        youtubeLiveSelected ? 'bg-gray-800' : ''
+      }`}
+      onClick={() => updateSelectedChannel(index)}
+    >
+      <div className="flex h-full flex-row items-center gap-3 p-2">
+        <div className="flex h-[44px] w-[44px] items-center justify-center">
+          <YoutubeIcon size={28} className="text-red-500" />
+        </div>
+        <div className="min-w-0 flex-1 truncate text-base font-semibold">
+          {YOUTUBE_LAYOUT_NAME}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSourceCard = (source: SourceType, canalIndex: number) => {
-    const isActive = source.slug === selectedSourceSlug;
+    if (source.slug === YOUTUBE_LIVE_SLUG)
+      return renderYoutubeLiveCard(canalIndex);
+
+    const isActive = source.slug === selectedSourceSlug && !youtubeLiveSelected;
     const isFavourite =
       source.favourite ??
       customSources.find(s => s.slug === source.slug)?.favourite ??
@@ -753,9 +812,9 @@ export function SourceSlider({
       {activeCategory === 'favourites' &&
         !activeCategorySources.length &&
         'Sin favoritos'}
-      {activeCategory === 'youtube' &&
+      {isYoutube &&
         youtubeConnected &&
-        !activeCategorySources.length &&
+        !youtubeSources.length &&
         'Ningún canal suscrito está en vivo'}
     </>
   );

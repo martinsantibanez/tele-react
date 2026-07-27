@@ -5,26 +5,13 @@ import { Input } from '../../../components/ui/input';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { SavedScreen, useSavedScreens } from '../../hooks/useSavedScreens';
-import { DisplayMode } from '../../types/Monitor';
 import {
   COMPACT_ITEM_HEIGHT,
   ErasedSliderRow,
   sliderRow
 } from '../RowSlider/RowSlider';
-import {
-  findLayoutIndex,
-  possibleLayouts,
-  YOUTUBE_LAYOUT_NAME,
-  youtubeLayoutConfig
-} from './layoutOptions';
+import { findLayoutIndex, possibleLayouts } from './layoutOptions';
 import { ScreenThumbnail } from './ScreenThumbnail';
-
-// A fixed, non-deletable entry that sits at the head of the saved-screens row.
-// Its tiles are derived live, so it carries no sources of its own.
-const youtubeScreen: SavedScreen = {
-  name: YOUTUBE_LAYOUT_NAME,
-  screen: { config: youtubeLayoutConfig, sources: [] }
-};
 
 /**
  * Second row of the layouts category: the screens the user has stored, so a
@@ -78,13 +65,6 @@ export function useSavedScreensRow(): {
     setSelectedSources(saved.screen.sources);
   };
 
-  // The YouTube entry only switches the display mode; its tiles come from the
-  // live channels, so it must not clobber the user's saved grid sources.
-  const selectYoutube = () => {
-    setDisplayConfig(youtubeLayoutConfig);
-    setSelectedIndex(-1);
-  };
-
   const startDelete = (index = selectedIndex) => {
     if (!savedScreens[index]) return;
     setPendingDelete(index);
@@ -103,65 +83,43 @@ export function useSavedScreensRow(): {
     setPendingDelete(null);
   };
 
-  // The fixed YouTube entry occupies index 0; saved screens follow, so a row
-  // index maps to `savedScreens[rowIndex - 1]`.
-  const items = [youtubeScreen, ...savedScreens];
-  const rowSelectedIndex =
-    displayConfig.mode === DisplayMode.Youtube
-      ? 0
-      : selectedIndex < 0
-        ? -1
-        : selectedIndex + 1;
-
   const row = sliderRow<SavedScreen>({
     key: 'saved',
-    items,
-    selectedIndex: rowSelectedIndex,
+    items: savedScreens,
+    selectedIndex,
     itemHeight: COMPACT_ITEM_HEIGHT,
     onSelect: (index, saved) => {
-      if (index === 0) {
-        selectYoutube();
-        return;
-      }
-      setSelectedIndex(index - 1);
+      setSelectedIndex(index);
       restore(saved);
     },
-    getItemKey: (saved, index) =>
-      index === 0 ? 'youtube-live' : `${saved.name}-${index}`,
-    renderItem: (saved, { index, isSelected }) => {
-      const isYoutube = index === 0;
-      return (
-        <div
-          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative">
-              <ScreenThumbnail
-                screen={saved.screen}
-                width={112}
-                height={63}
-                className={isSelected ? 'ring-2 ring-white' : undefined}
-              />
-              {!isYoutube && (
-                <button
-                  title="Eliminar"
-                  onClick={event => {
-                    event.stopPropagation();
-                    startDelete(index - 1);
-                  }}
-                  className="absolute -top-1.5 -right-1.5 rounded-full bg-black/70 p-0.5"
-                >
-                  <X size={14} className="text-white" />
-                </button>
-              )}
-            </div>
-            <div className="max-w-full truncate text-xs font-semibold">
-              {saved.name}
-            </div>
+    getItemKey: (saved, index) => `${saved.name}-${index}`,
+    renderItem: (saved, { index, isSelected }) => (
+      <div className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}>
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative">
+            <ScreenThumbnail
+              screen={saved.screen}
+              width={112}
+              height={63}
+              className={isSelected ? 'ring-2 ring-white' : undefined}
+            />
+            <button
+              title="Eliminar"
+              onClick={event => {
+                event.stopPropagation();
+                startDelete(index);
+              }}
+              className="absolute -top-1.5 -right-1.5 rounded-full bg-black/70 p-0.5"
+            >
+              <X size={14} className="text-white" />
+            </button>
+          </div>
+          <div className="max-w-full truncate text-xs font-semibold">
+            {saved.name}
           </div>
         </div>
-      );
-    }
+      </div>
+    )
   });
 
   const namePrompt = isNaming ? (

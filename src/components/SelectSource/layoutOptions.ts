@@ -53,7 +53,7 @@ export const possibleLayouts: PossibleLayout[] = [
 ];
 
 /**
- * The dynamic YouTube layout lives next to the saved screens rather than in
+ * The dynamic YouTube layout heads the YouTube category rather than sitting in
  * this list — its tiles come from the live channels, not a fixed arrangement.
  * `grid` and `layout` are placeholders the mode never reads.
  */
