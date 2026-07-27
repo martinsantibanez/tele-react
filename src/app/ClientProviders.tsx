@@ -9,6 +9,7 @@ import {
   useZappingSession
 } from '../hooks/useZappingConfig';
 import { useYoutubeLiveSourceSync } from '../hooks/useYoutubeLiveSubs';
+import { useZappingWelcomeScreen } from '../hooks/useZappingWelcomeScreen';
 
 const ThemeProvider = dynamic(
   () => import('../components/theme-provider').then(c => c.ThemeProvider),
@@ -22,7 +23,10 @@ const ThemeProvider = dynamic(
 // pairing keeps running while the user is off linking the code, whatever part
 // of the UI they started it from.
 const ZappingSessionManager = () => {
-  useZappingActivationPolling();
+  // Linking an account swaps the screen over to Zapping channels, so the user
+  // sees what they just connected instead of the default grid.
+  const applyWelcomeScreen = useZappingWelcomeScreen();
+  useZappingActivationPolling(applyWelcomeScreen);
   useZappingSession();
   useZappingSourceSync();
   return null;

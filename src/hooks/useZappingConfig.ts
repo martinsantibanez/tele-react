@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import useSessionStorageState from 'use-session-storage-state';
 import {
@@ -141,12 +141,17 @@ export function useZappingActivation() {
  * Mount once (see ClientProviders): while a pairing code is pending, polls
  * Zapping until the user links it, then stores the loginToken and the uuid it
  * was bound to — which is all `useZappingSession` needs to take over.
+ *
+ * `onLinked` fires once, at the moment the account gets linked.
  */
-export function useZappingActivationPolling() {
+export function useZappingActivationPolling(onLinked?: () => void) {
   const [activation, setActivation] = useZappingActivationState();
   const [loginToken, setLoginToken] = useZappingLoginToken();
   const [, setUuid] = useZappingUuid();
   const [, setStatus] = useZappingSessionStatus();
+  // Kept in a ref so an unstable callback can't restart the poll mid-pairing.
+  const onLinkedRef = useRef(onLinked);
+  onLinkedRef.current = onLinked;
 
   useEffect(() => {
     if (!activation || loginToken) return;
@@ -170,6 +175,7 @@ export function useZappingActivationPolling() {
           setStatus('starting');
           setLoginToken(result.loginToken);
           setActivation(undefined);
+          onLinkedRef.current?.();
           return;
         }
         retryIn = result.nextQuery;
