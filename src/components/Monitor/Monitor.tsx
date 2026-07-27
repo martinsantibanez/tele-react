@@ -265,13 +265,10 @@ export const Monitor = () => {
         return;
       }
       setEditingSourceIdx(idx);
-      if (!isEditing) {
-        if (swapSourceIdx === undefined) handleSoloAudio(idx);
-        return;
-      }
+      if (swapSourceIdx === undefined) handleSoloAudio(idx);
       showSources();
     },
-    [isEditing, visibleScreenCount, swapSourceIdx, isYoutubeMode]
+    [visibleScreenCount, swapSourceIdx, isYoutubeMode]
   );
   useHotkeys(
     'enter',
