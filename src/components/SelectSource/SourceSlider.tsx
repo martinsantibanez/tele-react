@@ -3,12 +3,13 @@ import { StaticAuthProvider } from '@twurple/auth';
 import {
   ChevronRight,
   Heart,
+  LayoutGrid,
   Tv,
   Video,
   YoutubeIcon,
   TwitchIcon
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
@@ -26,6 +27,7 @@ import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeAuth } from '../../hooks/useYoutubeAuth';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
+import { ZappingLogo } from './ZappingSelector/ZappingLogo';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
 import {
   findLayoutIndex,
@@ -88,12 +90,7 @@ type Props = {
 };
 
 type SelectorCategories =
-  | 'tv'
-  | 'twitch'
-  | 'zapping'
-  | 'youtube'
-  | 'favourites'
-  | 'layouts';
+  'tv' | 'twitch' | 'zapping' | 'youtube' | 'favourites' | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
@@ -111,6 +108,22 @@ const categoryLabels: Record<SelectorCategories, string> = {
   youtube: 'YouTube',
   favourites: 'Favoritos',
   layouts: 'Layouts'
+};
+
+/**
+ * The nav shows only these; the label rides along as the accessible name.
+ * Zapping brings its own wordmark, so the map is not lucide-only.
+ */
+const categoryIcons: Record<
+  SelectorCategories,
+  ComponentType<{ size?: number; 'aria-hidden'?: boolean }>
+> = {
+  tv: Tv,
+  twitch: TwitchIcon,
+  zapping: ZappingLogo,
+  youtube: YoutubeIcon,
+  favourites: Heart,
+  layouts: LayoutGrid
 };
 
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
@@ -254,8 +267,7 @@ export function SourceSlider({
   };
 
   const selectedSource = activeCategorySources[selectedIndex] as
-    | SourceType
-    | undefined;
+    SourceType | undefined;
   const availableSignals = selectedSource
     ? getAvailableSignals(selectedSource)
     : [];
@@ -557,16 +569,25 @@ export function SourceSlider({
     </div>
   );
 
-  const categoryButtons = categoryOrder.map(category => (
-    <Button
-      key={category}
-      variant={activeCategory === category ? 'default' : 'outline'}
-      onClick={() => setActiveCategory(category)}
-      className="h-8 grow px-2 text-xs"
-    >
-      {categoryLabels[category]}
-    </Button>
-  ));
+  const categoryButtons = categoryOrder.map(category => {
+    const Icon = categoryIcons[category];
+    const isActive = activeCategory === category;
+    return (
+      <Button
+        key={category}
+        variant={isActive ? 'default' : 'outline'}
+        onClick={() => setActiveCategory(category)}
+        className="h-8 grow px-2 text-xs"
+        // The icon carries no text, so the label has to be spelled out for
+        // screen readers and pointed out on hover for everyone else.
+        aria-label={categoryLabels[category]}
+        title={categoryLabels[category]}
+        aria-pressed={isActive}
+      >
+        <Icon size={16} aria-hidden />
+      </Button>
+    );
+  });
 
   const renderSourceCard = (source: SourceType, canalIndex: number) => {
     const isActive = source.slug === selectedSourceSlug;
@@ -823,7 +844,13 @@ export function SourceSlider({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
-      <div className="flex flex-wrap gap-1">{categoryButtons}</div>
+      <div
+        role="group"
+        aria-label="Categorías"
+        className="flex flex-wrap gap-1"
+      >
+        {categoryButtons}
+      </div>
       <div className="text-[9px] leading-none text-gray-400 text-center">
         ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
       </div>
