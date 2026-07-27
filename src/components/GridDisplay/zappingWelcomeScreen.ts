@@ -29,7 +29,7 @@ export const zappingWelcomeScreen: ScreenType = {
       uuid: 'e15622f4-51fa-49e4-b27d-944b4a24979d'
     },
     {
-      sourceSlug: 'custom_zapping_5071',
+      sourceSlug: 'custom_zapping_6381',
       uuid: 'd1d4ad46-10a1-468e-b520-f0273e92dd46'
     }
   ],

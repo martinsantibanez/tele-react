@@ -28,6 +28,8 @@ export function SourceOutput({ source, muted = true }: Props) {
     return <YoutubeSource videoId={source.youtubeVideoId} muted={muted} />;
   } else if (source.activeSignalType === 'twitch' && source.twitchAccount) {
     return <TwitchSource channel={source.twitchAccount} muted={muted} />;
+  }  else if (source.activeSignalType === 'youtubeChannel' && source.youtubeChannelId) {
+    return <YoutubeSource channelId={source.youtubeChannelId} muted={muted} />;
   } else if (source.iframeSrc) {
     return <IframeOutput src={source.iframeSrc} />;
   } else if (source.codeHtml) {
@@ -43,8 +45,6 @@ export function SourceOutput({ source, muted = true }: Props) {
     return <Component />;
   } else if (source.m3u8Url && typeof window !== 'undefined') {
     return <VideoPlayer src={source.m3u8Url} muted={muted} />;
-  } else if (source.youtubeChannelId) {
-    return <YoutubeSource channelId={source.youtubeChannelId} muted={muted} />;
   } else if (source.youtubeVideoId) {
     return <YoutubeSource videoId={source.youtubeVideoId} muted={muted} />;
   } else if (source.twitterAcount) {

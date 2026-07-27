@@ -32,7 +32,7 @@ export interface SourceInput {
   zappingChannel?: string;
 }
 
-export type SignalType = 'iframe' | 'm3u8' | 'youtube' | 'twitch';
+export type SignalType = 'iframe' | 'm3u8' | 'youtube' | 'twitch' | 'youtubeChannel';
 
 export interface SourceType extends SourceInput {
   slug: string;
@@ -54,6 +54,7 @@ const signalTypeField: Record<SignalType, keyof SourceInput> = {
   iframe: 'iframeSrc',
   m3u8: 'm3u8Url',
   youtube: 'youtubeVideoId',
+  youtubeChannel: 'youtubeChannelId',
   twitch: 'twitchAccount'
 };
 

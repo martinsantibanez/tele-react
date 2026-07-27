@@ -5,6 +5,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 import { Loader2, LogOut } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../../../components/ui/button';
 import {
   useZappingActivation,
@@ -23,6 +24,16 @@ export function ZappingConfig() {
   const isStarting = sessionStatus === 'starting';
   const isConnected = Boolean(loginToken);
 
+  const [isOpen, setIsOpen] = useState(false);
+  const statusRef = useRef<HTMLButtonElement>(null);
+  const closedOnConnect = useRef(false);
+
+  useEffect(() => {
+    if (!isConnected || !isOpen) return;
+    closedOnConnect.current = true;
+    setIsOpen(false);
+  }, [isConnected, isOpen]);
+
   /**
    * Drops the stored credential, which unmounts the heartbeat loop in
    * `useZappingSession`, and clears the live token so nothing keeps playing.
@@ -36,11 +47,23 @@ export function ZappingConfig() {
 
   return (
     <>
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        {sessionStatus === 'idle' && (
+
+        
         <PopoverTrigger asChild>
           <Button variant="outline">Zapping Config</Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80">
+        )}
+        <PopoverContent
+          className="w-80"
+          onCloseAutoFocus={event => {
+            if (!closedOnConnect.current) return;
+            closedOnConnect.current = false;
+            event.preventDefault();
+            statusRef.current?.focus();
+          }}
+        >
           <div className="grid gap-4">
             <div className="space-y-2">
               <h4 className="font-medium leading-none">Zapping</h4>
@@ -63,7 +86,13 @@ export function ZappingConfig() {
           </div>
         </PopoverContent>
       </Popover>
-      <Button variant="outline" disabled>
+      <Button
+        ref={statusRef}
+        variant="outline"
+        aria-disabled
+        tabIndex={-1}
+        className="pointer-events-none opacity-50 focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+      >
         {isStarting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isStarting
           ? 'Conectando...'

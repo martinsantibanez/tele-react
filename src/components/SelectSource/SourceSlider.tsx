@@ -21,13 +21,25 @@ import {
   PossibleLayout
 } from './layoutOptions';
 import Image from 'next/image';
-import { RowSlider, sliderRow } from '../RowSlider/RowSlider';
+import {
+  COMPACT_ITEM_HEIGHT,
+  RowSlider,
+  sliderRow
+} from '../RowSlider/RowSlider';
+import { VirtualList } from '../VirtualList/VirtualList';
 import { useSavedScreensRow } from './SavedScreensRow';
+
+/**
+ * Height of a source row in the sidebar: the 44px logo box plus its padding.
+ * The virtual list needs it up front, so the card is pinned to it.
+ */
+const SIDEBAR_ROW_HEIGHT = 60;
 
 const signalIcons: Record<SignalType, typeof Tv> = {
   iframe: Tv,
   m3u8: Video,
   youtube: YoutubeIcon,
+  youtubeChannel: YoutubeIcon,
   twitch: TwitchIcon
 };
 
@@ -36,21 +48,38 @@ type Props = {
   onSelect: (source: SourceType) => void;
   onSourceSwap?: () => void;
   invertControl?: boolean;
-  /** No screen is being edited, so only the layouts category is usable. */
-  noScreenSelected?: boolean;
+  /**
+   * Sidebar layout: the sources are stacked in a column and the categories run
+   * across the top, so up/down walk the sources and left/right the categories.
+   */
+  vertical?: boolean;
 };
 
 type SelectorCategories =
-  'tv' | 'twitch' | 'zapping' | 'youtube' | 'favourites' | 'layouts';
+  | 'tv'
+  | 'twitch'
+  | 'zapping'
+  | 'youtube'
+  | 'favourites'
+  | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
-  'twitch',
   'zapping',
   'youtube',
   'favourites',
+  'twitch',
   'layouts'
 ];
+
+const categoryLabels: Record<SelectorCategories, string> = {
+  tv: 'TV',
+  twitch: 'Twitch',
+  zapping: 'Zapping',
+  youtube: 'YouTube',
+  favourites: 'Favoritos',
+  layouts: 'Layouts'
+};
 
 type Channel = {
   id: string;
@@ -77,7 +106,7 @@ export function SourceSlider({
   onSelect,
   selectedSourceSlug,
   onSourceSwap,
-  noScreenSelected
+  vertical
 }: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken] = useTwitchToken();
@@ -94,7 +123,7 @@ export function SourceSlider({
     cancelDelete,
     deletePrompt,
     isConfirmingDelete
-  } = useSavedScreensRow();
+  } = useSavedScreensRow({ compact: vertical });
   // Which RowSlider row Tab is on, so D only deletes from the saved row.
   const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
 
@@ -182,15 +211,13 @@ export function SourceSlider({
     selectSignal(nextType);
   };
 
-  const canNavigate = isLayouts || !noScreenSelected;
-
   const next = () => {
-    if (!canNavigate || !itemCount) return;
+    if (!itemCount) return;
     updateSelectedChannel(Math.min(selectedIndex + 1, itemCount - 1));
   };
 
   const prev = () => {
-    if (!canNavigate || !itemCount) return;
+    if (!itemCount) return;
     updateSelectedChannel(Math.max(selectedIndex - 1, 0));
   };
 
@@ -207,14 +234,20 @@ export function SourceSlider({
     );
   };
 
-  useHotkeys('up', () => prevCategory(), { preventDefault: true });
-  useHotkeys('down', () => nextCategory(), { preventDefault: true });
+  // The sources run along the picker's main axis and the categories across it,
+  // so which arrows do what follows the orientation.
+  const [prevItemKey, nextItemKey, prevCategoryKey, nextCategoryKey] = vertical
+    ? ['up', 'down', 'left', 'right']
+    : ['left', 'right', 'up', 'down'];
+
+  useHotkeys(prevCategoryKey, () => prevCategory(), { preventDefault: true });
+  useHotkeys(nextCategoryKey, () => nextCategory(), { preventDefault: true });
 
   // Layouts are driven by the RowSlider, which owns its own arrow handling.
-  useHotkeys('left', () => (isLayouts ? undefined : prev()), {
+  useHotkeys(prevItemKey, () => (isLayouts ? undefined : prev()), {
     preventDefault: true
   });
-  useHotkeys('right', () => (isLayouts ? undefined : next()), {
+  useHotkeys(nextItemKey, () => (isLayouts ? undefined : next()), {
     preventDefault: true
   });
   useHotkeys('enter', () => (onSourceSwap ? onSourceSwap() : undefined), {
@@ -270,21 +303,17 @@ export function SourceSlider({
 
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (isLayouts || noScreenSelected) return;
+    if (isLayouts) return;
+    // In the sidebar the VirtualList keeps the selected row mounted and in
+    // view, so focusing it never needs to scroll.
     selectedItemRef.current?.focus({ preventScroll: true });
-  }, [selectedSourceSlug, activeCategory, isLayouts, noScreenSelected]);
+  }, [selectedSourceSlug, activeCategory, isLayouts]);
 
   const focusActiveConfig = () => {
     activeConfigRef.current?.querySelector('button')?.focus();
   };
 
   const configNeedsAuth = isYoutube ? !youtubeConnected : !zappingToken;
-
-  // When nothing is selected we normally show the generic "pick a screen"
-  // hint. But if the user is on the YouTube tab and hasn't connected yet,
-  // there's nothing to pick — surface the config so they can connect instead.
-  const showYoutubeConfigInsteadOfHint =
-    noScreenSelected && isYoutube && !youtubeConnected;
 
   // Without a connection there is nothing to browse, so the config is the only
   // thing worth reaching: put the caret on it as soon as the tab opens.
@@ -325,6 +354,8 @@ export function SourceSlider({
     ]
   );
 
+  // The horizontal picker only fits a handful of cards, so it renders a window
+  // around the selection. The sidebar scrolls the whole list instead.
   const startIndex = Math.max(selectedIndex - 2, 0);
   const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
 
@@ -336,26 +367,34 @@ export function SourceSlider({
       selectedIndex: selectedLayoutIndex,
       onSelect: index => selectLayout(index),
       getItemKey: layout => layout.imgName,
+      itemHeight: COMPACT_ITEM_HEIGHT,
       renderItem: (layout, { isSelected }) => (
         <div
-          className={`cursor-pointer p-3 ${isSelected ? 'bg-gray-800' : ''}`}
+          className={`cursor-pointer ${vertical ? 'p-1' : 'p-3'} ${
+            isSelected ? 'bg-gray-800' : ''
+          }`}
         >
           <div className="flex flex-col items-center gap-2">
             <Image
               alt={layout.name}
               src={`/img/layout/${layout.imgName}`}
-              width="160"
-              height="90"
+              width={vertical ? 112 : 160}
+              height={vertical ? 63 : 90}
               className={
                 isSelected ? 'ring-2 ring-white rounded-sm' : undefined
               }
             />
-            <div className="text-sm font-semibold">{layout.name}</div>
+            <div
+              className={`font-semibold ${
+                vertical ? 'max-w-full truncate text-xs' : 'text-sm'
+              }`}
+            >
+              {layout.name}
+            </div>
           </div>
         </div>
       )
-    }),
-    
+    })
   ];
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
@@ -416,7 +455,7 @@ export function SourceSlider({
         imageUrl: canal.logo,
         iframeSrc: canal.signals.find(s => s.type === 'iframe')?.url,
         m3u8Url: canal.signals.find(s => s.type === 'm3u8')?.url,
-        youtubeVideoId: canal.last_youtube_livestreams?.[0],
+        youtubeChannelId: canal.youtube ?? undefined,
         twitchAccount: canal.twitch ?? undefined
       }));
       sources.forEach(createSource);
@@ -442,6 +481,279 @@ export function SourceSlider({
     </div>
   );
 
+  const categoryButtons = categoryOrder.map(category => (
+    <Button
+      key={category}
+      variant={activeCategory === category ? 'default' : 'outline'}
+      onClick={() => setActiveCategory(category)}
+      className={vertical ? 'h-8 grow px-2 text-xs' : undefined}
+    >
+      {categoryLabels[category]}
+    </Button>
+  ));
+
+  const renderSourceCard = (source: SourceType, canalIndex: number) => {
+    const isActive = source.slug === selectedSourceSlug;
+    const isFavourite =
+      source.favourite ??
+      customSources.find(s => s.slug === source.slug)?.favourite ??
+      false;
+
+    return (
+      <div
+        ref={isActive ? selectedItemRef : undefined}
+        tabIndex={isActive ? 0 : -1}
+        aria-current={isActive}
+        className={`cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
+          vertical ? 'h-full w-full' : ''
+        } ${isActive ? 'bg-gray-800' : ''}`}
+        onClick={() => {
+          updateSelectedChannel(canalIndex);
+        }}
+        key={`zp_${source.slug}`}
+      >
+        <div
+          className={`flex ${
+            vertical
+              ? 'h-full flex-row items-center gap-3 p-2'
+              : 'flex-col items-center gap-4 p-6'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <div className="relative">
+              {source.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={source.imageUrl}
+                  className={
+                    // Logos come in every aspect ratio; boxing them keeps the
+                    // sidebar rows the height the virtual list assumes.
+                    vertical ? 'h-[44px] w-[44px] object-contain' : 'w-[62px] '
+                  }
+                  alt={source.name || ''}
+                />
+              )}
+              <div className="flex flex-col">
+                <button
+                  title={
+                    isFavourite ? 'Quitar de favoritos' : 'Agregar a favoritos'
+                  }
+                  onClick={e => {
+                    e.stopPropagation();
+                    toggleFavourite(source);
+                  }}
+                  className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
+                >
+                  <Heart
+                    size={14}
+                    className={
+                      isFavourite ? 'fill-red-500 text-red-500' : 'text-white'
+                    }
+                  />
+                </button>
+                {isActive && (
+                  <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
+                    F
+                  </span>
+                )}
+              </div>
+            </div>
+            {isActive && availableSignals.length > 1 && (
+              <div
+                className={`flex items-center gap-1 rounded bg-black/70 p-1 ${
+                  vertical ? 'flex-row ml-2' : 'flex-col ml-5'
+                }`}
+              >
+                {availableSignals.map(type => {
+                  const Icon = signalIcons[type];
+                  return (
+                    <button
+                      key={type}
+                      title={type}
+                      onClick={e => {
+                        e.stopPropagation();
+                        selectSignal(type);
+                      }}
+                      className={`rounded p-0.5 ${
+                        type === activeSignalType
+                          ? 'bg-white text-black'
+                          : 'text-white'
+                      }`}
+                    >
+                      <Icon size={14} />
+                    </button>
+                  );
+                })}
+                <span
+                  className={`text-[9px] leading-none text-gray-300 ${
+                    vertical ? '' : 'mt-0.5'
+                  }`}
+                >
+                  TAB
+                </span>
+              </div>
+            )}
+          </div>
+          <div
+            className={
+              vertical
+                ? 'min-w-0 flex-1 truncate text-base font-semibold'
+                : 'text-lg font-semibold'
+            }
+          >
+            {source.name}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Zapping and YouTube have nothing to list until the account is connected;
+  // the indices still line up with `activeCategorySources` because the list is
+  // either shown whole or not at all.
+  const listedSources =
+    (isZapping && !zappingToken) || (isYoutube && !youtubeConnected)
+      ? []
+      : activeCategorySources;
+
+  const sourcesStatus = (
+    <>
+      {activeCategory === 'twitch' && !accessToken && (
+        <a
+          href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
+        >
+          Connect with Twitch
+        </a>
+      )}
+      {((activeCategory === 'twitch' && isLoadingTwitch) ||
+        (activeCategory === 'tv' && !tvSources.length)) &&
+        'Cargando...'}
+      {activeCategory === 'favourites' &&
+        !activeCategorySources.length &&
+        'Sin favoritos'}
+      {activeCategory === 'youtube' &&
+        youtubeConnected &&
+        !activeCategorySources.length &&
+        'Ningún canal suscrito está en vivo'}
+    </>
+  );
+
+  const configPanels = (
+    <>
+      {isZapping && (
+        <div
+          ref={zappingConfigRef}
+          className="flex flex-col items-center gap-2 p-3 shrink-0"
+        >
+          {!zappingToken && (
+            <span className="text-center text-gray-400">
+              Conecta tu cuenta para ver los canales
+            </span>
+          )}
+          <ZappingConfig />
+          {!!zappingToken && (
+            <span className="text-[9px] leading-none text-gray-400">TAB</span>
+          )}
+        </div>
+      )}
+      {isYoutube && youtubeConfigPanel}
+    </>
+  );
+
+  const sourcesContent = (
+    <>
+      {sourcesStatus}
+      {listedSources.map((source, canalIndex) => {
+        if (canalIndex < startIndex || canalIndex > endIndex) return null;
+        return renderSourceCard(source, canalIndex);
+      })}
+      {configPanels}
+    </>
+  );
+
+  // The sidebar shows the whole catalogue instead of a window around the
+  // selection, so it scrolls natively (touch included) and only the rows near
+  // the viewport are mounted.
+  const verticalSourcesContent = (
+    <>
+      <div className="shrink-0 text-center">{sourcesStatus}</div>
+      {/* Skipped when empty so the config panel stays next to the message
+          explaining why the list is empty, instead of at the bottom. */}
+      {!!listedSources.length && (
+        <VirtualList
+          items={listedSources}
+          itemHeight={SIDEBAR_ROW_HEIGHT}
+          activeIndex={selectedIndex}
+          getItemKey={source => source.slug}
+          renderItem={(source, index) => renderSourceCard(source, index)}
+          className="min-h-0 w-full flex-1"
+        />
+      )}
+      <div className="flex shrink-0 flex-col items-center">{configPanels}</div>
+    </>
+  );
+
+  const layoutsContent = (
+    <div
+      className={`flex w-full flex-col gap-2 ${
+        // The sidebar rows scroll, so they need the leftover height.
+        vertical ? 'min-h-0 flex-1' : ''
+      }`}
+    >
+      {namePrompt}
+      {deletePrompt}
+      {/* While a prompt is open the keys belong to it, not the rows. */}
+      <RowSlider
+        rows={layoutRows}
+        enabled={!isNaming && !isConfirmingDelete}
+        onActiveRowChange={setActiveRowKey}
+        vertical={vertical}
+      />
+    </div>
+  );
+
+  const savedScreensHint = isLayouts && (
+    <div className="text-[9px] leading-none text-gray-400 text-center">
+      S guarda la pantalla actual · D elimina la guardada
+    </div>
+  );
+
+  if (vertical)
+    return (
+      <div className="flex h-full w-full flex-col gap-2">
+        <div className="flex flex-wrap gap-1">{categoryButtons}</div>
+        <div className="text-[9px] leading-none text-gray-400 text-center">
+          ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
+        </div>
+        {savedScreensHint}
+        {isLayouts ? (
+          layoutsContent
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Button
+              onClick={() => prev()}
+              variant="ghost"
+              className="h-6 w-full py-0"
+              disabled={selectedIndex <= 0}
+            >
+              <span>{'∧'}</span>
+            </Button>
+            <div className="flex min-h-0 flex-1 flex-col">
+              {verticalSourcesContent}
+            </div>
+            <Button
+              onClick={() => next()}
+              variant="ghost"
+              className="h-6 w-full py-0"
+              disabled={selectedIndex === itemCount - 1}
+            >
+              <span>{'∨'}</span>
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+
   return (
     <div className="w-full h-full flex flex-col justify-center">
       <div className="grid grid-cols-12">
@@ -449,228 +761,28 @@ export function SourceSlider({
           <div className="text-[9px] leading-none text-gray-400 text-center">
             ↑ ↓ usa las flechas para navegar ← →
           </div>
-          <Button
-            variant={activeCategory === 'tv' ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('tv')}
-          >
-            TV
-          </Button>
-          <Button
-            variant={activeCategory === 'twitch' ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('twitch')}
-          >
-            Twitch
-          </Button>
-          <Button
-            variant={activeCategory === 'zapping' ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('zapping')}
-          >
-            Zapping
-          </Button>
-          <Button
-            variant={activeCategory === 'youtube' ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('youtube')}
-          >
-            YouTube en vivo
-          </Button>
-          <Button
-            variant={activeCategory === 'favourites' ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('favourites')}
-          >
-            Favoritos
-          </Button>
-          <Button
-            variant={isLayouts ? 'default' : 'outline'}
-            onClick={() => setActiveCategory('layouts')}
-          >
-            Layouts
-          </Button>
-          {isLayouts && (
-            <div className="text-[9px] leading-none text-gray-400 text-center">
-              S guarda la pantalla actual · D elimina la guardada
-            </div>
-          )}
+          {categoryButtons}
+          {savedScreensHint}
         </div>
         <div className="flex justify-between items-center col-span-10 w-full">
-          {isLayouts && (
-            <div className="flex w-full flex-col gap-2">
-              {namePrompt}
-              {deletePrompt}
-              {/* While a prompt is open the keys belong to it, not the rows. */}
-              <RowSlider
-                rows={layoutRows}
-                enabled={!isNaming && !isConfirmingDelete}
-                onActiveRowChange={setActiveRowKey}
-              />
-            </div>
-          )}
+          {isLayouts && layoutsContent}
           {!isLayouts && (
             <Button
               onClick={() => prev()}
               variant="ghost"
               className="h-full flex flex-col items-center gap-0.5"
-              disabled={!canNavigate || selectedIndex <= 0}
+              disabled={selectedIndex <= 0}
             >
               <span>{'<'}</span>
             </Button>
           )}
-          {!isLayouts &&
-            noScreenSelected &&
-            !showYoutubeConfigInsteadOfHint && (
-              <div className="p-6 text-center text-gray-400">
-                Selecciona una pantalla con las teclas 1-9 o con el botón
-                Cambiar
-              </div>
-            )}
-          {!isLayouts && showYoutubeConfigInsteadOfHint && (
-            <div className="flex w-full justify-center">
-              {youtubeConfigPanel}
-            </div>
-          )}
-          {!isLayouts && !noScreenSelected && (
-            <>
-              {activeCategory === 'twitch' && !accessToken && (
-                <a
-                  href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
-                >
-                  Connect with Twitch
-                </a>
-              )}
-              {((activeCategory === 'twitch' && isLoadingTwitch) ||
-                (activeCategory === 'tv' && !tvSources.length)) &&
-                'Cargando...'}
-              {activeCategory === 'favourites' &&
-                !activeCategorySources.length &&
-                'Sin favoritos'}
-              {activeCategory === 'youtube' &&
-                youtubeConnected &&
-                !activeCategorySources.length &&
-                'Ningún canal suscrito está en vivo'}
-              {activeCategorySources.map((source, canalIndex) => {
-                if (canalIndex < startIndex || canalIndex > endIndex)
-                  return null;
-                if (activeCategory === 'zapping' && !zappingToken) return null;
-                if (activeCategory === 'youtube' && !youtubeConnected)
-                  return null;
-                const isActive = source.slug === selectedSourceSlug;
-                const isFavourite =
-                  source.favourite ??
-                  customSources.find(s => s.slug === source.slug)?.favourite ??
-                  false;
-
-                return (
-                  <div
-                    ref={isActive ? selectedItemRef : undefined}
-                    tabIndex={isActive ? 0 : -1}
-                    aria-current={isActive}
-                    className={`cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
-                      isActive ? 'bg-gray-800' : ''
-                    }`}
-                    onClick={() => {
-                      updateSelectedChannel(canalIndex);
-                    }}
-                    key={`zp_${source.slug}`}
-                  >
-                    <div className="flex flex-col items-center gap-4 p-6">
-                      <div className="flex items-center gap-1.5">
-                        <div className="relative">
-                          {source.imageUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={source.imageUrl}
-                              className="w-[62px] "
-                              alt={source.name || ''}
-                            />
-                          )}
-                          <div className="flex flex-col">
-                            <button
-                              title={
-                                isFavourite
-                                  ? 'Quitar de favoritos'
-                                  : 'Agregar a favoritos'
-                              }
-                              onClick={e => {
-                                e.stopPropagation();
-                                toggleFavourite(source);
-                              }}
-                              className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
-                            >
-                              <Heart
-                                size={14}
-                                className={
-                                  isFavourite
-                                    ? 'fill-red-500 text-red-500'
-                                    : 'text-white'
-                                }
-                              />
-                            </button>
-                            {isActive && (
-                              <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
-                                F
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {isActive && availableSignals.length > 1 && (
-                          <div className="flex flex-col items-center gap-1 rounded bg-black/70 p-1 ml-5">
-                            {availableSignals.map(type => {
-                              const Icon = signalIcons[type];
-                              return (
-                                <button
-                                  key={type}
-                                  title={type}
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    selectSignal(type);
-                                  }}
-                                  className={`rounded p-0.5 ${
-                                    type === activeSignalType
-                                      ? 'bg-white text-black'
-                                      : 'text-white'
-                                  }`}
-                                >
-                                  <Icon size={14} />
-                                </button>
-                              );
-                            })}
-                            <span className="text-[9px] leading-none text-gray-300 mt-0.5">
-                              TAB
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-lg font-semibold">{source.name}</div>
-                    </div>
-                  </div>
-                );
-              })}
-              {isZapping && (
-                <div
-                  ref={zappingConfigRef}
-                  className="flex flex-col items-center gap-2 p-3 shrink-0"
-                >
-                  {!zappingToken && (
-                    <span className="text-center text-gray-400">
-                      Conecta tu cuenta para ver los canales
-                    </span>
-                  )}
-                  <ZappingConfig />
-                  {!!zappingToken && (
-                    <span className="text-[9px] leading-none text-gray-400">
-                      TAB
-                    </span>
-                  )}
-                </div>
-              )}
-              {isYoutube && youtubeConfigPanel}
-            </>
-          )}
+          {!isLayouts && sourcesContent}
           {!isLayouts && (
             <Button
               onClick={() => next()}
               variant="ghost"
               className="h-full flex flex-col items-center gap-0.5"
-              disabled={!canNavigate || selectedIndex === itemCount - 1}
+              disabled={selectedIndex === itemCount - 1}
             >
               <span>{'>'}</span>
             </Button>

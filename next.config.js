@@ -13,12 +13,17 @@ module.exports = {
     return [
       {
         source: '/layout',
-        destination: '/monitor',
+        destination: '/',
         permanent: true
       },
       {
         source: '/grid',
-        destination: '/monitor',
+        destination: '/',
+        permanent: true
+      },
+      {
+        source: '/monitor',
+        destination: '/',
         permanent: true
       }
     ];

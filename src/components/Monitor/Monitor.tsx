@@ -25,12 +25,13 @@ import {
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
+import { ControlBar } from './ControlBar';
 import { OnSwitchCb } from './MonitorSource';
 import { Screen } from './Screen';
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
-  <div>
-    <span className="font-bold text-xl">{keys}</span> {label}
+  <div className="leading-tight">
+    <span className="font-bold">{keys}</span> {label}
   </div>
 );
 
@@ -77,16 +78,10 @@ export const Monitor = () => {
     [displayConfig, activeSources, customSources]
   );
 
-  const fullscreenIdx =
-    isFullscreen && typeof editingSourceIdx === 'number'
-      ? editingSourceIdx
-      : undefined;
+  const fullscreenIdx = isFullscreen ? editingSourceIdx : undefined;
 
   const selectedSourceSlug = useMemo(
-    () =>
-      typeof editingSourceIdx === 'number'
-        ? selectedSources[editingSourceIdx]?.sourceSlug
-        : undefined,
+    () => selectedSources[editingSourceIdx]?.sourceSlug,
     [editingSourceIdx, selectedSources]
   );
 
@@ -95,6 +90,14 @@ export const Monitor = () => {
     : displayConfig.mode === DisplayMode.Layout
       ? displayConfig.layout.length
       : (selectedSources?.length ?? 0);
+
+  // A screen is always selected (the first one to begin with), so when the
+  // tile it pointed at is gone — removed, layout change, fewer live channels —
+  // the selection walks back to the last one that still exists.
+  useEffect(() => {
+    if (!visibleScreenCount) return;
+    setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
+  }, [visibleScreenCount, setEditingSourceIdx]);
 
   const handlePromote = () => {
     setFeaturedMonitor(screen);
@@ -132,8 +135,13 @@ export const Monitor = () => {
     ]);
   };
 
+  // The grid always keeps one screen, so there is something to select.
+  const canRemoveScreen = (selectedSources?.length ?? 0) > 1;
+
   const handleSourceRemove = (idx: number) => {
+    if (!canRemoveScreen) return;
     setSwapSourceIdx(undefined);
+    setIsFullscreen(false);
     setSelectedSources(sources => {
       if (!sources) return sources;
       return sources.filter((src, index) => index !== idx);
@@ -141,7 +149,6 @@ export const Monitor = () => {
   };
 
   const handleSourceChange = (source: SourceType) => {
-    if (editingSourceIdx === undefined) return;
     setSelectedSources(sources => {
       if (!sources) return sources;
       if (sources.length < editingSourceIdx + 1) {
@@ -179,8 +186,7 @@ export const Monitor = () => {
     setActiveCategory(category => (category === 'layouts' ? 'tv' : category));
 
   const handleSourceEdit = (newIdx: number) => {
-    // if it's already being edited, unselect it
-    setEditingSourceIdx(current => (current !== newIdx ? newIdx : undefined));
+    setEditingSourceIdx(newIdx);
     showSources();
   };
 
@@ -252,7 +258,7 @@ export const Monitor = () => {
   useHotkeys(
     'enter',
     () => {
-      if (isYoutubeMode || editingSourceIdx === undefined) return;
+      if (isYoutubeMode) return;
       if (swapSourceIdx === undefined) {
         setSwapSourceIdx(editingSourceIdx);
         return;
@@ -265,17 +271,7 @@ export const Monitor = () => {
     },
     [editingSourceIdx, swapSourceIdx, isYoutubeMode]
   );
-  useHotkeys(
-    'g',
-    () => {
-      if (editingSourceIdx === undefined) {
-        setIsFullscreen(false);
-        return;
-      }
-      setIsFullscreen(current => !current);
-    },
-    [editingSourceIdx]
-  );
+  useHotkeys('g', () => setIsFullscreen(current => !current));
   useHotkeys(
     'escape',
     () => {
@@ -284,14 +280,13 @@ export const Monitor = () => {
         return;
       }
       setSwapSourceIdx(undefined);
-      setEditingSourceIdx(undefined);
     },
     [isFullscreen]
   );
   useHotkeys(
     'm',
     () => {
-      if (editingSourceIdx === undefined || swapSourceIdx !== undefined) return;
+      if (swapSourceIdx !== undefined) return;
       if (isYoutubeMode) {
         setYoutubeSoloIdx(current =>
           current === editingSourceIdx ? undefined : editingSourceIdx
@@ -305,16 +300,10 @@ export const Monitor = () => {
   useHotkeys(
     'd',
     () => {
-      if (isYoutubeMode || editingSourceIdx === undefined || swapSourceIdx !== undefined)
-        return;
+      if (isYoutubeMode || swapSourceIdx !== undefined) return;
       handleSourceRemove(editingSourceIdx);
-      setIsFullscreen(false);
-      const newLength = (selectedSources?.length ?? 0) - 1;
-      setEditingSourceIdx(
-        newLength <= 0 ? undefined : Math.min(editingSourceIdx, newLength - 1)
-      );
     },
-    [editingSourceIdx, swapSourceIdx, selectedSources, isYoutubeMode]
+    [editingSourceIdx, swapSourceIdx, canRemoveScreen, isYoutubeMode]
   );
   useHotkeys(
     'a',
@@ -324,34 +313,18 @@ export const Monitor = () => {
     },
     [displayConfig.mode]
   );
-  useHotkeys('c', () => (isEditing ? showSources() : undefined), [isEditing]);
-  useHotkeys(
-    'l',
-    () => (isEditing ? setActiveCategory('layouts') : undefined),
-    [isEditing]
-  );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
-      <div className="min-h-0 flex-1">
-        <Screen
-          screen={screen}
-          onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-          onRemove={isYoutubeMode ? undefined : handleSourceRemove}
-          editingSourceIdx={editingSourceIdx}
-          swapSourceIdx={swapSourceIdx}
-          fullscreenIdx={fullscreenIdx}
-          onSwitch={isYoutubeMode ? undefined : handleSwitch}
-        />
-      </div>
-
+    <div className="flex h-screen overflow-hidden">
       {isEditing && (
-        <div className="flex-none overflow-y-auto p-3">
-          <SourceSlider
-            onSelect={handleSourceChange}
-            selectedSourceSlug={selectedSourceSlug}
-            noScreenSelected={editingSourceIdx === undefined}
-          />
+        <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <SourceSlider
+              vertical
+              onSelect={handleSourceChange}
+              selectedSourceSlug={selectedSourceSlug}
+            />
+          </div>
 
           {activeCategory === 'layouts' && (
             <div className="mt-3">
@@ -371,10 +344,8 @@ export const Monitor = () => {
             </div>
           )}
 
-          <div className="mt-3 flex flex-row flex-wrap gap-3 text-sm">
+          <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
             <Shortcut keys="E" label="Toggle Edit Mode" />
-            <Shortcut keys="1-9 / ⇧1-9" label="Select Screen" />
-            <Shortcut keys="Esc" label="Deselect" />
             <Shortcut
               keys="Enter"
               label={
@@ -383,46 +354,52 @@ export const Monitor = () => {
                   : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
               }
             />
-            <Shortcut keys="C / L" label="Canales/Layouts" />
-            {editingSourceIdx !== undefined && (
-              <Shortcut
-                keys="G"
-                label={
-                  isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
-                }
-              />
-            )}
-            {editingSourceIdx !== undefined && (
-              <Shortcut
-                keys="M"
-                label={
-                  (selectedSources?.[editingSourceIdx]?.muted ?? true)
-                    ? 'Activar Audio'
-                    : 'Silenciar'
-                }
-              />
-            )}
-            {editingSourceIdx !== undefined && (
+            <Shortcut
+              keys="G"
+              label={
+                isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
+              }
+            />
+            <Shortcut
+              keys="M"
+              label={
+                (selectedSources?.[editingSourceIdx]?.muted ?? true)
+                  ? 'Activar Audio'
+                  : 'Silenciar'
+              }
+            />
+            {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
               <Shortcut keys="D" label="Quitar" />
             )}
             {displayConfig.mode === DisplayMode.Grid && (
               <Shortcut keys="A" label="Agregar" />
             )}
-            <Shortcut keys="↑ ↓" label="Switch Category" />
-            {activeCategory === 'layouts' ? (
-              <Shortcut keys="← →" label="Previous/Next Layout" />
-            ) : (
-              editingSourceIdx !== undefined && (
-                <>
-                  <Shortcut keys="← →" label="Previous/Next Source" />
-                  <Shortcut keys="F" label="Toggle Favourite" />
-                  <Shortcut keys="Tab" label="Cycle Signal" />
-                </>
-              )
-            )}
           </div>
         </div>
       )}
+      <div
+        className="flex min-h-0 min-w-0 flex-1 flex-col"
+        style={{ containerType: 'size' }}
+      >
+        <div
+          className="aspect-video flex-none self-center"
+          style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+        >
+          <Screen
+            screen={screen}
+            onEdit={isYoutubeMode ? undefined : handleSourceEdit}
+            onRemove={
+              isYoutubeMode || !canRemoveScreen ? undefined : handleSourceRemove
+            }
+            editingSourceIdx={editingSourceIdx}
+            swapSourceIdx={swapSourceIdx}
+            fullscreenIdx={fullscreenIdx}
+            onSwitch={isYoutubeMode ? undefined : handleSwitch}
+          />
+        </div>
+
+        <ControlBar className="min-h-0 w-full flex-1" />
+      </div>
     </div>
   );
 };

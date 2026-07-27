@@ -1,6 +1,13 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '@/components/ui/button';
+import { VirtualList } from '../VirtualList/VirtualList';
+
+/**
+ * Height of a compact (sidebar) row item: a 63px thumbnail plus its padding,
+ * gap and label. Rows that use it can be virtualised.
+ */
+export const COMPACT_ITEM_HEIGHT = 95;
 
 export type SliderRow<T = unknown> = {
   /** Stable identity for the row. */
@@ -17,6 +24,12 @@ export type SliderRow<T = unknown> = {
   emptyState?: ReactNode;
   /** How many items to show on each side of the selected one. */
   windowRadius?: number;
+  /**
+   * Fixed height of an item in the vertical layout. Rows that declare it scroll
+   * the whole list (virtualised) instead of showing a window around the
+   * selection; ignored by the horizontal layout, which has no room to scroll.
+   */
+  itemHeight?: number;
   getItemKey?: (item: T, index: number) => string;
 };
 
@@ -35,16 +48,26 @@ type Props = {
   enabled?: boolean;
   /** Reports the key of the row Tab has landed on, for row specific hotkeys. */
   onActiveRowChange?: (key: string | undefined) => void;
+  /**
+   * Transposed: the rows sit side by side as columns and up/down move inside
+   * the active one. Tab still switches between them.
+   */
+  vertical?: boolean;
 };
 
 const DEFAULT_WINDOW_RADIUS = 2;
 
 /**
- * Stack of horizontal, keyboard driven carousels: left/right move inside the
- * active row, Tab moves between rows. Rows keep their own selection, so
- * switching back and forth doesn't lose the place.
+ * Stack of keyboard driven carousels: the arrows along the carousel's axis move
+ * inside the active row, Tab moves between rows. Rows keep their own selection,
+ * so switching back and forth doesn't lose the place.
  */
-export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
+export function RowSlider({
+  rows,
+  enabled = true,
+  onActiveRowChange,
+  vertical
+}: Props) {
   // Start on the first row that actually has items, so an empty leading row
   // (e.g. no saved screens yet) hands focus to the next one instead of
   // stranding it on an empty carousel.
@@ -75,14 +98,18 @@ export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
     activeRow.onSelect(nextIndex, activeRow.items[nextIndex]);
   };
 
-  useHotkeys('left', () => move(-1), { preventDefault: true }, [
-    enabled,
-    activeRow
-  ]);
-  useHotkeys('right', () => move(1), { preventDefault: true }, [
-    enabled,
-    activeRow
-  ]);
+  useHotkeys(
+    vertical ? 'up' : 'left',
+    () => move(-1),
+    { preventDefault: true },
+    [enabled, activeRow]
+  );
+  useHotkeys(
+    vertical ? 'down' : 'right',
+    () => move(1),
+    { preventDefault: true },
+    [enabled, activeRow]
+  );
   useHotkeys(
     'tab',
     () => {
@@ -94,13 +121,20 @@ export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
   );
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div
+      className={`flex w-full gap-2 ${
+        // Side by side columns that own the height they are given, so each one
+        // can scroll its own list.
+        vertical ? 'h-full min-h-0 flex-row items-stretch' : 'flex-col'
+      }`}
+    >
       {rows.map((row, rowIndex) => (
         <Row
           key={row.key}
           row={row}
           isActive={enabled && rowIndex === activeRowIndex}
           showTabHint={enabled && rows.length > 1}
+          vertical={vertical}
         />
       ))}
     </div>
@@ -110,15 +144,19 @@ export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
 function Row({
   row,
   isActive,
-  showTabHint
+  showTabHint,
+  vertical
 }: {
   row: ErasedSliderRow;
   isActive: boolean;
   showTabHint: boolean;
+  vertical?: boolean;
 }) {
   const radius = row.windowRadius ?? DEFAULT_WINDOW_RADIUS;
   const startIndex = Math.max(row.selectedIndex - radius, 0);
   const endIndex = Math.min(row.items.length - 1, row.selectedIndex + radius);
+  // A sidebar column is tall enough to scroll, so it shows the whole list.
+  const itemHeight = vertical ? row.itemHeight : undefined;
 
   const move = (delta: number) => {
     const nextIndex = Math.min(
@@ -128,37 +166,66 @@ function Row({
     row.onSelect(nextIndex, row.items[nextIndex]);
   };
 
+  const renderItem = (item: never, index: number) => (
+    <div className="h-full" onClick={() => row.onSelect(index, item)}>
+      {row.renderItem(item, {
+        index,
+        isSelected: index === row.selectedIndex,
+        isRowActive: isActive
+      })}
+    </div>
+  );
+
   return (
     <div
-      className={`flex w-full items-center justify-between transition-opacity ${
-        isActive ? 'opacity-100' : 'opacity-40'
-      }`}
+      className={`flex transition-opacity ${
+        vertical
+          ? 'min-h-0 min-w-0 flex-1 flex-col items-center gap-1'
+          : 'w-full items-center justify-between'
+      } ${isActive ? 'opacity-100' : 'opacity-40'}`}
     >
       <Button
         onClick={() => move(-1)}
         variant="ghost"
-        className="h-full flex flex-col items-center gap-0.5"
+        className={`flex shrink-0 flex-col items-center gap-0.5 ${
+          vertical ? 'h-6 w-full py-0' : 'h-full'
+        }`}
         disabled={row.selectedIndex <= 0}
       >
-        <span>{'<'}</span>
+        <span>{vertical ? '∧' : '<'}</span>
       </Button>
       {!row.items.length && row.emptyState}
-      {row.items.map((item, index) => {
-        if (index < startIndex || index > endIndex) return null;
-        return (
-          <div
-            key={row.getItemKey?.(item, index) ?? index}
-            onClick={() => row.onSelect(index, item)}
-          >
-            {row.renderItem(item, {
-              index,
-              isSelected: index === row.selectedIndex,
-              isRowActive: isActive
-            })}
-          </div>
-        );
-      })}
-      <div className="flex items-center gap-1">
+      {itemHeight ? (
+        <VirtualList
+          items={row.items}
+          itemHeight={itemHeight}
+          activeIndex={row.selectedIndex}
+          getItemKey={row.getItemKey}
+          renderItem={renderItem}
+          className="min-h-0 w-full flex-1"
+        />
+      ) : (
+        row.items.map((item, index) => {
+          if (index < startIndex || index > endIndex) return null;
+          return (
+            <div
+              key={row.getItemKey?.(item, index) ?? index}
+              onClick={() => row.onSelect(index, item)}
+            >
+              {row.renderItem(item, {
+                index,
+                isSelected: index === row.selectedIndex,
+                isRowActive: isActive
+              })}
+            </div>
+          );
+        })
+      )}
+      <div
+        className={`flex items-center gap-1 ${
+          vertical ? 'w-full shrink-0 flex-col' : ''
+        }`}
+      >
         {/* Marks the row Tab would jump to; kept in the layout while hidden so
             rows stay aligned. */}
         {showTabHint && (
@@ -173,10 +240,12 @@ function Row({
         <Button
           onClick={() => move(1)}
           variant="ghost"
-          className="h-full flex flex-col items-center gap-0.5"
+          className={`flex flex-col items-center gap-0.5 ${
+            vertical ? 'h-6 w-full py-0' : 'h-full'
+          }`}
           disabled={row.selectedIndex >= row.items.length - 1}
         >
-          <span>{'>'}</span>
+          <span>{vertical ? '∨' : '>'}</span>
         </Button>
       </div>
     </div>

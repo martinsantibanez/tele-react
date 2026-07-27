@@ -6,7 +6,11 @@ import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { SavedScreen, useSavedScreens } from '../../hooks/useSavedScreens';
 import { DisplayMode } from '../../types/Monitor';
-import { ErasedSliderRow, sliderRow } from '../RowSlider/RowSlider';
+import {
+  COMPACT_ITEM_HEIGHT,
+  ErasedSliderRow,
+  sliderRow
+} from '../RowSlider/RowSlider';
 import {
   findLayoutIndex,
   possibleLayouts,
@@ -26,7 +30,7 @@ const youtubeScreen: SavedScreen = {
  * Second row of the layouts category: the screens the user has stored, so a
  * whole setup (layout + which source sits in each slot) can be brought back.
  */
-export function useSavedScreensRow(): {
+export function useSavedScreensRow({ compact }: { compact?: boolean } = {}): {
   row: ErasedSliderRow;
   /** Opens the name prompt; the save itself happens on submit. */
   startSave: () => void;
@@ -113,6 +117,7 @@ export function useSavedScreensRow(): {
     key: 'saved',
     items,
     selectedIndex: rowSelectedIndex,
+    itemHeight: COMPACT_ITEM_HEIGHT,
     onSelect: (index, saved) => {
       if (index === 0) {
         selectYoutube();
@@ -127,12 +132,16 @@ export function useSavedScreensRow(): {
       const isYoutube = index === 0;
       return (
         <div
-          className={`cursor-pointer p-3 ${isSelected ? 'bg-gray-800' : ''}`}
+          className={`cursor-pointer ${compact ? 'p-1' : 'p-3'} ${
+            isSelected ? 'bg-gray-800' : ''
+          }`}
         >
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
               <ScreenThumbnail
                 screen={saved.screen}
+                width={compact ? 112 : 160}
+                height={compact ? 63 : 90}
                 className={isSelected ? 'ring-2 ring-white' : undefined}
               />
               {!isYoutube && (
@@ -148,7 +157,13 @@ export function useSavedScreensRow(): {
                 </button>
               )}
             </div>
-            <div className="text-sm font-semibold">{saved.name}</div>
+            <div
+              className={`font-semibold ${
+                compact ? 'max-w-full truncate text-xs' : 'text-sm'
+              }`}
+            >
+              {saved.name}
+            </div>
           </div>
         </div>
       );
