@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
-import { useTwitchToken } from '../../app/duo/DuoPage';
+import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getAvailableSignals, SignalType, SourceType } from '../../sources';
 import { useZappingSources } from '../../hooks/useZappingChannels';
@@ -46,13 +46,6 @@ const signalIcons: Record<SignalType, typeof Tv> = {
 type Props = {
   selectedSourceSlug: string | undefined;
   onSelect: (source: SourceType) => void;
-  onSourceSwap?: () => void;
-  invertControl?: boolean;
-  /**
-   * Sidebar layout: the sources are stacked in a column and the categories run
-   * across the top, so up/down walk the sources and left/right the categories.
-   */
-  vertical?: boolean;
 };
 
 type SelectorCategories =
@@ -102,14 +95,9 @@ export const useActiveCategory = () => {
   });
 };
 
-export function SourceSlider({
-  onSelect,
-  selectedSourceSlug,
-  onSourceSwap,
-  vertical
-}: Props) {
+export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
-  const [accessToken] = useTwitchToken();
+  const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const isLayouts = activeCategory === 'layouts';
@@ -123,7 +111,7 @@ export function SourceSlider({
     cancelDelete,
     deletePrompt,
     isConfirmingDelete
-  } = useSavedScreensRow({ compact: vertical });
+  } = useSavedScreensRow();
   // Which RowSlider row Tab is on, so D only deletes from the saved row.
   const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
 
@@ -234,23 +222,16 @@ export function SourceSlider({
     );
   };
 
-  // The sources run along the picker's main axis and the categories across it,
-  // so which arrows do what follows the orientation.
-  const [prevItemKey, nextItemKey, prevCategoryKey, nextCategoryKey] = vertical
-    ? ['up', 'down', 'left', 'right']
-    : ['left', 'right', 'up', 'down'];
-
-  useHotkeys(prevCategoryKey, () => prevCategory(), { preventDefault: true });
-  useHotkeys(nextCategoryKey, () => nextCategory(), { preventDefault: true });
+  // The sources are stacked in a column and the categories run across the top,
+  // so up/down walk the sources and left/right the categories.
+  useHotkeys('left', () => prevCategory(), { preventDefault: true });
+  useHotkeys('right', () => nextCategory(), { preventDefault: true });
 
   // Layouts are driven by the RowSlider, which owns its own arrow handling.
-  useHotkeys(prevItemKey, () => (isLayouts ? undefined : prev()), {
+  useHotkeys('up', () => (isLayouts ? undefined : prev()), {
     preventDefault: true
   });
-  useHotkeys(nextItemKey, () => (isLayouts ? undefined : next()), {
-    preventDefault: true
-  });
-  useHotkeys('enter', () => (onSourceSwap ? onSourceSwap() : undefined), {
+  useHotkeys('down', () => (isLayouts ? undefined : next()), {
     preventDefault: true
   });
   useHotkeys(
@@ -354,11 +335,6 @@ export function SourceSlider({
     ]
   );
 
-  // The horizontal picker only fits a handful of cards, so it renders a window
-  // around the selection. The sidebar scrolls the whole list instead.
-  const startIndex = Math.max(selectedIndex - 2, 0);
-  const endIndex = Math.min(itemCount - 1, selectedIndex + 2);
-
   const layoutRows = [
     savedScreensRow,
     sliderRow<PossibleLayout>({
@@ -370,25 +346,19 @@ export function SourceSlider({
       itemHeight: COMPACT_ITEM_HEIGHT,
       renderItem: (layout, { isSelected }) => (
         <div
-          className={`cursor-pointer ${vertical ? 'p-1' : 'p-3'} ${
-            isSelected ? 'bg-gray-800' : ''
-          }`}
+          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
         >
           <div className="flex flex-col items-center gap-2">
             <Image
               alt={layout.name}
               src={`/img/layout/${layout.imgName}`}
-              width={vertical ? 112 : 160}
-              height={vertical ? 63 : 90}
+              width={112}
+              height={63}
               className={
                 isSelected ? 'ring-2 ring-white rounded-sm' : undefined
               }
             />
-            <div
-              className={`font-semibold ${
-                vertical ? 'max-w-full truncate text-xs' : 'text-sm'
-              }`}
-            >
+            <div className="max-w-full truncate text-xs font-semibold">
               {layout.name}
             </div>
           </div>
@@ -398,6 +368,15 @@ export function SourceSlider({
   ];
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
+
+  // Twitch sends the token back in the fragment of the page that started the
+  // flow, which is whichever page is hosting the picker.
+  useEffect(() => {
+    if (!document.location.hash) return;
+    const parsedHash = new URLSearchParams(window.location.hash.substring(1));
+    const token = parsedHash.get('access_token');
+    if (token) setTwitchToken(token);
+  }, [setTwitchToken]);
 
   useEffect(() => {
     const getFollowing = async () => {
@@ -486,7 +465,7 @@ export function SourceSlider({
       key={category}
       variant={activeCategory === category ? 'default' : 'outline'}
       onClick={() => setActiveCategory(category)}
-      className={vertical ? 'h-8 grow px-2 text-xs' : undefined}
+      className="h-8 grow px-2 text-xs"
     >
       {categoryLabels[category]}
     </Button>
@@ -504,32 +483,24 @@ export function SourceSlider({
         ref={isActive ? selectedItemRef : undefined}
         tabIndex={isActive ? 0 : -1}
         aria-current={isActive}
-        className={`cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
-          vertical ? 'h-full w-full' : ''
-        } ${isActive ? 'bg-gray-800' : ''}`}
+        className={`h-full w-full cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
+          isActive ? 'bg-gray-800' : ''
+        }`}
         onClick={() => {
           updateSelectedChannel(canalIndex);
         }}
         key={`zp_${source.slug}`}
       >
-        <div
-          className={`flex ${
-            vertical
-              ? 'h-full flex-row items-center gap-3 p-2'
-              : 'flex-col items-center gap-4 p-6'
-          }`}
-        >
+        <div className="flex h-full flex-row items-center gap-3 p-2">
           <div className="flex items-center gap-1.5">
             <div className="relative">
               {source.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={source.imageUrl}
-                  className={
-                    // Logos come in every aspect ratio; boxing them keeps the
-                    // sidebar rows the height the virtual list assumes.
-                    vertical ? 'h-[44px] w-[44px] object-contain' : 'w-[62px] '
-                  }
+                  // Logos come in every aspect ratio; boxing them keeps the
+                  // sidebar rows the height the virtual list assumes.
+                  className="h-[44px] w-[44px] object-contain"
                   alt={source.name || ''}
                 />
               )}
@@ -559,11 +530,7 @@ export function SourceSlider({
               </div>
             </div>
             {isActive && availableSignals.length > 1 && (
-              <div
-                className={`flex items-center gap-1 rounded bg-black/70 p-1 ${
-                  vertical ? 'flex-row ml-2' : 'flex-col ml-5'
-                }`}
-              >
+              <div className="ml-2 flex flex-row items-center gap-1 rounded bg-black/70 p-1">
                 {availableSignals.map(type => {
                   const Icon = signalIcons[type];
                   return (
@@ -584,23 +551,13 @@ export function SourceSlider({
                     </button>
                   );
                 })}
-                <span
-                  className={`text-[9px] leading-none text-gray-300 ${
-                    vertical ? '' : 'mt-0.5'
-                  }`}
-                >
+                <span className="text-[9px] leading-none text-gray-300">
                   TAB
                 </span>
               </div>
             )}
           </div>
-          <div
-            className={
-              vertical
-                ? 'min-w-0 flex-1 truncate text-base font-semibold'
-                : 'text-lg font-semibold'
-            }
-          >
+          <div className="min-w-0 flex-1 truncate text-base font-semibold">
             {source.name}
           </div>
         </div>
@@ -660,21 +617,9 @@ export function SourceSlider({
     </>
   );
 
+  // The sidebar shows the whole catalogue, so it scrolls natively (touch
+  // included) and only the rows near the viewport are mounted.
   const sourcesContent = (
-    <>
-      {sourcesStatus}
-      {listedSources.map((source, canalIndex) => {
-        if (canalIndex < startIndex || canalIndex > endIndex) return null;
-        return renderSourceCard(source, canalIndex);
-      })}
-      {configPanels}
-    </>
-  );
-
-  // The sidebar shows the whole catalogue instead of a window around the
-  // selection, so it scrolls natively (touch included) and only the rows near
-  // the viewport are mounted.
-  const verticalSourcesContent = (
     <>
       <div className="shrink-0 text-center">{sourcesStatus}</div>
       {/* Skipped when empty so the config panel stays next to the message
@@ -694,12 +639,8 @@ export function SourceSlider({
   );
 
   const layoutsContent = (
-    <div
-      className={`flex w-full flex-col gap-2 ${
-        // The sidebar rows scroll, so they need the leftover height.
-        vertical ? 'min-h-0 flex-1' : ''
-      }`}
-    >
+    // The sidebar rows scroll, so they need the leftover height.
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-2">
       {namePrompt}
       {deletePrompt}
       {/* While a prompt is open the keys belong to it, not the rows. */}
@@ -707,7 +648,6 @@ export function SourceSlider({
         rows={layoutRows}
         enabled={!isNaming && !isConfirmingDelete}
         onActiveRowChange={setActiveRowKey}
-        vertical={vertical}
       />
     </div>
   );
@@ -718,77 +658,36 @@ export function SourceSlider({
     </div>
   );
 
-  if (vertical)
-    return (
-      <div className="flex h-full w-full flex-col gap-2">
-        <div className="flex flex-wrap gap-1">{categoryButtons}</div>
-        <div className="text-[9px] leading-none text-gray-400 text-center">
-          ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
-        </div>
-        {savedScreensHint}
-        {isLayouts ? (
-          layoutsContent
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <Button
-              onClick={() => prev()}
-              variant="ghost"
-              className="h-6 w-full py-0"
-              disabled={selectedIndex <= 0}
-            >
-              <span>{'∧'}</span>
-            </Button>
-            <div className="flex min-h-0 flex-1 flex-col">
-              {verticalSourcesContent}
-            </div>
-            <Button
-              onClick={() => next()}
-              variant="ghost"
-              className="h-6 w-full py-0"
-              disabled={selectedIndex === itemCount - 1}
-            >
-              <span>{'∨'}</span>
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-
   return (
-    <div className="w-full h-full flex flex-col justify-center">
-      <div className="grid grid-cols-12">
-        <div className="w-full flex flex-col gap-3 justify-center pl-3 col-span-2">
-          <div className="text-[9px] leading-none text-gray-400 text-center">
-            ↑ ↓ usa las flechas para navegar ← →
-          </div>
-          {categoryButtons}
-          {savedScreensHint}
-        </div>
-        <div className="flex justify-between items-center col-span-10 w-full">
-          {isLayouts && layoutsContent}
-          {!isLayouts && (
-            <Button
-              onClick={() => prev()}
-              variant="ghost"
-              className="h-full flex flex-col items-center gap-0.5"
-              disabled={selectedIndex <= 0}
-            >
-              <span>{'<'}</span>
-            </Button>
-          )}
-          {!isLayouts && sourcesContent}
-          {!isLayouts && (
-            <Button
-              onClick={() => next()}
-              variant="ghost"
-              className="h-full flex flex-col items-center gap-0.5"
-              disabled={selectedIndex === itemCount - 1}
-            >
-              <span>{'>'}</span>
-            </Button>
-          )}
-        </div>
+    <div className="flex h-full w-full flex-col gap-2">
+      <div className="flex flex-wrap gap-1">{categoryButtons}</div>
+      <div className="text-[9px] leading-none text-gray-400 text-center">
+        ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
       </div>
+      {savedScreensHint}
+      {isLayouts ? (
+        layoutsContent
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <Button
+            onClick={() => prev()}
+            variant="ghost"
+            className="h-6 w-full py-0"
+            disabled={selectedIndex <= 0}
+          >
+            <span>{'∧'}</span>
+          </Button>
+          <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
+          <Button
+            onClick={() => next()}
+            variant="ghost"
+            className="h-6 w-full py-0"
+            disabled={selectedIndex === itemCount - 1}
+          >
+            <span>{'∨'}</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

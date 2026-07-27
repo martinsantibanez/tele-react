@@ -30,7 +30,7 @@ const youtubeScreen: SavedScreen = {
  * Second row of the layouts category: the screens the user has stored, so a
  * whole setup (layout + which source sits in each slot) can be brought back.
  */
-export function useSavedScreensRow({ compact }: { compact?: boolean } = {}): {
+export function useSavedScreensRow(): {
   row: ErasedSliderRow;
   /** Opens the name prompt; the save itself happens on submit. */
   startSave: () => void;
@@ -132,16 +132,14 @@ export function useSavedScreensRow({ compact }: { compact?: boolean } = {}): {
       const isYoutube = index === 0;
       return (
         <div
-          className={`cursor-pointer ${compact ? 'p-1' : 'p-3'} ${
-            isSelected ? 'bg-gray-800' : ''
-          }`}
+          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
         >
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
               <ScreenThumbnail
                 screen={saved.screen}
-                width={compact ? 112 : 160}
-                height={compact ? 63 : 90}
+                width={112}
+                height={63}
                 className={isSelected ? 'ring-2 ring-white' : undefined}
               />
               {!isYoutube && (
@@ -157,11 +155,7 @@ export function useSavedScreensRow({ compact }: { compact?: boolean } = {}): {
                 </button>
               )}
             </div>
-            <div
-              className={`font-semibold ${
-                compact ? 'max-w-full truncate text-xs' : 'text-sm'
-              }`}
-            >
+            <div className="max-w-full truncate text-xs font-semibold">
               {saved.name}
             </div>
           </div>

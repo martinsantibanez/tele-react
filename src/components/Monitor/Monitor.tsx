@@ -320,7 +320,6 @@ export const Monitor = () => {
         <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             <SourceSlider
-              vertical
               onSelect={handleSourceChange}
               selectedSourceSlug={selectedSourceSlug}
             />

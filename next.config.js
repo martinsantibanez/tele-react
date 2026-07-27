@@ -25,6 +25,11 @@ module.exports = {
         source: '/monitor',
         destination: '/',
         permanent: true
+      },
+      {
+        source: '/duo',
+        destination: '/',
+        permanent: true
       }
     ];
   }
