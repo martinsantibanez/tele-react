@@ -24,6 +24,7 @@ export function GridDisplay({
         <MonitorSource
           idx={idx}
           sourceSlug={source.sourceSlug}
+          activeSignal={source.activeSignal}
           muted={source.muted ?? true}
           key={`${source.uuid}`}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}

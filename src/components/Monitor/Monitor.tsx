@@ -85,6 +85,13 @@ export const Monitor = () => {
     [editingSourceIdx, selectedSources]
   );
 
+  // The signal lives on the grid node, so it is the screen being edited that
+  // says which one the picker is showing.
+  const selectedSignal = useMemo(
+    () => selectedSources[editingSourceIdx]?.activeSignal,
+    [editingSourceIdx, selectedSources]
+  );
+
   const visibleScreenCount = isYoutubeMode
     ? youtubeSources.length
     : displayConfig.mode === DisplayMode.Layout
@@ -157,10 +164,21 @@ export const Monitor = () => {
         }
       }
       return sources.map((src, idx) => {
+        // A signal key only means something for the source it came from, so a
+        // new channel starts on its own default.
         if (editingSourceIdx === idx)
-          return { ...src, sourceSlug: source.slug };
+          return { ...src, sourceSlug: source.slug, activeSignal: undefined };
         else return src;
       });
+    });
+  };
+
+  const handleSignalChange = (activeSignal: string) => {
+    setSelectedSources(sources => {
+      if (!sources) return sources;
+      return sources.map((src, idx) =>
+        editingSourceIdx === idx ? { ...src, activeSignal } : src
+      );
     });
   };
 
@@ -322,6 +340,8 @@ export const Monitor = () => {
             <SourceSlider
               onSelect={handleSourceChange}
               selectedSourceSlug={selectedSourceSlug}
+              activeSignal={selectedSignal}
+              onSelectSignal={handleSignalChange}
             />
           </div>
 

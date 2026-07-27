@@ -11,6 +11,7 @@ export type OnSwitchCb = (left: number, right: number) => void;
 
 type Props = {
   sourceSlug?: string;
+  activeSignal?: string;
   muted?: boolean;
   onChangeClick?: () => void;
   onRemove?: () => void;
@@ -22,6 +23,7 @@ type Props = {
 
 export function MonitorSource({
   sourceSlug,
+  activeSignal,
   muted = true,
   onChangeClick,
   onRemove,
@@ -71,7 +73,13 @@ export function MonitorSource({
         }`}
       >
         <div className="w-full h-full">
-          {!!source && <SourceOutput source={source} muted={muted} />}
+          {!!source && (
+            <SourceOutput
+              source={source}
+              activeSignal={activeSignal}
+              muted={muted}
+            />
+          )}
         </div>
         {isMarkedForSwap && (
           <div className="pointer-events-none absolute inset-0 z-[3] bg-slate-500/40" />

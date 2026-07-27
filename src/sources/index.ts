@@ -41,11 +41,9 @@ export interface SourceType extends SourceInput {
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
   imageUrl?: string;
-  activeSignalType?: SignalType;
   favourite?: boolean;
 
-  // TODO
-  // inputs?: SourceInput[];
+  inputs?: SourceInput[];
 
   fuente?: string;
 }
@@ -58,10 +56,36 @@ const signalTypeField: Record<SignalType, keyof SourceInput> = {
   twitch: 'twitchAccount'
 };
 
-export function getAvailableSignals(source: SourceType): SignalType[] {
-  return (Object.keys(signalTypeField) as SignalType[]).filter(
-    type => !!source[signalTypeField[type]]
+export interface Signal {
+  type: SignalType;
+  /** Position among the source's inputs of this type; 0 is the primary. */
+  index: number;
+  /** Stable id, so a grid node can point at this signal across reloads. */
+  key: string;
+  input: SourceInput;
+}
+
+/** The primary of each type keeps the bare type as its key. */
+export function signalKey(type: SignalType, index: number) {
+  return index ? `${type}:${index}` : type;
+}
+
+export function getAvailableSignals(source: SourceType): Signal[] {
+  const inputs: SourceInput[] = [source, ...(source.inputs ?? [])];
+  return (Object.keys(signalTypeField) as SignalType[]).flatMap(type =>
+    inputs
+      .filter(input => !!input[signalTypeField[type]])
+      .map((input, index) => ({
+        type,
+        index,
+        key: signalKey(type, index),
+        input
+      }))
   );
+}
+
+export function findSignal(source: SourceType, key: string) {
+  return getAvailableSignals(source).find(signal => signal.key === key);
 }
 
 export type SourcesMap = {

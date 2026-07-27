@@ -1,13 +1,25 @@
 import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
-import { Heart, Tv, Video, YoutubeIcon, TwitchIcon } from 'lucide-react';
+import {
+  ChevronRight,
+  Heart,
+  Tv,
+  Video,
+  YoutubeIcon,
+  TwitchIcon
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useCustomSources } from '../../hooks/useCustomSources';
-import { getAvailableSignals, SignalType, SourceType } from '../../sources';
+import {
+  getAvailableSignals,
+  Signal,
+  SignalType,
+  SourceType
+} from '../../sources';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
@@ -28,12 +40,36 @@ import {
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { useSavedScreensRow } from './SavedScreensRow';
+import {
+  Channel,
+  groupChannelsByCountry,
+  HOME_COUNTRY,
+  TvCountryGroup
+} from './tvChannels';
 
 /**
  * Height of a source row in the sidebar: the 44px logo box plus its padding.
  * The virtual list needs it up front, so the card is pinned to it.
  */
 const SIDEBAR_ROW_HEIGHT = 60;
+
+/** Heights of the two headers the TV list mixes in between the channels. */
+const COUNTRY_ROW_HEIGHT = 38;
+const TV_CATEGORY_ROW_HEIGHT = 24;
+
+/**
+ * A row of the TV list: the country headers fold their channels away, and each
+ * open country labels its channels by the category the feed gives them.
+ */
+type TvRow =
+  | { kind: 'country'; key: string; group: TvCountryGroup; isOpen: boolean }
+  | { kind: 'category'; key: string; label: string }
+  | { kind: 'source'; key: string; source: SourceType; sourceIndex: number };
+
+const tvRowHeight = (row: TvRow) => {
+  if (row.kind === 'source') return SIDEBAR_ROW_HEIGHT;
+  return row.kind === 'country' ? COUNTRY_ROW_HEIGHT : TV_CATEGORY_ROW_HEIGHT;
+};
 
 const signalIcons: Record<SignalType, typeof Tv> = {
   iframe: Tv,
@@ -46,6 +82,9 @@ const signalIcons: Record<SignalType, typeof Tv> = {
 type Props = {
   selectedSourceSlug: string | undefined;
   onSelect: (source: SourceType) => void;
+  /** Signal the edited screen is playing; owned by the grid, not the source. */
+  activeSignal?: string;
+  onSelectSignal?: (key: string) => void;
 };
 
 type SelectorCategories =
@@ -74,19 +113,6 @@ const categoryLabels: Record<SelectorCategories, string> = {
   layouts: 'Layouts'
 };
 
-type Channel = {
-  id: string;
-  name: string;
-  logo: string;
-  signals: { type: 'm3u8' | 'iframe' | 'audio'; url: string }[];
-  youtube: string | null;
-  last_youtube_livestreams?: string[];
-  twitch: string | null;
-  website: string;
-  country: string;
-  category: string;
-};
-
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
 
 export const useActiveCategory = () => {
@@ -95,7 +121,22 @@ export const useActiveCategory = () => {
   });
 };
 
-export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
+/**
+ * Countries whose channels are unfolded in the TV list. Only the home country
+ * starts open, so the catalogue reads as a short list of countries.
+ */
+const useOpenCountries = () => {
+  return useLocalStorageState<string[]>('_open_tv_countries_', {
+    defaultValue: [HOME_COUNTRY]
+  });
+};
+
+export function SourceSlider({
+  onSelect,
+  selectedSourceSlug,
+  activeSignal,
+  onSelectSignal
+}: Props) {
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
@@ -115,13 +156,55 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
   // Which RowSlider row Tab is on, so D only deletes from the saved row.
   const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
 
-  const { createSource, updateSource, toggleFavourite, customSources } =
+  const { createSource, upsertSources, toggleFavourite, customSources } =
     useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const zappingSources = useZappingSources();
   const youtubeSources = useYoutubeLiveSources();
   const { isConnected: youtubeConnected } = useYoutubeAuth();
-  const [tvSources, setTvSources] = useState<SourceType[]>([]);
+  const [tvGroups, setTvGroups] = useState<TvCountryGroup[]>([]);
+  const [openCountries, setOpenCountries] = useOpenCountries();
+
+  const toggleCountry = (country: string) =>
+    setOpenCountries(open =>
+      open.includes(country)
+        ? open.filter(other => other !== country)
+        : [...open, country]
+    );
+
+  // The rows the TV list renders, plus the channels they expose: folded-away
+  // countries drop out of both, so the arrows only walk what is on screen.
+  const { tvRows, tvSources } = useMemo(() => {
+    const rows: TvRow[] = [];
+    const sources: SourceType[] = [];
+    tvGroups.forEach(group => {
+      const isOpen = openCountries.includes(group.country);
+      rows.push({
+        kind: 'country',
+        key: `country_${group.country}`,
+        group,
+        isOpen
+      });
+      if (!isOpen) return;
+      group.categories.forEach(category => {
+        rows.push({
+          kind: 'category',
+          key: `category_${group.country}_${category.category}`,
+          label: category.label
+        });
+        category.sources.forEach(source => {
+          rows.push({
+            kind: 'source',
+            key: source.slug,
+            source,
+            sourceIndex: sources.length
+          });
+          sources.push(source);
+        });
+      });
+    });
+    return { tvRows: rows, tvSources: sources };
+  }, [tvGroups, openCountries]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
     if (activeCategory === 'tv') {
@@ -173,30 +256,44 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
   const selectedSource = activeCategorySources[selectedIndex] as
     | SourceType
     | undefined;
-  // The persisted copy is what MonitorSource actually plays, so it's the
-  // source of truth for which signal is currently active.
-  const persistedSelectedSource = customSources.find(
-    src => src.slug === selectedSource?.slug
-  );
   const availableSignals = selectedSource
     ? getAvailableSignals(selectedSource)
     : [];
-  const activeSignalType =
-    persistedSelectedSource?.activeSignalType ?? availableSignals[0];
+  // Nothing stored means the screen is on the source's default, which is the
+  // first signal the fallback chain would reach for.
+  const activeSignalKey = activeSignal ?? availableSignals[0]?.key;
 
-  const selectSignal = (type: SignalType) => {
-    if (!selectedSource) return;
-    updateSource(selectedSource.slug, { activeSignalType: type });
+  // Mirrors of one type are interchangeable, so the picker shows a button per
+  // type and the active one counts through the mirrors behind it.
+  const signalGroups = availableSignals.reduce<
+    { type: SignalType; signals: Signal[] }[]
+  >((groups, signal) => {
+    const group = groups.find(g => g.type === signal.type);
+    if (group) group.signals.push(signal);
+    else groups.push({ type: signal.type, signals: [signal] });
+    return groups;
+  }, []);
+
+  // Tab walks every signal, mirrors included: when a stream is dead the next
+  // thing to try is the next mirror, not the next type.
+  const cycleSignal = () => {
+    if (availableSignals.length < 2) return;
+    const currentIdx = availableSignals.findIndex(
+      signal => signal.key === activeSignalKey
+    );
+    onSelectSignal?.(
+      availableSignals[(currentIdx + 1) % availableSignals.length].key
+    );
   };
 
-  const cycleSignal = () => {
-    if (!selectedSource || availableSignals.length < 2) return;
-    const currentIdx = activeSignalType
-      ? availableSignals.indexOf(activeSignalType)
-      : -1;
-    const nextType =
-      availableSignals[(currentIdx + 1) % availableSignals.length];
-    selectSignal(nextType);
+  // Clicking the type already playing steps to its next mirror; clicking any
+  // other type jumps to that type's primary.
+  const selectSignalGroup = (signals: Signal[]) => {
+    const currentIdx = signals.findIndex(
+      signal => signal.key === activeSignalKey
+    );
+    const nextIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % signals.length;
+    onSelectSignal?.(signals[nextIdx].key);
   };
 
   const next = () => {
@@ -273,6 +370,7 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
     { preventDefault: true },
     [isConfirmingDelete, cancelDelete]
   );
+  const isTv = activeCategory === 'tv';
   const isZapping = activeCategory === 'zapping';
   const isYoutube = activeCategory === 'youtube';
   // Zapping and YouTube both put a connect/disconnect panel where the signals
@@ -330,8 +428,8 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
       isConfigCategory,
       isYoutube,
       selectedSource,
-      availableSignals,
-      activeSignalType
+      activeSignal,
+      onSelectSignal
     ]
   );
 
@@ -428,20 +526,19 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
       const response = await fetch('/api/channels');
       if (!response.ok) return;
       const { channels }: { channels: Channel[] } = await response.json();
-      const sources: SourceType[] = channels.map(canal => ({
-        slug: `custom_${canal.id}`,
-        name: canal.name,
-        imageUrl: canal.logo,
-        iframeSrc: canal.signals.find(s => s.type === 'iframe')?.url,
-        m3u8Url: canal.signals.find(s => s.type === 'm3u8')?.url,
-        youtubeChannelId: canal.youtube ?? undefined,
-        twitchAccount: canal.twitch ?? undefined
-      }));
-      sources.forEach(createSource);
-      setTvSources(sources);
+      const groups = groupChannelsByCountry(channels);
+      // The feed owns these channels, so the stored copies are rewritten from
+      // it on every load; otherwise one saved before a channel gained mirrors
+      // would keep playing without them.
+      upsertSources(
+        groups.flatMap(group =>
+          group.categories.flatMap(category => category.sources)
+        )
+      );
+      setTvGroups(groups);
     };
     loadSources();
-  }, [createSource]);
+  }, [upsertSources]);
 
   const youtubeConfigPanel = (
     <div
@@ -531,23 +628,35 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
             </div>
             {isActive && availableSignals.length > 1 && (
               <div className="ml-2 flex flex-row items-center gap-1 rounded bg-black/70 p-1">
-                {availableSignals.map(type => {
+                {signalGroups.map(({ type, signals }) => {
                   const Icon = signalIcons[type];
+                  const currentIdx = signals.findIndex(
+                    signal => signal.key === activeSignalKey
+                  );
+                  const isActiveGroup = currentIdx !== -1;
                   return (
                     <button
                       key={type}
-                      title={type}
+                      title={
+                        signals.length > 1
+                          ? `${type} (${signals.length} señales)`
+                          : type
+                      }
                       onClick={e => {
                         e.stopPropagation();
-                        selectSignal(type);
+                        selectSignalGroup(signals);
                       }}
-                      className={`rounded p-0.5 ${
-                        type === activeSignalType
-                          ? 'bg-white text-black'
-                          : 'text-white'
+                      className={`flex items-center gap-0.5 rounded p-0.5 ${
+                        isActiveGroup ? 'bg-white text-black' : 'text-white'
                       }`}
                     >
                       <Icon size={14} />
+                      {signals.length > 1 && (
+                        <span className="text-[9px] leading-none">
+                          {isActiveGroup ? `${currentIdx + 1}/` : ''}
+                          {signals.length}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -562,6 +671,41 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
           </div>
         </div>
       </div>
+    );
+  };
+
+  const renderTvRow = (row: TvRow) => {
+    if (row.kind === 'source')
+      return renderSourceCard(row.source, row.sourceIndex);
+
+    if (row.kind === 'category')
+      return (
+        <div className="flex h-full items-end px-2 pb-0.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+          {row.label}
+        </div>
+      );
+
+    return (
+      <button
+        type="button"
+        aria-expanded={row.isOpen}
+        onClick={() => toggleCountry(row.group.country)}
+        className="flex h-full w-full items-center gap-2 border-t border-gray-800 px-1 text-left outline-none hover:bg-gray-800/60 focus-visible:ring-2 focus-visible:ring-white"
+      >
+        <ChevronRight
+          size={16}
+          className={`shrink-0 transition-transform ${
+            row.isOpen ? 'rotate-90' : ''
+          }`}
+        />
+        <span aria-hidden>{row.group.flag}</span>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+          {row.group.label}
+        </span>
+        <span className="shrink-0 text-xs text-gray-400">
+          {row.group.count}
+        </span>
+      </button>
     );
   };
 
@@ -583,7 +727,7 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
         </a>
       )}
       {((activeCategory === 'twitch' && isLoadingTwitch) ||
-        (activeCategory === 'tv' && !tvSources.length)) &&
+        (isTv && !tvGroups.length)) &&
         'Cargando...'}
       {activeCategory === 'favourites' &&
         !activeCategorySources.length &&
@@ -617,6 +761,34 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
     </>
   );
 
+  // The TV list carries its headers as rows, so the selection has to be looked
+  // up by slug rather than reused from the flat channel index.
+  const selectedTvRowIndex = tvRows.findIndex(
+    row => row.kind === 'source' && row.source.slug === selectedSourceSlug
+  );
+
+  const sourcesList = isTv ? (
+    !!tvRows.length && (
+      <VirtualList
+        items={tvRows}
+        itemHeight={tvRowHeight}
+        activeIndex={selectedTvRowIndex}
+        getItemKey={row => row.key}
+        renderItem={row => renderTvRow(row)}
+        className="min-h-0 w-full flex-1"
+      />
+    )
+  ) : (
+    <VirtualList
+      items={listedSources}
+      itemHeight={SIDEBAR_ROW_HEIGHT}
+      activeIndex={selectedIndex}
+      getItemKey={source => source.slug}
+      renderItem={(source, index) => renderSourceCard(source, index)}
+      className="min-h-0 w-full flex-1"
+    />
+  );
+
   // The sidebar shows the whole catalogue, so it scrolls natively (touch
   // included) and only the rows near the viewport are mounted.
   const sourcesContent = (
@@ -624,16 +796,7 @@ export function SourceSlider({ onSelect, selectedSourceSlug }: Props) {
       <div className="shrink-0 text-center">{sourcesStatus}</div>
       {/* Skipped when empty so the config panel stays next to the message
           explaining why the list is empty, instead of at the bottom. */}
-      {!!listedSources.length && (
-        <VirtualList
-          items={listedSources}
-          itemHeight={SIDEBAR_ROW_HEIGHT}
-          activeIndex={selectedIndex}
-          getItemKey={source => source.slug}
-          renderItem={(source, index) => renderSourceCard(source, index)}
-          className="min-h-0 w-full flex-1"
-        />
-      )}
+      {(isTv || !!listedSources.length) && sourcesList}
       <div className="flex shrink-0 flex-col items-center">{configPanels}</div>
     </>
   );

@@ -64,6 +64,7 @@ export function Layout({
             <MonitorSource
               idx={idx}
               sourceSlug={source.sourceSlug}
+              activeSignal={source.activeSignal}
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}

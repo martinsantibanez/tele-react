@@ -1,9 +1,19 @@
-import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 
 type Props<T> = {
   items: T[];
-  /** Every row is this tall, which is what keeps the maths cheap. */
-  itemHeight: number;
+  /**
+   * Height of a row, either the one every row shares or, for lists that mix
+   * headers into the rows, a per-item measure.
+   */
+  itemHeight: number | ((item: T, index: number) => number);
   renderItem: (item: T, index: number) => ReactNode;
   /**
    * Row that keyboard navigation is on: it's kept scrolled into view and is
@@ -15,6 +25,18 @@ type Props<T> = {
   getItemKey?: (item: T, index: number) => string;
   className?: string;
 };
+
+/** Largest index whose row starts at or before `offset`. */
+function indexAtOffset(offsets: number[], offset: number) {
+  let low = 0;
+  let high = offsets.length - 2;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (offsets[mid] <= offset) low = mid;
+    else high = mid - 1;
+  }
+  return low;
+}
 
 /**
  * Scroller that only mounts the rows near the viewport, so a catalogue of
@@ -35,6 +57,19 @@ export function VirtualList<T>({
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
 
+  // Running row tops, one entry longer than `items` so the last one doubles as
+  // the total height. Everything below is index arithmetic on this.
+  const offsets = useMemo(() => {
+    const result = [0];
+    items.forEach((item, index) => {
+      const height =
+        typeof itemHeight === 'function' ? itemHeight(item, index) : itemHeight;
+      result.push(result[index] + height);
+    });
+    return result;
+  }, [items, itemHeight]);
+  const totalHeight = offsets[items.length];
+
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -52,18 +87,23 @@ export function VirtualList<T>({
     const el = scrollerRef.current;
     if (!el || !viewportHeight) return;
     if (activeIndex === undefined || activeIndex < 0) return;
-    const top = activeIndex * itemHeight;
-    const bottom = top + itemHeight;
+    if (activeIndex >= items.length) return;
+    const top = offsets[activeIndex];
+    const bottom = offsets[activeIndex + 1];
     if (top < el.scrollTop) el.scrollTop = top;
     else if (bottom > el.scrollTop + viewportHeight)
       el.scrollTop = bottom - viewportHeight;
-  }, [activeIndex, itemHeight, viewportHeight]);
+  }, [activeIndex, offsets, items.length, viewportHeight]);
 
-  const firstIndex = Math.max(Math.floor(scrollTop / itemHeight) - overscan, 0);
-  const lastIndex = Math.min(
-    firstIndex + Math.ceil(viewportHeight / itemHeight) + overscan * 2,
-    items.length - 1
-  );
+  const firstIndex = items.length
+    ? Math.max(indexAtOffset(offsets, scrollTop) - overscan, 0)
+    : 0;
+  const lastIndex = items.length
+    ? Math.min(
+        indexAtOffset(offsets, scrollTop + viewportHeight) + overscan,
+        items.length - 1
+      )
+    : -1;
 
   const indices: number[] = [];
   for (let index = firstIndex; index <= lastIndex; index++) indices.push(index);
@@ -83,15 +123,15 @@ export function VirtualList<T>({
         className ?? ''
       }`}
     >
-      <div
-        className="relative w-full"
-        style={{ height: items.length * itemHeight }}
-      >
+      <div className="relative w-full" style={{ height: totalHeight }}>
         {indices.map(index => (
           <div
             key={getItemKey?.(items[index], index) ?? index}
             className="absolute inset-x-0"
-            style={{ top: index * itemHeight, height: itemHeight }}
+            style={{
+              top: offsets[index],
+              height: offsets[index + 1] - offsets[index]
+            }}
           >
             {renderItem(items[index], index)}
           </div>

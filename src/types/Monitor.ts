@@ -4,6 +4,7 @@ export type SourceNode = {
   sourceSlug?: string;
   uuid?: string;
   muted?: boolean;
+  activeSignal?: string;
 };
 
 export type ColType = {

@@ -17,6 +17,23 @@ export function useCustomSources() {
     [setCustomSources]
   );
 
+  const upsertSources = useCallback(
+    (incoming: SourceType[]) => {
+      setCustomSources(v => {
+        const bySlug = new Map((v ?? []).map(source => [source.slug, source]));
+        incoming.forEach(source => {
+          const existing = bySlug.get(source.slug);
+          bySlug.set(source.slug, {
+            ...source,
+            favourite: existing?.favourite ?? source.favourite
+          });
+        });
+        return Array.from(bySlug.values());
+      });
+    },
+    [setCustomSources]
+  );
+
   const updateSource = useCallback(
     (slug: string, patch: Partial<SourceType>) => {
       setCustomSources(v =>
@@ -44,6 +61,7 @@ export function useCustomSources() {
     customSources,
     setCustomSources,
     createSource,
+    upsertSources,
     updateSource,
     toggleFavourite,
     customSourcesMeta
