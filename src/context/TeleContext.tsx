@@ -6,6 +6,9 @@ function useValue() {
   const toggleEditting = () => setIsEditing(e => !e);
   const [editingSourceIdx, setEditingSourceIdx] = useState(0);
   const [swapSourceIdx, setSwapSourceIdx] = useState<number | undefined>();
+  // Naming a screen or confirming a deletion takes over the keyboard: the
+  // single-letter shortcuts would otherwise fire underneath the prompt.
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
 
   return {
     isEditing,
@@ -13,7 +16,9 @@ function useValue() {
     editingSourceIdx,
     setEditingSourceIdx,
     swapSourceIdx,
-    setSwapSourceIdx
+    setSwapSourceIdx,
+    isPromptOpen,
+    setIsPromptOpen
   };
 }
 

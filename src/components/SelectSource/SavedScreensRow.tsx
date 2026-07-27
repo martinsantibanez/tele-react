@@ -5,20 +5,20 @@ import { Input } from '../../../components/ui/input';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { SavedScreen, useSavedScreens } from '../../hooks/useSavedScreens';
-import {
-  COMPACT_ITEM_HEIGHT,
-  ErasedSliderRow,
-  sliderRow
-} from '../RowSlider/RowSlider';
+import { getNumberShortcutLabel } from '../../utils/numberShortcut';
+import { ErasedSliderRow, sliderRow } from '../RowSlider/RowSlider';
 import { findLayoutIndex, possibleLayouts } from './layoutOptions';
 import { ScreenThumbnail } from './ScreenThumbnail';
 
 /**
- * Second row of the layouts category: the screens the user has stored, so a
- * whole setup (layout + which source sits in each slot) can be brought back.
+ * First row of the layout config: the screens the user has stored, so a whole
+ * setup (layout + which source sits in each slot) can be brought back. They
+ * outlive the session, so each one keeps a number key of its own.
  */
 export function useSavedScreensRow(): {
   row: ErasedSliderRow;
+  /** Restores the screen at `index`, if there is one. */
+  selectByIndex: (index: number) => void;
   /** Opens the name prompt; the save itself happens on submit. */
   startSave: () => void;
   /** Render this next to the rows: it is the name prompt, or null when closed. */
@@ -65,6 +65,13 @@ export function useSavedScreensRow(): {
     setSelectedSources(saved.screen.sources);
   };
 
+  const selectByIndex = (index: number) => {
+    const saved = savedScreens[index];
+    if (!saved) return;
+    setSelectedIndex(index);
+    restore(saved);
+  };
+
   const startDelete = (index = selectedIndex) => {
     if (!savedScreens[index]) return;
     setPendingDelete(index);
@@ -87,22 +94,29 @@ export function useSavedScreensRow(): {
     key: 'saved',
     items: savedScreens,
     selectedIndex,
-    itemHeight: COMPACT_ITEM_HEIGHT,
-    onSelect: (index, saved) => {
-      setSelectedIndex(index);
-      restore(saved);
-    },
+    emptyState: (
+      <span className="shrink-0 text-[10px] text-gray-400">
+        Sin pantallas guardadas
+      </span>
+    ),
+    onSelect: index => selectByIndex(index),
     getItemKey: (saved, index) => `${saved.name}-${index}`,
     renderItem: (saved, { index, isSelected }) => (
       <div className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex w-[96px] flex-col items-center gap-1">
           <div className="relative">
             <ScreenThumbnail
               screen={saved.screen}
-              width={112}
-              height={63}
+              width={96}
+              height={54}
               className={isSelected ? 'ring-2 ring-white' : undefined}
             />
+            {/* Past 18 screens there is no key left to show. */}
+            {index < 18 && (
+              <span className="absolute top-0.5 left-0.5 rounded bg-black/70 px-1 text-[10px] font-bold leading-tight text-white">
+                {getNumberShortcutLabel(index)}
+              </span>
+            )}
             <button
               title="Eliminar"
               onClick={event => {
@@ -114,7 +128,7 @@ export function useSavedScreensRow(): {
               <X size={14} className="text-white" />
             </button>
           </div>
-          <div className="max-w-full truncate text-xs font-semibold">
+          <div className="max-w-full truncate text-[10px] font-semibold">
             {saved.name}
           </div>
         </div>
@@ -175,6 +189,7 @@ export function useSavedScreensRow(): {
 
   return {
     row,
+    selectByIndex,
     startSave,
     namePrompt,
     isNaming,

@@ -52,7 +52,7 @@ export function ZappingConfig() {
 
         
         <PopoverTrigger asChild>
-          <Button variant="outline">Zapping Config</Button>
+          <Button variant="outline">Configurar</Button>
         </PopoverTrigger>
         )}
         <PopoverContent

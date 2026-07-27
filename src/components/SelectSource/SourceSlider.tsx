@@ -4,7 +4,6 @@ import {
   ChevronRight,
   FlaskConical,
   Heart,
-  LayoutGrid,
   Tv,
   Video,
   YoutubeIcon,
@@ -14,6 +13,7 @@ import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
+import { useTeleContext } from '../../context/TeleContext';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import {
@@ -31,22 +31,9 @@ import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { ZappingLogo } from './ZappingSelector/ZappingLogo';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
-import {
-  findLayoutIndex,
-  possibleLayouts,
-  PossibleLayout,
-  YOUTUBE_LAYOUT_NAME,
-  youtubeLayoutConfig
-} from './layoutOptions';
+import { YOUTUBE_LAYOUT_NAME, youtubeLayoutConfig } from './layoutOptions';
 import { DisplayMode } from '../../types/Monitor';
-import Image from 'next/image';
-import {
-  COMPACT_ITEM_HEIGHT,
-  RowSlider,
-  sliderRow
-} from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
-import { useSavedScreensRow } from './SavedScreensRow';
 import {
   Channel,
   groupChannelsByCountry,
@@ -117,8 +104,7 @@ type SelectorCategories =
   | 'zapping'
   | 'youtube'
   | 'favourites'
-  | 'pruebas'
-  | 'layouts';
+  | 'pruebas';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
@@ -126,8 +112,7 @@ const categoryOrder: SelectorCategories[] = [
   'youtube',
   'favourites',
   'twitch',
-  ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : []),
-  'layouts'
+  ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : [])
 ];
 
 const categoryLabels: Record<SelectorCategories, string> = {
@@ -136,8 +121,7 @@ const categoryLabels: Record<SelectorCategories, string> = {
   zapping: 'Zapping',
   youtube: 'YouTube',
   favourites: 'Favoritos',
-  pruebas: 'Pruebas',
-  layouts: 'Layouts'
+  pruebas: 'Pruebas'
 };
 
 /**
@@ -153,8 +137,7 @@ const categoryIcons: Record<
   zapping: ZappingLogo,
   youtube: YoutubeIcon,
   favourites: Heart,
-  pruebas: FlaskConical,
-  layouts: LayoutGrid
+  pruebas: FlaskConical
 };
 
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
@@ -182,6 +165,8 @@ export function SourceSlider({
   onSelectSignal
 }: Props) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
+  // While the layouts panel is naming or confirming, the keys are its.
+  const { isPromptOpen } = useTeleContext();
   // A stored category can stop existing — `pruebas` outside dev — and the
   // picker would then show an empty list no button points at.
   const activeCategory = categoryOrder.includes(storedCategory)
@@ -190,7 +175,6 @@ export function SourceSlider({
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const isLayouts = activeCategory === 'layouts';
   const isTv = activeCategory === 'tv';
   const isZapping = activeCategory === 'zapping';
   const isYoutube = activeCategory === 'youtube';
@@ -202,20 +186,6 @@ export function SourceSlider({
   );
   const youtubeLiveSelected =
     isYoutube && youtubeLiveCaret && displayConfig.mode === DisplayMode.Youtube;
-  const {
-    row: savedScreensRow,
-    startSave,
-    namePrompt,
-    isNaming,
-    startDelete,
-    confirmDelete,
-    cancelDelete,
-    deletePrompt,
-    isConfirmingDelete
-  } = useSavedScreensRow();
-  // Which RowSlider row Tab is on, so D only deletes from the saved row.
-  const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
-
   const { createSource, upsertSources, toggleFavourite, customSources } =
     useCustomSources();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
@@ -278,8 +248,6 @@ export function SourceSlider({
       return customSources.filter(source => source.favourite);
     } else if (activeCategory === 'pruebas') {
       return pruebasList;
-    } else if (activeCategory === 'layouts') {
-      return [];
     }
     return zappingSources;
   }, [
@@ -291,27 +259,14 @@ export function SourceSlider({
     youtubeSources
   ]);
 
-  const selectedLayoutIndex = findLayoutIndex(displayConfig);
-
-  // The slider navigates either sources or layouts, depending on the category.
-  const selectedIndex = isLayouts
-    ? selectedLayoutIndex
-    : youtubeLiveSelected
-      ? 0
-      : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
-  const itemCount = isLayouts
-    ? possibleLayouts.length
-    : activeCategorySources.length;
-
-  const selectLayout = (index: number) => {
-    setDisplayConfig(possibleLayouts[index].config);
-  };
+  // The layout config lives under the monitor now, so the sidebar only ever
+  // walks sources.
+  const selectedIndex = youtubeLiveSelected
+    ? 0
+    : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
+  const itemCount = activeCategorySources.length;
 
   const updateSelectedChannel = (index: number) => {
-    if (isLayouts) {
-      selectLayout(index);
-      return;
-    }
     const source = activeCategorySources[index];
     if (!source) return;
     if (isYoutube) setYoutubeLiveCaret(source.slug === YOUTUBE_LIVE_SLUG);
@@ -390,60 +345,36 @@ export function SourceSlider({
     );
   };
 
-  // The sources are stacked in a column and the categories run across the top,
-  // so up/down walk the sources and left/right the categories.
-  useHotkeys('left', () => prevCategory(), { preventDefault: true });
-  useHotkeys('right', () => nextCategory(), { preventDefault: true });
-
-  // Layouts are driven by the RowSlider, which owns its own arrow handling.
-  useHotkeys('up', () => (isLayouts ? undefined : prev()), {
+  // The arrows belong to the monitor now: they walk the screens themselves.
+  // Tab steps through the categories across the top, and W/S — right under the
+  // hand that is already there — walk the sources listed below them.
+  useHotkeys('tab', () => (isPromptOpen ? undefined : nextCategory()), {
     preventDefault: true
   });
-  useHotkeys('down', () => (isLayouts ? undefined : next()), {
+  useHotkeys(
+    'shift+tab',
+    () => (isPromptOpen ? undefined : prevCategory()),
+    { preventDefault: true }
+  );
+
+  useHotkeys('w', () => (isPromptOpen ? undefined : prev()), {
+    preventDefault: true
+  });
+  useHotkeys('s', () => (isPromptOpen ? undefined : next()), {
     preventDefault: true
   });
   useHotkeys(
     'f',
     () => {
       // The live display is not a channel, so there is nothing to favourite.
+      if (isPromptOpen) return;
       if (!selectedSource || selectedSource.slug === YOUTUBE_LIVE_SLUG) return;
       toggleFavourite(selectedSource);
     },
     { preventDefault: true }
   );
-  useHotkeys(
-    's',
-    () => {
-      if (!isLayouts || isNaming || isConfirmingDelete) return;
-      startSave();
-    },
-    { preventDefault: true },
-    [isLayouts, isNaming, isConfirmingDelete, startSave]
-  );
-  useHotkeys(
-    'd',
-    () => {
-      if (!isLayouts || isNaming || isConfirmingDelete) return;
-      if (activeRowKey !== 'saved') return;
-      startDelete();
-    },
-    { preventDefault: true },
-    [isLayouts, isNaming, isConfirmingDelete, activeRowKey, startDelete]
-  );
-  useHotkeys(
-    'y',
-    () => (isConfirmingDelete ? confirmDelete() : undefined),
-    { preventDefault: true },
-    [isConfirmingDelete, confirmDelete]
-  );
-  useHotkeys(
-    'n',
-    () => (isConfirmingDelete ? cancelDelete() : undefined),
-    { preventDefault: true },
-    [isConfirmingDelete, cancelDelete]
-  );
-  // Zapping and YouTube both put a connect/disconnect panel where the signals
-  // TAB would otherwise be.
+  // Zapping and YouTube both put a connect/disconnect panel where the signal
+  // picker would otherwise be.
   const isConfigCategory = isZapping || isYoutube;
   const zappingConfigRef = useRef<HTMLDivElement>(null);
   const youtubeConfigRef = useRef<HTMLDivElement>(null);
@@ -451,11 +382,10 @@ export function SourceSlider({
 
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (isLayouts) return;
     // In the sidebar the VirtualList keeps the selected row mounted and in
     // view, so focusing it never needs to scroll.
     selectedItemRef.current?.focus({ preventScroll: true });
-  }, [selectedSourceSlug, activeCategory, isLayouts, youtubeLiveSelected]);
+  }, [selectedSourceSlug, activeCategory, youtubeLiveSelected]);
 
   const focusActiveConfig = () => {
     activeConfigRef.current?.querySelector('button')?.focus();
@@ -472,67 +402,11 @@ export function SourceSlider({
   }, [isConfigCategory, configNeedsAuth]);
 
   useHotkeys(
-    'tab',
-    e => {
-      // In layouts Tab switches rows inside the RowSlider.
-      if (isLayouts) return;
-      const config = activeConfigRef.current;
-      // Inside the config controls Tab keeps its native meaning.
-      if (
-        isConfigCategory &&
-        config &&
-        !config.contains(document.activeElement)
-      ) {
-        e.preventDefault();
-        focusActiveConfig();
-        return;
-      }
-      if (isConfigCategory) return;
-      e.preventDefault();
-      cycleSignal();
-    },
-    { preventDefault: false },
-    [
-      isLayouts,
-      isConfigCategory,
-      isYoutube,
-      selectedSource,
-      activeSignal,
-      onSelectSignal
-    ]
+    'r',
+    () => (isPromptOpen ? undefined : cycleSignal()),
+    { preventDefault: true },
+    [isPromptOpen, selectedSource, activeSignal, onSelectSignal]
   );
-
-  const layoutRows = [
-    savedScreensRow,
-    sliderRow<PossibleLayout>({
-      key: 'layouts',
-      items: possibleLayouts,
-      selectedIndex: selectedLayoutIndex,
-      onSelect: index => selectLayout(index),
-      getItemKey: layout => layout.imgName,
-      itemHeight: COMPACT_ITEM_HEIGHT,
-      renderItem: (layout, { isSelected }) => (
-        <div
-          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <Image
-              alt={layout.name}
-              src={`/img/layout/${layout.imgName}`}
-              width={112}
-              height={63}
-              className={
-                isSelected ? 'ring-2 ring-white rounded-sm' : undefined
-              }
-            />
-            <div className="max-w-full truncate text-xs font-semibold">
-              {layout.name}
-            </div>
-          </div>
-        </div>
-      )
-    })
-  ];
 
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
 
@@ -620,9 +494,6 @@ export function SourceSlider({
         </span>
       )}
       <YoutubeConfig />
-      {youtubeConnected && (
-        <span className="text-[9px] leading-none text-gray-400">TAB</span>
-      )}
     </div>
   );
 
@@ -764,9 +635,7 @@ export function SourceSlider({
                     </button>
                   );
                 })}
-                <span className="text-[9px] leading-none text-gray-300">
-                  TAB
-                </span>
+                <span className="text-[9px] leading-none text-gray-300">R</span>
               </div>
             )}
           </div>
@@ -856,9 +725,6 @@ export function SourceSlider({
             </span>
           )}
           <ZappingConfig />
-          {!!zappingToken && (
-            <span className="text-[9px] leading-none text-gray-400">TAB</span>
-          )}
         </div>
       )}
       {isYoutube && youtubeConfigPanel}
@@ -905,26 +771,6 @@ export function SourceSlider({
     </>
   );
 
-  const layoutsContent = (
-    // The sidebar rows scroll, so they need the leftover height.
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2">
-      {namePrompt}
-      {deletePrompt}
-      {/* While a prompt is open the keys belong to it, not the rows. */}
-      <RowSlider
-        rows={layoutRows}
-        enabled={!isNaming && !isConfirmingDelete}
-        onActiveRowChange={setActiveRowKey}
-      />
-    </div>
-  );
-
-  const savedScreensHint = isLayouts && (
-    <div className="text-[9px] leading-none text-gray-400 text-center">
-      S guarda la pantalla actual · D elimina la guardada
-    </div>
-  );
-
   return (
     <div className="flex h-full w-full flex-col gap-2">
       <div
@@ -935,16 +781,9 @@ export function SourceSlider({
         {categoryButtons}
       </div>
       <div className="text-[9px] leading-none text-gray-400 text-center">
-        ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
+        TAB categorías · W S canales · R señal
       </div>
-      {savedScreensHint}
-      {isLayouts ? (
-        layoutsContent
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
-        </div>
-      )}
+      <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 'use client';
-import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
@@ -8,7 +7,6 @@ import {
   DEFAULT_GRID_SIZE,
   useDisplayConfig
 } from '../../hooks/useDisplayConfig';
-import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { SourceType } from '../../sources';
@@ -19,12 +17,12 @@ import {
   SourceNode
 } from '../../types/Monitor';
 import {
-  getIndexFromKeyEvent,
-  getSourceShortcutLabel
-} from '../../utils/sourceShortcut';
+  Direction,
+  directionFromKeyEvent,
+  findNeighbourIdx
+} from '../../utils/spatialNavigation';
 import { uuid } from '../../utils/uuid';
-import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
+import { SourceSlider } from '../SelectSource/SourceSlider';
 import { ControlBar } from './ControlBar';
 import { OnSwitchCb } from './MonitorSource';
 import { Screen } from './Screen';
@@ -42,14 +40,16 @@ export const Monitor = () => {
     editingSourceIdx,
     setEditingSourceIdx,
     swapSourceIdx,
-    setSwapSourceIdx
+    setSwapSourceIdx,
+    isPromptOpen
   } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const { customSources } = useCustomSources();
-  const [, setFeaturedMonitor] = useFeaturedScreen();
-  const [activeCategory, setActiveCategory] = useActiveCategory();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Scopes the arrows to this monitor's tiles; the saved-screen thumbnails
+  // elsewhere on the page are not screens to navigate to.
+  const screenRef = useRef<HTMLDivElement>(null);
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
   const { nodes: youtubeNodes } = useYoutubeGridSources();
@@ -105,10 +105,6 @@ export const Monitor = () => {
     if (!visibleScreenCount) return;
     setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
   }, [visibleScreenCount, setEditingSourceIdx]);
-
-  const handlePromote = () => {
-    setFeaturedMonitor(screen);
-  };
 
   const handleModeChange = (mode: DisplayMode) => {
     if (mode === DisplayMode.Grid) {
@@ -199,22 +195,7 @@ export const Monitor = () => {
     });
   };
 
-  // Leaving the layouts category falls back to the channels list.
-  const showSources = () =>
-    setActiveCategory(category => (category === 'layouts' ? 'tv' : category));
-
-  const handleSourceEdit = (newIdx: number) => {
-    setEditingSourceIdx(newIdx);
-    showSources();
-  };
-
-  const handleShare = async () => {
-    const response = await axios.post('/api/share', screen);
-    prompt(
-      `Enlace para compartir. Valido por 24 horas.`,
-      `${window.location.origin}/shared/${response.data.uuid}`
-    );
-  };
+  const handleSourceEdit = (newIdx: number) => setEditingSourceIdx(newIdx);
 
   const handleSwitch: OnSwitchCb = (left: number, right: number) => {
     setSelectedSources(sources => {
@@ -248,32 +229,48 @@ export const Monitor = () => {
     };
   }, []);
 
-  useHotkeys('e', () => toggleEditting());
+  // The arrows walk the monitor by geometry, so the screen next to the one
+  // selected is the one the eye says is next to it, whatever the arrangement.
+  const moveSelection = (direction: Direction) => {
+    const nextIdx = findNeighbourIdx(
+      screenRef.current,
+      editingSourceIdx,
+      direction
+    );
+    if (nextIdx === undefined || nextIdx >= visibleScreenCount) return;
+    setEditingSourceIdx(nextIdx);
+    // The YouTube grid is auto-managed: landing on a tile solos its audio (and
+    // lets G fullscreen it); there is no per-tile source editing.
+    if (isYoutubeMode) {
+      setYoutubeSoloIdx(nextIdx);
+      return;
+    }
+    if (swapSourceIdx === undefined) handleSoloAudio(nextIdx);
+  };
+
+  useHotkeys('e', () => (isPromptOpen ? undefined : toggleEditting()), [
+    isPromptOpen
+  ]);
   useHotkeys(
-    [
-      '1,2,3,4,5,6,7,8,9',
-      'shift+1,shift+2,shift+3,shift+4,shift+5,shift+6,shift+7,shift+8,shift+9'
-    ].join(','),
-    e => {
-      const idx = getIndexFromKeyEvent(e);
-      if (idx === undefined || idx >= visibleScreenCount) return;
-      // The YouTube grid is auto-managed: a number key selects a tile (so G can
-      // fullscreen it) and solos its audio; there is no per-tile source editing.
-      if (isYoutubeMode) {
-        setEditingSourceIdx(idx);
-        setYoutubeSoloIdx(idx);
-        return;
-      }
-      setEditingSourceIdx(idx);
-      if (swapSourceIdx === undefined) handleSoloAudio(idx);
-      showSources();
+    'up,down,left,right',
+    event => {
+      if (isPromptOpen) return;
+      const direction = directionFromKeyEvent(event);
+      if (direction) moveSelection(direction);
     },
-    [visibleScreenCount, swapSourceIdx, isYoutubeMode]
+    { preventDefault: true },
+    [
+      editingSourceIdx,
+      visibleScreenCount,
+      swapSourceIdx,
+      isYoutubeMode,
+      isPromptOpen
+    ]
   );
   useHotkeys(
     'enter',
     () => {
-      if (isYoutubeMode) return;
+      if (isYoutubeMode || isPromptOpen) return;
       if (swapSourceIdx === undefined) {
         setSwapSourceIdx(editingSourceIdx);
         return;
@@ -284,24 +281,29 @@ export const Monitor = () => {
       }
       setSwapSourceIdx(undefined);
     },
-    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
+    [editingSourceIdx, swapSourceIdx, isYoutubeMode, isPromptOpen]
   );
-  useHotkeys('g', () => setIsFullscreen(current => !current));
+  useHotkeys(
+    'g',
+    () => (isPromptOpen ? undefined : setIsFullscreen(current => !current)),
+    [isPromptOpen]
+  );
   useHotkeys(
     'escape',
     () => {
+      if (isPromptOpen) return;
       if (isFullscreen) {
         setIsFullscreen(false);
         return;
       }
       setSwapSourceIdx(undefined);
     },
-    [isFullscreen]
+    [isFullscreen, isPromptOpen]
   );
   useHotkeys(
     'm',
     () => {
-      if (swapSourceIdx !== undefined) return;
+      if (swapSourceIdx !== undefined || isPromptOpen) return;
       if (isYoutubeMode) {
         setYoutubeSoloIdx(current =>
           current === editingSourceIdx ? undefined : editingSourceIdx
@@ -310,23 +312,33 @@ export const Monitor = () => {
       }
       handleToggleMute(editingSourceIdx);
     },
-    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
+    [editingSourceIdx, swapSourceIdx, isYoutubeMode, isPromptOpen]
   );
+  // A and D walk the layouts under the monitor, so removing and adding a screen
+  // moved off the letters onto the keys that already mean it.
   useHotkeys(
-    'd',
+    'delete,backspace',
     () => {
-      if (isYoutubeMode || swapSourceIdx !== undefined) return;
+      if (isYoutubeMode || swapSourceIdx !== undefined || isPromptOpen) return;
       handleSourceRemove(editingSourceIdx);
     },
-    [editingSourceIdx, swapSourceIdx, canRemoveScreen, isYoutubeMode]
+    { preventDefault: true },
+    [
+      editingSourceIdx,
+      swapSourceIdx,
+      canRemoveScreen,
+      isYoutubeMode,
+      isPromptOpen
+    ]
   );
   useHotkeys(
-    'a',
+    'n',
     () => {
-      if (displayConfig.mode !== DisplayMode.Grid) return;
+      // While a deletion is being confirmed N is its "no"; the panel has it.
+      if (displayConfig.mode !== DisplayMode.Grid || isPromptOpen) return;
       handleSourceAdd();
     },
-    [displayConfig.mode]
+    [displayConfig.mode, isPromptOpen]
   );
 
   return (
@@ -342,32 +354,15 @@ export const Monitor = () => {
             />
           </div>
 
-          {activeCategory === 'layouts' && (
-            <div className="mt-3">
-              <ScreenOptions
-                onSizeChange={handleSizeChange}
-                onSourceAdd={
-                  displayConfig.mode === DisplayMode.Grid
-                    ? handleSourceAdd
-                    : undefined
-                }
-                onModeChange={handleModeChange}
-                onPromote={handlePromote}
-                onShare={handleShare}
-                mode={displayConfig.mode}
-                size={displayConfig.grid.size}
-              />
-            </div>
-          )}
-
           <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
             <Shortcut keys="E" label="Toggle Edit Mode" />
+            <Shortcut keys="↑ ↓ ← →" label="Elegir Pantalla" />
             <Shortcut
               keys="Enter"
               label={
                 swapSourceIdx === undefined
                   ? 'Marcar para Intercambiar'
-                  : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
+                  : `Intercambiar con ${swapSourceIdx + 1}`
               }
             />
             <Shortcut
@@ -385,36 +380,54 @@ export const Monitor = () => {
               }
             />
             {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
-              <Shortcut keys="D" label="Quitar" />
+              <Shortcut keys="SUPR" label="Quitar" />
             )}
             {displayConfig.mode === DisplayMode.Grid && (
-              <Shortcut keys="A" label="Agregar" />
+              <Shortcut keys="N" label="Agregar" />
             )}
           </div>
         </div>
       )}
-      <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
-        style={{ containerType: 'size' }}
-      >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {/* The monitor takes what the control bar leaves, and the container
+            query fits the 16:9 box inside it. */}
         <div
-          className="aspect-video flex-none self-center"
-          style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+          className="flex min-h-0 min-w-0 flex-1"
+          style={{ containerType: 'size' }}
         >
-          <Screen
-            screen={screen}
-            onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-            onRemove={
-              isYoutubeMode || !canRemoveScreen ? undefined : handleSourceRemove
-            }
-            editingSourceIdx={editingSourceIdx}
-            swapSourceIdx={swapSourceIdx}
-            fullscreenIdx={fullscreenIdx}
-            onSwitch={isYoutubeMode ? undefined : handleSwitch}
-          />
+          <div
+            ref={screenRef}
+            className="m-auto aspect-video"
+            style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+          >
+            <Screen
+              screen={screen}
+              onEdit={isYoutubeMode ? undefined : handleSourceEdit}
+              onRemove={
+                isYoutubeMode || !canRemoveScreen
+                  ? undefined
+                  : handleSourceRemove
+              }
+              editingSourceIdx={editingSourceIdx}
+              swapSourceIdx={swapSourceIdx}
+              fullscreenIdx={fullscreenIdx}
+              onSwitch={isYoutubeMode ? undefined : handleSwitch}
+            />
+          </div>
         </div>
 
-        <ControlBar className="min-h-0 w-full flex-1" />
+        {/* The layout config is always on screen, and its keys are its own, so
+            it answers whichever category the sidebar is browsing. */}
+        <ControlBar
+          className="w-full flex-none"
+          mode={displayConfig.mode}
+          size={displayConfig.grid.size}
+          onModeChange={handleModeChange}
+          onSizeChange={handleSizeChange}
+          onSourceAdd={
+            displayConfig.mode === DisplayMode.Grid ? handleSourceAdd : undefined
+          }
+        />
       </div>
     </div>
   );

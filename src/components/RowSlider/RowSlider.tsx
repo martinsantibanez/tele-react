@@ -1,12 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { VirtualList } from '../VirtualList/VirtualList';
-
-/**
- * Height of a compact (sidebar) row item: a 63px thumbnail plus its padding,
- * gap and label. Rows that use it can be virtualised.
- */
-export const COMPACT_ITEM_HEIGHT = 95;
+import { ReactNode, useEffect, useRef } from 'react';
 
 export type SliderRow<T = unknown> = {
   /** Stable identity for the row. */
@@ -15,14 +7,9 @@ export type SliderRow<T = unknown> = {
   /** Index of the item currently selected inside this row, -1 when none. */
   selectedIndex: number;
   onSelect: (index: number, item: T) => void;
-  renderItem: (
-    item: T,
-    ctx: { index: number; isSelected: boolean; isRowActive: boolean }
-  ) => ReactNode;
+  renderItem: (item: T, ctx: { index: number; isSelected: boolean }) => ReactNode;
   /** Shown instead of the items when the row is empty. */
   emptyState?: ReactNode;
-  /** Fixed height of an item, needed up front to virtualise the list. */
-  itemHeight: number;
   getItemKey?: (item: T, index: number) => string;
 };
 
@@ -37,128 +24,55 @@ export const sliderRow = <T,>(row: SliderRow<T>): ErasedSliderRow =>
 
 type Props = {
   rows: ErasedSliderRow[];
-  /** Arrows and Tab are ignored while false. */
-  enabled?: boolean;
-  /** Reports the key of the row Tab has landed on, for row specific hotkeys. */
-  onActiveRowChange?: (key: string | undefined) => void;
 };
 
 /**
- * Keyboard driven carousels sitting side by side as columns: up/down move
- * inside the active one, Tab switches between them. Rows keep their own
- * selection, so switching back and forth doesn't lose the place.
+ * Strips of thumbnails stacked on top of each other. Each row owns its own
+ * shortcut — see {@link import('../SelectSource/LayoutsPanel').LayoutsPanel} —
+ * so this only draws them and keeps the selection in view.
  */
-export function RowSlider({ rows, enabled = true, onActiveRowChange }: Props) {
-  // Start on the first row that actually has items, so an empty leading row
-  // (e.g. no saved screens yet) hands focus to the next one instead of
-  // stranding it on an empty carousel.
-  const [activeRowIndex, setActiveRowIndex] = useState(() => {
-    const firstFilled = rows.findIndex(row => row.items.length > 0);
-    return firstFilled === -1 ? 0 : firstFilled;
-  });
-
-  // Rows can appear or disappear as the surrounding tab changes.
-  useEffect(() => {
-    setActiveRowIndex(current => (current < rows.length ? current : 0));
-  }, [rows.length]);
-
-  const activeRow = rows[activeRowIndex] as ErasedSliderRow | undefined;
-  const activeRowKey = activeRow?.key;
-
-  useEffect(() => {
-    onActiveRowChange?.(activeRowKey);
-  }, [activeRowKey, onActiveRowChange]);
-
-  const move = (delta: number) => {
-    if (!enabled || !activeRow || !activeRow.items.length) return;
-    const nextIndex = Math.min(
-      Math.max(activeRow.selectedIndex + delta, 0),
-      activeRow.items.length - 1
-    );
-    if (nextIndex === activeRow.selectedIndex) return;
-    activeRow.onSelect(nextIndex, activeRow.items[nextIndex]);
-  };
-
-  useHotkeys('up', () => move(-1), { preventDefault: true }, [
-    enabled,
-    activeRow
-  ]);
-  useHotkeys('down', () => move(1), { preventDefault: true }, [
-    enabled,
-    activeRow
-  ]);
-  useHotkeys(
-    'tab',
-    () => {
-      if (!enabled || rows.length < 2) return;
-      setActiveRowIndex(current => (current + 1) % rows.length);
-    },
-    { preventDefault: true },
-    [enabled, rows.length]
-  );
-
+export function RowSlider({ rows }: Props) {
   return (
-    // Side by side columns that own the height they are given, so each one can
-    // scroll its own list.
-    <div className="flex h-full min-h-0 w-full flex-row items-stretch gap-2">
-      {rows.map((row, rowIndex) => (
-        <Row
-          key={row.key}
-          row={row}
-          isActive={enabled && rowIndex === activeRowIndex}
-          showTabHint={enabled && rows.length > 1}
-        />
+    <div className="flex w-full flex-col gap-2">
+      {rows.map(row => (
+        <SliderStrip key={row.key} row={row} />
       ))}
     </div>
   );
 }
 
-function Row({
-  row,
-  isActive,
-  showTabHint
-}: {
-  row: ErasedSliderRow;
-  isActive: boolean;
-  showTabHint: boolean;
-}) {
-  const renderItem = (item: never, index: number) => (
-    <div className="h-full" onClick={() => row.onSelect(index, item)}>
-      {row.renderItem(item, {
-        index,
-        isSelected: index === row.selectedIndex,
-        isRowActive: isActive
-      })}
-    </div>
-  );
+/**
+ * The lists are short — a handful of arrangements and the screens the user has
+ * saved — so every item is mounted and the strip just scrolls sideways.
+ */
+function SliderStrip({ row }: { row: ErasedSliderRow }) {
+  const selectedRef = useRef<HTMLDivElement>(null);
+
+  // The shortcuts can walk the selection past the edge of the strip.
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest'
+    });
+  }, [row.selectedIndex]);
 
   return (
-    <div
-      className={`flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 transition-opacity ${
-        isActive ? 'opacity-100' : 'opacity-40'
-      }`}
-    >
+    <div className="flex w-full min-w-0 shrink-0 flex-row items-center gap-1">
       {!row.items.length && row.emptyState}
-      <VirtualList
-        items={row.items}
-        itemHeight={row.itemHeight}
-        activeIndex={row.selectedIndex}
-        getItemKey={row.getItemKey}
-        renderItem={renderItem}
-        className="min-h-0 w-full flex-1"
-      />
-      <div className="flex w-full shrink-0 flex-col items-center gap-1">
-        {/* Marks the row Tab would jump to; kept in the layout while hidden so
-            rows stay aligned. */}
-        {showTabHint && (
-          <span
-            className={`text-[9px] leading-none text-gray-400 ${
-              isActive ? 'invisible' : ''
-            }`}
+      <div className="flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto overscroll-contain touch-pan-x">
+        {row.items.map((item, index) => (
+          <div
+            key={row.getItemKey?.(item, index) ?? index}
+            ref={index === row.selectedIndex ? selectedRef : undefined}
+            className="shrink-0"
+            onClick={() => row.onSelect(index, item)}
           >
-            TAB
-          </span>
-        )}
+            {row.renderItem(item, {
+              index,
+              isSelected: index === row.selectedIndex
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

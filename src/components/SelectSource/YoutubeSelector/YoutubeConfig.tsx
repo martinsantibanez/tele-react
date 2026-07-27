@@ -20,7 +20,7 @@ export function YoutubeConfig() {
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline">YouTube Config</Button>
+          <Button variant="outline">Configurar</Button>
         </PopoverTrigger>
         <PopoverContent className="w-80">
           <div className="grid gap-4">
