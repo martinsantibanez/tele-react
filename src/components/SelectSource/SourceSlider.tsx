@@ -2,6 +2,7 @@ import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
 import {
   ChevronRight,
+  FlaskConical,
   Heart,
   LayoutGrid,
   Tv,
@@ -21,6 +22,7 @@ import {
   SignalType,
   SourceType
 } from '../../sources';
+import { pruebasSources } from '../../sources/pruebas';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
@@ -87,6 +89,12 @@ const youtubeLiveEntry: SourceType = {
   name: YOUTUBE_LAYOUT_NAME
 };
 
+/** The test bench is for trying sources out, so it never ships to production. */
+const showPruebas = process.env.NODE_ENV === 'development';
+
+/** Hand-written sources for trying things out; they come from no feed. */
+const pruebasList = showPruebas ? Object.values(pruebasSources) : [];
+
 const signalIcons: Record<SignalType, typeof Tv> = {
   iframe: Tv,
   m3u8: Video,
@@ -104,7 +112,13 @@ type Props = {
 };
 
 type SelectorCategories =
-  'tv' | 'twitch' | 'zapping' | 'youtube' | 'favourites' | 'layouts';
+  | 'tv'
+  | 'twitch'
+  | 'zapping'
+  | 'youtube'
+  | 'favourites'
+  | 'pruebas'
+  | 'layouts';
 
 const categoryOrder: SelectorCategories[] = [
   'tv',
@@ -112,6 +126,7 @@ const categoryOrder: SelectorCategories[] = [
   'youtube',
   'favourites',
   'twitch',
+  ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : []),
   'layouts'
 ];
 
@@ -121,6 +136,7 @@ const categoryLabels: Record<SelectorCategories, string> = {
   zapping: 'Zapping',
   youtube: 'YouTube',
   favourites: 'Favoritos',
+  pruebas: 'Pruebas',
   layouts: 'Layouts'
 };
 
@@ -137,6 +153,7 @@ const categoryIcons: Record<
   zapping: ZappingLogo,
   youtube: YoutubeIcon,
   favourites: Heart,
+  pruebas: FlaskConical,
   layouts: LayoutGrid
 };
 
@@ -164,7 +181,12 @@ export function SourceSlider({
   activeSignal,
   onSelectSignal
 }: Props) {
-  const [activeCategory, setActiveCategory] = useActiveCategory();
+  const [storedCategory, setActiveCategory] = useActiveCategory();
+  // A stored category can stop existing — `pruebas` outside dev — and the
+  // picker would then show an empty list no button points at.
+  const activeCategory = categoryOrder.includes(storedCategory)
+    ? storedCategory
+    : 'tv';
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
@@ -254,6 +276,8 @@ export function SourceSlider({
       return [youtubeLiveEntry, ...youtubeSources];
     } else if (activeCategory === 'favourites') {
       return customSources.filter(source => source.favourite);
+    } else if (activeCategory === 'pruebas') {
+      return pruebasList;
     } else if (activeCategory === 'layouts') {
       return [];
     }

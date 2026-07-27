@@ -7,6 +7,7 @@ import { especialesSources } from './especiales';
 import { internacionalSources } from './internacional';
 import { musicaSources } from './musica';
 import { placeHolderSources } from './placeholder';
+import { pruebasSources } from './pruebas';
 import { radiosSources } from './radios';
 import { regionesSources } from './regiones';
 import { relojesSources } from './relojes';
@@ -149,6 +150,10 @@ export const sourcesCategories: SourceGroup[] = [
   {
     name: 'Especiales',
     sources: especialesSources
+  },
+  {
+    name: 'Pruebas',
+    sources: pruebasSources
   }
 ];
 
