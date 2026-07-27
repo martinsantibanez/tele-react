@@ -477,7 +477,7 @@ export function SourceSlider({
             variant={activeCategory === 'favourites' ? 'default' : 'outline'}
             onClick={() => setActiveCategory('favourites')}
           >
-            Favourites
+            Favoritos
           </Button>
           <Button
             variant={isLayouts ? 'default' : 'outline'}
