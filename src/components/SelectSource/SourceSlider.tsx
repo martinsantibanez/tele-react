@@ -5,14 +5,17 @@ import {
   FlaskConical,
   Heart,
   LayoutGrid,
+  Search,
   Tv,
   Video,
+  X,
   YoutubeIcon,
   TwitchIcon
 } from 'lucide-react';
 import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useFavourites } from '../../hooks/useFavourites';
 import { useSourceCatalog } from '../../hooks/useSourceCatalog';
@@ -49,8 +52,10 @@ import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
 import {
   categoryOrder,
+  normalizeSearch,
   SelectorCategories,
   showPruebas,
+  sourceMatches,
   useActiveCategory,
   useOpenCountries
 } from './sourceCategories';
@@ -176,6 +181,16 @@ export function SourceSlider({
   const { tvGroups, bySlug: catalogueBySlug } = useSourceCatalog();
   const [openCountries, setOpenCountries] = useOpenCountries();
 
+  // The search box narrows the tab being browsed, not the whole catalogue: each
+  // tab comes from its own feed, and the tabs are how they are told apart.
+  const [query, setQuery] = useState('');
+  const searchQuery = normalizeSearch(query);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // A query written for one tab means nothing in the next one, and a tab
+  // silently filtered on arrival would look empty for no visible reason.
+  useEffect(() => setQuery(''), [activeCategory]);
+
   const toggleCountry = (country: string) =>
     setOpenCountries(open =>
       open.includes(country)
@@ -189,15 +204,40 @@ export function SourceSlider({
     const rows: TvRow[] = [];
     const sources: SourceType[] = [];
     tvGroups.forEach(group => {
-      const isOpen = openCountries.includes(group.country);
+      const categories = searchQuery
+        ? group.categories
+            .map(category => ({
+              ...category,
+              sources: category.sources.filter(source =>
+                sourceMatches(source, searchQuery)
+              )
+            }))
+            .filter(category => category.sources.length)
+        : group.categories;
+      // A country with no hit has nothing to say about the search.
+      if (searchQuery && !categories.length) return;
+      // Hits are the point of searching, so the countries holding them are
+      // unfolded. Folding one is still recorded — it takes hold once the
+      // search box is cleared and the whole catalogue is back.
+      const isOpen = !!searchQuery || openCountries.includes(group.country);
       rows.push({
         kind: 'country',
         key: `country_${group.country}`,
-        group,
+        // Collapsed, the header counts what is inside it; while searching that
+        // is the hits, not the channels they were found among.
+        group: searchQuery
+          ? {
+              ...group,
+              count: categories.reduce(
+                (total, category) => total + category.sources.length,
+                0
+              )
+            }
+          : group,
         isOpen
       });
       if (!isOpen) return;
-      group.categories.forEach(category => {
+      categories.forEach(category => {
         rows.push({
           kind: 'category',
           key: `category_${group.country}_${category.category}`,
@@ -215,26 +255,32 @@ export function SourceSlider({
       });
     });
     return { tvRows: rows, tvSources: sources };
-  }, [tvGroups, openCountries]);
+  }, [tvGroups, openCountries, searchQuery]);
 
   const activeCategorySources: SourceType[] = useMemo(() => {
-    if (activeCategory === 'tv') {
-      return tvSources;
-      // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
-    } else if (activeCategory === 'twitch') {
-      return twitchSources;
-    } else if (activeCategory === 'youtube') {
-      return [youtubeLiveEntry, ...youtubeSources];
-    } else if (activeCategory === 'favourites') {
-      // The stored copy is a snapshot; show the catalogue's when it has one, so
-      // a starred channel is listed with its current logo and signals.
-      return favourites.map(fav => catalogueBySlug.get(fav.slug) ?? fav);
-    } else if (activeCategory === 'pruebas') {
-      return pruebasList;
-    } else if (activeCategory === 'layouts') {
-      return [];
-    }
-    return zappingSources;
+    const categorySources = () => {
+      if (activeCategory === 'tv') {
+        // Already filtered, along with the headers the hits are listed under.
+        return tvSources;
+        // return sourcesCategories.flatMap(cat => Object.values(cat.sources));
+      } else if (activeCategory === 'twitch') {
+        return twitchSources;
+      } else if (activeCategory === 'youtube') {
+        return [youtubeLiveEntry, ...youtubeSources];
+      } else if (activeCategory === 'favourites') {
+        // The stored copy is a snapshot; show the catalogue's when it has one,
+        // so a starred channel is listed with its current logo and signals.
+        return favourites.map(fav => catalogueBySlug.get(fav.slug) ?? fav);
+      } else if (activeCategory === 'pruebas') {
+        return pruebasList;
+      } else if (activeCategory === 'layouts') {
+        return [];
+      }
+      return zappingSources;
+    };
+    const sources = categorySources();
+    if (!searchQuery || activeCategory === 'tv') return sources;
+    return sources.filter(source => sourceMatches(source, searchQuery));
   }, [
     activeCategory,
     tvSources,
@@ -242,17 +288,21 @@ export function SourceSlider({
     favourites,
     catalogueBySlug,
     zappingSources,
-    youtubeSources
+    youtubeSources,
+    searchQuery
   ]);
 
   const selectedLayoutIndex = findLayoutIndex(displayConfig);
 
   // The slider navigates either sources or layouts, depending on the category.
+  // Looked up rather than counted: a search can filter the selection out of
+  // the list, and then no row is the selected one.
+  const selectedSlug = youtubeLiveSelected
+    ? YOUTUBE_LIVE_SLUG
+    : selectedSourceSlug;
   const selectedIndex = isLayouts
     ? selectedLayoutIndex
-    : youtubeLiveSelected
-      ? 0
-      : activeCategorySources.findIndex(src => src.slug === selectedSourceSlug);
+    : activeCategorySources.findIndex(src => src.slug === selectedSlug);
   const itemCount = isLayouts
     ? possibleLayouts.length
     : activeCategorySources.length;
@@ -344,17 +394,29 @@ export function SourceSlider({
   };
 
   // The sources are stacked in a column and the categories run across the top,
-  // so up/down walk the sources and left/right the categories.
+  // so up/down walk the sources and left/right the categories. Left and right
+  // are left to the caret while the search box has the focus.
   useHotkeys('left', () => prevCategory(), { preventDefault: true });
   useHotkeys('right', () => nextCategory(), { preventDefault: true });
 
   // Layouts are driven by the RowSlider, which owns its own arrow handling.
+  // Walking the results is what follows typing, so up/down keep working from
+  // inside the search box.
   useHotkeys('up', () => (isLayouts ? undefined : prev()), {
-    preventDefault: true
+    preventDefault: true,
+    enableOnFormTags: ['input']
   });
   useHotkeys('down', () => (isLayouts ? undefined : next()), {
-    preventDefault: true
+    preventDefault: true,
+    enableOnFormTags: ['input']
   });
+  useHotkeys(
+    '/',
+    () => searchRef.current?.focus(),
+    // Matched on the character rather than the physical key, so it is the
+    // slash the keyboard actually writes.
+    { preventDefault: true, useKey: true, enabled: !isLayouts }
+  );
   useHotkeys(
     'f',
     () => {
@@ -374,6 +436,9 @@ export function SourceSlider({
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isLayouts) return;
+    // Arrowing through the results from the search box must not pull the focus
+    // out of it, or the next keystroke would be a hotkey instead of a letter.
+    if (document.activeElement === searchRef.current) return;
     // In the sidebar the VirtualList keeps the selected row mounted and in
     // view, so focusing it never needs to scroll.
     selectedItemRef.current?.focus({ preventScroll: true });
@@ -536,7 +601,11 @@ export function SourceSlider({
         key={category}
         variant={isActive ? 'default' : 'outline'}
         onClick={() => setActiveCategory(category)}
-        className="h-8 grow px-2 text-xs"
+        // Equal shares of the row, free to shrink: the nav is one line whatever
+        // the sidebar's width and however many tabs are shown. The padding is
+        // spelled out for the icon-only case too, or the button's own
+        // `has-[>svg]:px-3` would keep the wider default.
+        className="h-8 min-w-0 shrink grow basis-0 px-1 text-xs has-[>svg]:px-1"
         // The icon carries no text, so the label has to be spelled out for
         // screen readers and pointed out on hover for everyone else.
         aria-label={categoryLabels[category]}
@@ -735,12 +804,16 @@ export function SourceSlider({
         (isTv && !tvGroups.length)) &&
         'Cargando...'}
       {activeCategory === 'favourites' &&
+        !searchQuery &&
         !activeCategorySources.length &&
         'Sin favoritos'}
       {isYoutube &&
         youtubeConnected &&
         !youtubeSources.length &&
         'Ningún canal suscrito está en vivo'}
+      {!!searchQuery &&
+        !(isTv ? tvRows.length : listedSources.length) &&
+        `Sin resultados para «${query.trim()}»`}
     </>
   );
 
@@ -809,6 +882,56 @@ export function SourceSlider({
     </>
   );
 
+  // Above the scroller rather than inside it, so it stays put while the
+  // catalogue runs past underneath and is always a keystroke from the list.
+  const searchBar = (
+    // `sticky` positions the box for the icons pinned inside it, and keeps it
+    // in place should the sidebar itself ever be the thing scrolling.
+    <div className="bg-background sticky top-0 z-20 shrink-0">
+      <Search
+        size={14}
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-gray-400"
+      />
+      <Input
+        ref={searchRef}
+        // Not `search`: the browser's own clear button would double the one
+        // pinned to the right of the box.
+        type="text"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => {
+          if (e.key !== 'Escape') return;
+          // Escape gives back the full list first and the focus second, so a
+          // filtered list is never left behind by a stray keystroke.
+          if (query) setQuery('');
+          else searchRef.current?.blur();
+        }}
+        placeholder="Buscar canal"
+        aria-label="Buscar canal"
+        className="h-8 pr-7 pl-7 text-sm"
+      />
+      {query ? (
+        <button
+          type="button"
+          title="Limpiar búsqueda"
+          aria-label="Limpiar búsqueda"
+          onClick={() => {
+            setQuery('');
+            searchRef.current?.focus();
+          }}
+          className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-white"
+        >
+          <X size={14} />
+        </button>
+      ) : (
+        <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[9px] leading-none text-gray-400">
+          /
+        </span>
+      )}
+    </div>
+  );
+
   const layoutsContent = (
     // The sidebar rows scroll, so they need the leftover height.
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2">
@@ -821,7 +944,7 @@ export function SourceSlider({
       <div
         role="group"
         aria-label="Categorías"
-        className="flex flex-wrap gap-1"
+        className="flex flex-nowrap gap-1"
       >
         {categoryButtons}
       </div>
@@ -831,7 +954,8 @@ export function SourceSlider({
       {isLayouts ? (
         layoutsContent
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          {searchBar}
           <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
         </div>
       )}

@@ -18,11 +18,14 @@ import { ScreenThumbnail } from '../SelectSource/ScreenThumbnail';
 const THUMB_WIDTH = 96;
 const THUMB_HEIGHT = 54;
 
+// Both prompts ask for a name; what differs is where the answer lands.
+type NamePrompt = { mode: 'add' | 'rename'; value: string };
+
 export function SavedScreensBar() {
   const [savedScreens, setSavedScreens] = useSavedScreens();
   const [activeIndex, setActiveIndex] = useActiveScreenIndex();
   const [activeScreen] = useActiveScreen();
-  const [pendingName, setPendingName] = useState<string | null>(null);
+  const [pendingName, setPendingName] = useState<NamePrompt | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const isNaming = pendingName !== null;
@@ -47,12 +50,30 @@ export function SavedScreensBar() {
     return `${layout?.name ?? 'Pantalla'} ${savedScreens.length + 1}`;
   };
 
-  const startAdd = () => setPendingName('');
+  const startAdd = () => setPendingName({ mode: 'add', value: '' });
 
-  const confirmAdd = () => {
-    const name = pendingName?.trim() || suggestedName();
-    setSavedScreens(saved => [...saved, { name, screen: activeScreen }]);
-    setActiveIndex(savedScreens.length);
+  const startRename = () =>
+    setPendingName({
+      mode: 'rename',
+      value: savedScreens[activeIndex]?.name ?? ''
+    });
+
+  const confirmName = () => {
+    if (!pendingName) return;
+    const typed = pendingName.value.trim();
+    if (pendingName.mode === 'add') {
+      const name = typed || suggestedName();
+      setSavedScreens(saved => [...saved, { name, screen: activeScreen }]);
+      setActiveIndex(savedScreens.length);
+    } else if (typed) {
+      // An empty box on a rename means the user cleared it and gave up, not
+      // that the screen should lose its name.
+      setSavedScreens(saved =>
+        saved.map((entry, index) =>
+          index === activeIndex ? { ...entry, name: typed } : entry
+        )
+      );
+    }
     setPendingName(null);
   };
 
@@ -105,6 +126,12 @@ export function SavedScreensBar() {
     () => (isPrompting ? undefined : startAdd()),
     { preventDefault: true },
     [isPrompting]
+  );
+  useHotkeys(
+    'r',
+    () => (isPrompting ? undefined : startRename()),
+    { preventDefault: true },
+    [isPrompting, activeIndex, savedScreens]
   );
   useHotkeys(
     'shift+d',
@@ -179,20 +206,29 @@ export function SavedScreensBar() {
     </div>
   );
 
+  const isRenaming = pendingName?.mode === 'rename';
+
   const namePrompt = (
     <form
       className="flex items-center justify-center gap-2"
       onSubmit={event => {
         event.preventDefault();
-        confirmAdd();
+        confirmName();
       }}
     >
       <Input
         // The prompt only exists while naming, so mounting is the right moment
         // to take the caret.
         autoFocus
-        value={pendingName ?? ''}
-        onChange={event => setPendingName(event.target.value)}
+        // A rename starts from the current name: selecting it lets the user
+        // type over it without clearing it first.
+        onFocus={event => event.target.select()}
+        value={pendingName?.value ?? ''}
+        onChange={event =>
+          setPendingName(current =>
+            current ? { ...current, value: event.target.value } : current
+          )
+        }
         onKeyDown={event => {
           if (event.key !== 'Escape') return;
           event.preventDefault();
@@ -202,7 +238,7 @@ export function SavedScreensBar() {
         className="h-7 max-w-xs"
       />
       <Button type="submit" variant="default" className="h-7">
-        Crear
+        {isRenaming ? 'Renombrar' : 'Crear'}
       </Button>
       <Button
         type="button"
@@ -243,7 +279,7 @@ export function SavedScreensBar() {
 
   const hint = (
     <div className="text-center text-[9px] leading-none text-gray-400">
-      Z ◀ X ▶ cambiar · S nueva pantalla
+      Z ◀ X ▶ cambiar · S nueva pantalla · R renombrar
       {canDelete && <> · ⇧D eliminar</>}
     </div>
   );

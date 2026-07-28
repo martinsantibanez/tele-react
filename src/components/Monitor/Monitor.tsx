@@ -434,7 +434,7 @@ export const Monitor = () => {
           </div>
         </div>
 
-        <ControlBar className="w-full flex-none" />
+        {isEditing && <ControlBar className="w-full flex-none" />}
       </div>
     </div>
   );

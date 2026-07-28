@@ -108,11 +108,17 @@ export function useActiveScreen(): [
   const [savedScreens, setSavedScreens] = useSavedScreens();
   const [activeIndex] = useActiveScreenIndex();
 
+  // Read the target through a ref to keep the setter stable: the hotkeys that
+  // edit the grid memoize their handler, so a setter bound to the index at
+  // registration time would keep writing to the screen the user has left.
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
+
   const setActiveScreen = useCallback<Dispatch<SetStateAction<ScreenType>>>(
     update =>
       setSavedScreens(saved =>
         saved.map((entry, index) =>
-          index === activeIndex
+          index === activeIndexRef.current
             ? {
                 ...entry,
                 screen:
@@ -121,7 +127,7 @@ export function useActiveScreen(): [
             : entry
         )
       ),
-    [setSavedScreens, activeIndex]
+    [setSavedScreens]
   );
 
   return [savedScreens[activeIndex].screen, setActiveScreen];

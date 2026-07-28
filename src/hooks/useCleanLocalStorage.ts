@@ -9,6 +9,7 @@ import {
   useZappingLoginToken,
   useZappingToken
 } from './useZappingConfig';
+import { useZappingPresetsVersion } from './useZappingPresetScreens';
 
 export const useCleanLocalStorage = () => {
   const [, , savedScreensStorage] = useSavedScreens();
@@ -20,6 +21,7 @@ export const useCleanLocalStorage = () => {
   const [, , zappingTokenMeta] = useZappingToken();
   const [, , zappingLoginTokenMeta] = useZappingLoginToken();
   const [, , zappingActivationMeta] = useZappingActivationState();
+  const [, , zappingPresetsMeta] = useZappingPresetsVersion();
 
   return () => {
     savedScreensStorage.removeItem();
@@ -31,5 +33,6 @@ export const useCleanLocalStorage = () => {
     zappingTokenMeta.removeItem();
     zappingLoginTokenMeta.removeItem();
     zappingActivationMeta.removeItem();
+    zappingPresetsMeta.removeItem();
   };
 };

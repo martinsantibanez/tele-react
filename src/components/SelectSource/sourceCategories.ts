@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import { useFavourites } from '../../hooks/useFavourites';
 import { useSourceCatalog } from '../../hooks/useSourceCatalog';
+import { SourceType } from '../../sources';
 import { pruebasSources } from '../../sources/pruebas';
 import { HOME_COUNTRY } from './tvChannels';
 
@@ -42,6 +43,23 @@ export const useOpenCountries = () => {
     defaultValue: [HOME_COUNTRY]
   });
 };
+
+/**
+ * What the search box compares: lowercase and unaccented, so «senal» finds
+ * «Señal» and «TVN» finds «tvn». Both sides of the comparison go through it.
+ */
+export function normalizeSearch(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+/** Whether a channel answers to `query`, which is already normalized. */
+export function sourceMatches(source: SourceType, query: string) {
+  return normalizeSearch(source.name ?? source.slug).includes(query);
+}
 
 /**
  * The tab a channel is listed under. Each catalogue stamps its own prefix on

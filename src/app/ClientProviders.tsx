@@ -9,7 +9,7 @@ import {
 } from '../hooks/useZappingConfig';
 import { useFavourites } from '../hooks/useFavourites';
 import { SourceCatalogProvider } from '../hooks/useSourceCatalog';
-import { useZappingWelcomeScreen } from '../hooks/useZappingWelcomeScreen';
+import { useZappingPresetScreens } from '../hooks/useZappingPresetScreens';
 
 const ThemeProvider = dynamic(
   () => import('../components/theme-provider').then(c => c.ThemeProvider),
@@ -22,10 +22,10 @@ const ThemeProvider = dynamic(
 // activation poll lives here too so a pending pairing keeps running while the
 // user is off linking the code, whatever part of the UI they started it from.
 const ZappingSessionManager = () => {
-  // Linking an account swaps the screen over to Zapping channels, so the user
-  // sees what they just connected instead of the default grid.
-  const applyWelcomeScreen = useZappingWelcomeScreen();
-  useZappingActivationPolling(applyWelcomeScreen);
+  // A configured account brings its own screens of Zapping channels, so the
+  // user sees what they connected instead of the default grid.
+  useZappingPresetScreens();
+  useZappingActivationPolling();
   useZappingSession();
   return null;
 };

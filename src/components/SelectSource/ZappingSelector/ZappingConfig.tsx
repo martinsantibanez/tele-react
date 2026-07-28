@@ -13,12 +13,14 @@ import {
   useZappingSessionStatus,
   useZappingToken
 } from '../../../hooks/useZappingConfig';
+import { useZappingPresetsVersion } from '../../../hooks/useZappingPresetScreens';
 import { ZappingConnect } from './ZappingConnect';
 
 export function ZappingConfig() {
   const [loginToken, setZappingLoginToken] = useZappingLoginToken();
   const [sessionStatus, setSessionStatus] = useZappingSessionStatus();
   const [, setPlayToken] = useZappingToken();
+  const [, setPresetsVersion] = useZappingPresetsVersion();
   const { cancel: cancelActivation } = useZappingActivation();
 
   const isStarting = sessionStatus === 'starting';
@@ -37,11 +39,14 @@ export function ZappingConfig() {
   /**
    * Drops the stored credential, which unmounts the heartbeat loop in
    * `useZappingSession`, and clears the live token so nothing keeps playing.
+   * The preset screens stay where they are — they are the user's now — but
+   * connecting again seeds them afresh, so a set that was deleted comes back.
    */
   const handleDisconnect = () => {
     setZappingLoginToken(undefined);
     setPlayToken(undefined);
     setSessionStatus('idle');
+    setPresetsVersion(0);
     cancelActivation();
   };
 
@@ -49,11 +54,9 @@ export function ZappingConfig() {
     <>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         {sessionStatus === 'idle' && (
-
-        
-        <PopoverTrigger asChild>
-          <Button variant="outline">Zapping Config</Button>
-        </PopoverTrigger>
+          <PopoverTrigger asChild>
+            <Button variant="outline">Zapping Config</Button>
+          </PopoverTrigger>
         )}
         <PopoverContent
           className="w-80"
