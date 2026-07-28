@@ -33,7 +33,8 @@ export interface SourceInput {
   zappingChannel?: string;
 }
 
-export type SignalType = 'iframe' | 'm3u8' | 'youtube' | 'twitch' | 'youtubeChannel';
+export type SignalType =
+  'iframe' | 'm3u8' | 'youtube' | 'twitch' | 'youtubeChannel';
 
 export interface SourceType extends SourceInput {
   slug: string;
@@ -48,7 +49,6 @@ export interface SourceType extends SourceInput {
    * and a still of the stream is not a logo.
    */
   logoUrl?: string;
-  favourite?: boolean;
 
   inputs?: SourceInput[];
 
@@ -167,4 +167,28 @@ export function getSource(slug: string) {
   return sourcesCategories
     .flatMap(category => Object.values(category.sources))
     .find(src => src.slug === slug);
+}
+
+/**
+ * A copy that survives a round-trip through localStorage. The React bits a
+ * source can carry are functions and elements, which `JSON.stringify` either
+ * drops or mangles into an unusable shape.
+ */
+export function serializableSource(source: SourceType): SourceType {
+  const copy: SourceType = { ...source };
+  delete copy.component;
+  delete copy.titleIcons;
+  return copy;
+}
+
+/**
+ * What a grid node should store alongside its slug. Built-ins get nothing: the
+ * static table above is their truth, and they are the ones carrying the React
+ * bits that cannot be stored. Everything else — the TV feed, Zapping, YouTube
+ * lives, Twitch — rides along on the node, so a saved, shared or promoted
+ * screen carries its channels with it instead of leaning on a registry.
+ */
+export function embeddedSource(source: SourceType): SourceType | undefined {
+  if (getSource(source.slug)) return undefined;
+  return serializableSource(source);
 }

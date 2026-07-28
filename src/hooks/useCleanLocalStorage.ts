@@ -1,6 +1,7 @@
 'use client';
-import { useCustomSources } from './useCustomSources';
+import { useCustomTwitchAccounts } from './useCustomTwitchAccounts';
 import { useDisplayConfig } from './useDisplayConfig';
+import { useFavourites } from './useFavourites';
 import { useFeaturedScreen } from './useFeaturedScreen';
 import { useSavedGrid } from './useSavedGrid';
 import { useSavedSelectedItem } from './useSavedSelectedItem';
@@ -14,7 +15,8 @@ export const useCleanLocalStorage = () => {
   const [, , gridStorage] = useSavedGrid();
   const [, , featuredScreenStorage] = useFeaturedScreen();
   const [, , selectedItemStorage] = useSavedSelectedItem();
-  const { customSourcesMeta } = useCustomSources();
+  const { favouritesMeta } = useFavourites();
+  const [, , twitchAccountsMeta] = useCustomTwitchAccounts();
   const [, , displayConfigStorage] = useDisplayConfig();
   const [, , zappingTokenMeta] = useZappingToken();
   const [, , zappingLoginTokenMeta] = useZappingLoginToken();
@@ -24,7 +26,8 @@ export const useCleanLocalStorage = () => {
     gridStorage.removeItem();
     selectedItemStorage.removeItem();
     featuredScreenStorage.removeItem();
-    customSourcesMeta.removeItem();
+    favouritesMeta.removeItem();
+    twitchAccountsMeta.removeItem();
     displayConfigStorage.removeItem();
     zappingTokenMeta.removeItem();
     zappingLoginTokenMeta.removeItem();

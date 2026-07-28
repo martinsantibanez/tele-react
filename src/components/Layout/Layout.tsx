@@ -57,19 +57,20 @@ export function Layout({
         const colClass = col.cols ? colSizeClass[col.cols] : undefined;
         const rowClass = col.rows ? rowSizeClass[col.rows] : undefined;
         // const rowClass = 'auto-rows-2'
-        const source = sources[idx];
-        if (!source) return null;
+        const node = sources[idx];
+        if (!node) return null;
         return (
           <div className={`${colClass ?? ''} ${rowClass ?? ''}`} key={idx}>
             <MonitorSource
               idx={idx}
-              sourceSlug={source.sourceSlug}
-              activeSignal={source.activeSignal}
+              sourceSlug={node.sourceSlug}
+              storedSource={node.source}
+              activeSignal={node.activeSignal}
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}
               fullscreen={idx === fullscreenIdx}
-              muted={source.muted ?? true}
+              muted={node.muted ?? true}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />
           </div>

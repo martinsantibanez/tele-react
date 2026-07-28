@@ -2,8 +2,8 @@
 import { useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
-import { useCustomSources } from '../../hooks/useCustomSources';
-import { getSource } from '../../sources';
+import { useResolveSource } from '../../hooks/useSourceCatalog';
+import { SourceType } from '../../sources';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
 import { SourceLogo } from './SourceLogo';
 import { SourceOutput } from './SourceOutput/SourceOutput';
@@ -12,6 +12,8 @@ export type OnSwitchCb = (left: number, right: number) => void;
 
 type Props = {
   sourceSlug?: string;
+  /** The node's own copy of the source, for anything outside the built-ins. */
+  storedSource?: SourceType;
   activeSignal?: string;
   muted?: boolean;
   onChangeClick?: () => void;
@@ -24,6 +26,7 @@ type Props = {
 
 export function MonitorSource({
   sourceSlug,
+  storedSource,
   activeSignal,
   muted = true,
   onChangeClick,
@@ -35,17 +38,11 @@ export function MonitorSource({
 }: Props) {
   const { isEditing, swapSourceIdx } = useTeleContext();
   const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
-  const { customSources } = useCustomSources();
-  const source = useMemo(() => {
-    if (sourceSlug) {
-      if (sourceSlug.startsWith('custom_')) {
-        return customSources?.find(src => src.slug === sourceSlug);
-      } else {
-        return getSource(sourceSlug);
-      }
-    }
-    return null;
-  }, [customSources, sourceSlug]);
+  const resolveSource = useResolveSource();
+  const source = useMemo(
+    () => resolveSource(sourceSlug, storedSource),
+    [resolveSource, sourceSlug, storedSource]
+  );
 
   // const handlePromote = () => {
   //   setFeaturedScreen({

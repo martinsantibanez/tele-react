@@ -9,7 +9,6 @@ import {
 } from '@/lib/youtube';
 import { SourceType } from '../sources';
 import { SourceNode } from '../types/Monitor';
-import { useCustomSources } from './useCustomSources';
 import { useYoutubeAuth } from './useYoutubeAuth';
 
 /** Subscriptions change rarely; live status is the only thing polled often. */
@@ -62,13 +61,13 @@ export function useYoutubeLiveSubs() {
   const [subsCache, setSubsCache] = useLocalStorageState<
     CachedSubs | undefined
   >('youtubeSubscriptions', { defaultValue: undefined });
-  const [liveCache, setLiveCache] = useLocalStorageState<CachedLive | undefined>(
-    'youtubeLive',
-    { defaultValue: undefined }
-  );
+  const [liveCache, setLiveCache] = useLocalStorageState<
+    CachedLive | undefined
+  >('youtubeLive', { defaultValue: undefined });
 
   const subsStale = !subsCache || Date.now() - subsCache.fetchedAt > TTL_MS;
-  const liveStale = !liveCache || Date.now() - liveCache.fetchedAt > LIVE_TTL_MS;
+  const liveStale =
+    !liveCache || Date.now() - liveCache.fetchedAt > LIVE_TTL_MS;
 
   // STEP 1 — subscriptions (cheap, cached for hours).
   useEffect(() => {
@@ -184,7 +183,12 @@ export function assignLiveSlugs(
   return withSlugs;
 }
 
-/** The live subs mapped onto the app's `SourceType`. */
+/**
+ * The live subs mapped onto the app's `SourceType`. A saved screen keeps only
+ * the slug and a snapshot of the channel, and `useResolveSource` prefers
+ * whatever this returns, so a tile pointed at a stream that has since ended
+ * picks up the channel's current one by being looked up again.
+ */
 export function useYoutubeLiveSources(): SourceType[] {
   const { live, subscriptions } = useYoutubeLiveSubs();
   // A live's own thumbnail is a still of the stream, so the channel's mark has
@@ -211,13 +215,12 @@ export function useYoutubeLiveSources(): SourceType[] {
 /**
  * Feeds the dynamic YouTube layout: every live channel as a grid node, in a
  * stable order (channel title, slug as tie-break) so tiles don't shuffle on
- * every poll. The underlying `SourceType`s are registered in `customSources`
- * here so `MonitorSource` can resolve their `custom_yt_live_*` slugs — the live
- * source list alone is never persisted there.
+ * every poll. Each node carries its source, so the tiles resolve without
+ * anything being registered anywhere — these nodes are derived on every render
+ * and never stored.
  */
 export function useYoutubeGridSources() {
   const sources = useYoutubeLiveSources();
-  const { createSource } = useCustomSources();
 
   const ordered = useMemo(
     () =>
@@ -230,49 +233,15 @@ export function useYoutubeGridSources() {
     [sources]
   );
 
-  useEffect(() => {
-    ordered.forEach(createSource);
-  }, [ordered, createSource]);
-
   const nodes = useMemo<SourceNode[]>(
-    () => ordered.map(src => ({ sourceSlug: src.slug, uuid: src.slug })),
+    () =>
+      ordered.map(src => ({
+        sourceSlug: src.slug,
+        source: src,
+        uuid: src.slug
+      })),
     [ordered]
   );
 
   return { nodes, count: nodes.length };
-}
-
-/**
- * Mount once (see ClientProviders). `createSource` never overwrites an existing
- * entry, so a saved YouTube-live source keeps pointing at the videoId from when
- * it was first added — a stream that has since ended. Re-point every
- * `custom_yt_live_*` source at the current videoId on each refresh. This is the
- * YouTube analogue of `useZappingSourceSync`.
- */
-export function useYoutubeLiveSourceSync() {
-  const fresh = useYoutubeLiveSources();
-  const { customSources, setCustomSources } = useCustomSources();
-
-  useEffect(() => {
-    if (!fresh.length) return;
-    const bySlug = new Map(fresh.map(src => [src.slug, src]));
-    // The thumbnail and the channel avatar are re-pointed along with the
-    // videoId: a source saved before this carries a still of a stream that
-    // ended, and no logo at all.
-    const isStale = (src: SourceType) => {
-      const live = bySlug.get(src.slug);
-      return (
-        !!live &&
-        (live.youtubeVideoId !== src.youtubeVideoId ||
-          live.imageUrl !== src.imageUrl ||
-          live.logoUrl !== src.logoUrl)
-      );
-    };
-    if (!customSources.some(isStale)) return;
-    setCustomSources(sources =>
-      sources.map(src =>
-        isStale(src) ? { ...src, ...bySlug.get(src.slug) } : src
-      )
-    );
-  }, [fresh, customSources, setCustomSources]);
 }

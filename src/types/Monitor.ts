@@ -2,6 +2,15 @@ import { SourceType } from '../sources';
 
 export type SourceNode = {
   sourceSlug?: string;
+  /**
+   * The source itself, for everything outside the built-in table: the TV feed,
+   * Zapping, YouTube lives, Twitch. Kept on the node so a screen carries its
+   * channels wherever it goes — saved, shared, promoted. It is a snapshot, not
+   * the last word: the live catalogues still win by slug when they hold the
+   * same channel, so a stale stream url re-points itself. See
+   * `useResolveSource`.
+   */
+  source?: SourceType;
   uuid?: string;
   muted?: boolean;
   activeSignal?: string;
@@ -16,22 +25,7 @@ export type ColType = {
 export type RowType = { cols?: ColType[] };
 
 export type ColValues =
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
 export type RowValues = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type LayoutType = {
@@ -64,5 +58,4 @@ export type DisplayConfig = {
 export type ScreenType = {
   config: DisplayConfig;
   sources: SourceNode[];
-  customSources?: SourceType[];
 };

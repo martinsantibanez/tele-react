@@ -1,8 +1,8 @@
 'use client';
 import { YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import { useCustomSources } from '../../hooks/useCustomSources';
-import { getSource, SourceType } from '../../sources';
+import { useResolveSource } from '../../hooks/useSourceCatalog';
+import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
 
 type Props = {
@@ -24,15 +24,11 @@ export function ScreenThumbnail({
   height = 90,
   className
 }: Props) {
-  const { customSources } = useCustomSources();
+  const resolveSource = useResolveSource();
   const { config, sources = [] } = screen;
 
-  const resolve = (slug?: string): SourceType | undefined => {
-    if (!slug) return undefined;
-    if (slug.startsWith('custom_'))
-      return customSources?.find(src => src.slug === slug);
-    return getSource(slug);
-  };
+  const resolve: SlotResolver = node =>
+    resolveSource(node.sourceSlug, node.source);
 
   return (
     <div
@@ -46,7 +42,11 @@ export function ScreenThumbnail({
           <YoutubeIcon size={40} className="text-red-500" />
         </div>
       ) : config.mode === DisplayMode.Grid ? (
-        <GridPreview sources={sources} size={config.grid.size} resolve={resolve} />
+        <GridPreview
+          sources={sources}
+          size={config.grid.size}
+          resolve={resolve}
+        />
       ) : (
         <LayoutPreview
           layout={config.layout}
@@ -58,7 +58,7 @@ export function ScreenThumbnail({
   );
 }
 
-type SlotResolver = (slug?: string) => SourceType | undefined;
+type SlotResolver = (node: SourceNode) => SourceType | undefined;
 
 function GridPreview({
   sources,
@@ -78,8 +78,8 @@ function GridPreview({
         gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`
       }}
     >
-      {sources.map((source, idx) => (
-        <Slot key={idx} source={resolve(source.sourceSlug)} />
+      {sources.map((node, idx) => (
+        <Slot key={idx} source={resolve(node)} />
       ))}
     </div>
   );
@@ -97,8 +97,8 @@ function LayoutPreview({
   return (
     <div className="grid h-full w-full grid-cols-12 grid-rows-9 gap-px">
       {layout.map((col, idx) => {
-        const source = sources[idx];
-        if (!source) return null;
+        const node = sources[idx];
+        if (!node) return null;
         return (
           <div
             key={idx}
@@ -107,7 +107,7 @@ function LayoutPreview({
               gridRow: col.rows ? `span ${col.rows}` : undefined
             }}
           >
-            <Slot source={resolve(source.sourceSlug)} />
+            <Slot source={resolve(node)} />
           </div>
         );
       })}

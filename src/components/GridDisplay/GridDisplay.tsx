@@ -20,13 +20,14 @@ export function GridDisplay({
 }: Props) {
   return (
     <>
-      {sources.map((source, idx) => (
+      {sources.map((node, idx) => (
         <MonitorSource
           idx={idx}
-          sourceSlug={source.sourceSlug}
-          activeSignal={source.activeSignal}
-          muted={source.muted ?? true}
-          key={`${source.uuid}`}
+          sourceSlug={node.sourceSlug}
+          storedSource={node.source}
+          activeSignal={node.activeSignal}
+          muted={node.muted ?? true}
+          key={`${node.uuid}`}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
           isBeingEdited={idx === editingSourceIdx}

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { zappingWelcomeScreen } from '../components/GridDisplay/zappingWelcomeScreen';
-import { useCustomSources } from './useCustomSources';
+import { embeddedSource } from '../sources';
 import { useDisplayConfig } from './useDisplayConfig';
 import { useSavedGrid } from './useSavedGrid';
 import { useZappingSources } from './useZappingChannels';
@@ -14,7 +14,6 @@ import { useZappingSources } from './useZappingChannels';
 export function useZappingWelcomeScreen() {
   const [, setGrid] = useSavedGrid();
   const [, setDisplayConfig] = useDisplayConfig();
-  const { createSource } = useCustomSources();
   // Read at call time, not render time: the catalogue may still be the bundled
   // snapshot when this hook renders, and the callback has to stay stable so it
   // doesn't restart the activation poll.
@@ -24,14 +23,14 @@ export function useZappingWelcomeScreen() {
 
   return useCallback(() => {
     const bySlug = new Map(sourcesRef.current.map(src => [src.slug, src]));
-    zappingWelcomeScreen.sources.forEach(({ sourceSlug }) => {
-      const source = sourceSlug && bySlug.get(sourceSlug);
-      // `createSource` leaves channels the user already has alone, and
-      // `useZappingSourceSync` re-points stale urls, so seeding from the
-      // snapshot is safe.
-      if (source) createSource(source);
-    });
-    setGrid(zappingWelcomeScreen.sources);
+    // Seeding from the bundled snapshot is safe: the node only carries a copy,
+    // and the live catalogue is preferred over it once it has loaded.
+    setGrid(
+      zappingWelcomeScreen.sources.map(node => {
+        const source = node.sourceSlug && bySlug.get(node.sourceSlug);
+        return source ? { ...node, source: embeddedSource(source) } : node;
+      })
+    );
     setDisplayConfig(zappingWelcomeScreen.config);
-  }, [createSource, setDisplayConfig, setGrid]);
+  }, [setDisplayConfig, setGrid]);
 }

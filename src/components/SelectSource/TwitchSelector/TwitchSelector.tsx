@@ -1,14 +1,20 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
+import { BsTwitch } from 'react-icons/bs';
+import { useCustomTwitchAccounts } from '../../../hooks/useCustomTwitchAccounts';
 import { SourceType } from '../../../sources';
 import { SourceButton } from '../SourceButton/SourceButton';
-import { BsTwitch } from 'react-icons/bs';
-import { useCustomSources } from '../../../hooks/useCustomSources';
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger
 } from '../../../../components/ui/accordion';
+
+const twitchSource = (account: string): SourceType => ({
+  slug: `custom_twitch_${account}`,
+  titleHtml: account,
+  twitchAccount: account
+});
 
 type Props = {
   onSourceSelect: (source: SourceType) => void;
@@ -21,30 +27,32 @@ export function TwitchSelector({
   accordionEventKey
 }: Props) {
   const [customTwitchValue, setCustomTwitchValue] = useState<string>('');
-  const { createSource, customSources } = useCustomSources();
-  const twitchSources = customSources.filter(source => !!source.twitchAccount);
+  const [accounts, setAccounts] = useCustomTwitchAccounts();
+
   const handleCreateSource = () => {
-    const source: SourceType = {
-      slug: `custom_twitch_${customTwitchValue}`,
-      titleHtml: customTwitchValue,
-      twitchAccount: customTwitchValue
-    };
-    createSource(source);
-    onSourceSelect(source);
+    const account = customTwitchValue.trim();
+    if (!account) return;
+    setAccounts(current =>
+      current.includes(account) ? current : [...current, account]
+    );
+    onSourceSelect(twitchSource(account));
   };
 
   return (
     <AccordionItem value={accordionEventKey}>
       <AccordionTrigger>Twitch</AccordionTrigger>
       <AccordionContent>
-        {twitchSources?.map(source => (
-          <SourceButton
-            onSelect={onSourceSelect}
-            source={{ ...source, titleIcons: [<BsTwitch key="twitch" />] }}
-            isSelected={source.slug === selectedSourceSlug}
-            key={source.slug}
-          />
-        ))}
+        {accounts.map(account => {
+          const source = twitchSource(account);
+          return (
+            <SourceButton
+              onSelect={onSourceSelect}
+              source={{ ...source, titleIcons: [<BsTwitch key="twitch" />] }}
+              isSelected={source.slug === selectedSourceSlug}
+              key={source.slug}
+            />
+          );
+        })}
         <div className="mb-2 mt-4">
           <input
             type="text"

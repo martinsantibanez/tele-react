@@ -15,7 +15,8 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
-import { useCustomSources } from '../../hooks/useCustomSources';
+import { useFavourites } from '../../hooks/useFavourites';
+import { useSourceCatalog } from '../../hooks/useSourceCatalog';
 import {
   getAvailableSignals,
   Signal,
@@ -47,12 +48,7 @@ import {
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { useSavedScreensRow } from './SavedScreensRow';
-import {
-  Channel,
-  groupChannelsByCountry,
-  HOME_COUNTRY,
-  TvCountryGroup
-} from './tvChannels';
+import { HOME_COUNTRY, TvCountryGroup } from './tvChannels';
 
 /**
  * Height of a source row in the sidebar: the 44px logo box plus its padding.
@@ -216,13 +212,14 @@ export function SourceSlider({
   // Which RowSlider row Tab is on, so D only deletes from the saved row.
   const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
 
-  const { createSource, upsertSources, toggleFavourite, customSources } =
-    useCustomSources();
+  const { favourites, isFavourite, toggleFavourite } = useFavourites();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const zappingSources = useZappingSources();
   const youtubeSources = useYoutubeLiveSources();
   const { isConnected: youtubeConnected } = useYoutubeAuth();
-  const [tvGroups, setTvGroups] = useState<TvCountryGroup[]>([]);
+  // The TV feed is fetched once for the whole app, alongside the other
+  // catalogues the picker reads from.
+  const { tvGroups, bySlug: catalogueBySlug } = useSourceCatalog();
   const [openCountries, setOpenCountries] = useOpenCountries();
 
   const toggleCountry = (country: string) =>
@@ -275,7 +272,9 @@ export function SourceSlider({
     } else if (activeCategory === 'youtube') {
       return [youtubeLiveEntry, ...youtubeSources];
     } else if (activeCategory === 'favourites') {
-      return customSources.filter(source => source.favourite);
+      // The stored copy is a snapshot; show the catalogue's when it has one, so
+      // a starred channel is listed with its current logo and signals.
+      return favourites.map(fav => catalogueBySlug.get(fav.slug) ?? fav);
     } else if (activeCategory === 'pruebas') {
       return pruebasList;
     } else if (activeCategory === 'layouts') {
@@ -286,7 +285,8 @@ export function SourceSlider({
     activeCategory,
     tvSources,
     twitchSources,
-    customSources,
+    favourites,
+    catalogueBySlug,
     zappingSources,
     youtubeSources
   ]);
@@ -321,7 +321,6 @@ export function SourceSlider({
       setDisplayConfig(youtubeLayoutConfig);
       return;
     }
-    createSource(source);
     onSelect(source);
   };
 
@@ -588,26 +587,7 @@ export function SourceSlider({
       }
     };
     getFollowing();
-  }, [accessToken, createSource]);
-
-  useEffect(() => {
-    const loadSources = async () => {
-      const response = await fetch('/api/channels');
-      if (!response.ok) return;
-      const { channels }: { channels: Channel[] } = await response.json();
-      const groups = groupChannelsByCountry(channels);
-      // The feed owns these channels, so the stored copies are rewritten from
-      // it on every load; otherwise one saved before a channel gained mirrors
-      // would keep playing without them.
-      upsertSources(
-        groups.flatMap(group =>
-          group.categories.flatMap(category => category.sources)
-        )
-      );
-      setTvGroups(groups);
-    };
-    loadSources();
-  }, [upsertSources]);
+  }, [accessToken]);
 
   const youtubeConfigPanel = (
     <div
@@ -674,10 +654,7 @@ export function SourceSlider({
       return renderYoutubeLiveCard(canalIndex);
 
     const isActive = source.slug === selectedSourceSlug && !youtubeLiveSelected;
-    const isFavourite =
-      source.favourite ??
-      customSources.find(s => s.slug === source.slug)?.favourite ??
-      false;
+    const starred = isFavourite(source.slug);
 
     return (
       <div
@@ -708,7 +685,7 @@ export function SourceSlider({
               <div className="flex flex-col">
                 <button
                   title={
-                    isFavourite ? 'Quitar de favoritos' : 'Agregar a favoritos'
+                    starred ? 'Quitar de favoritos' : 'Agregar a favoritos'
                   }
                   onClick={e => {
                     e.stopPropagation();
@@ -719,7 +696,7 @@ export function SourceSlider({
                   <Heart
                     size={14}
                     className={
-                      isFavourite ? 'fill-red-500 text-red-500' : 'text-white'
+                      starred ? 'fill-red-500 text-red-500' : 'text-white'
                     }
                   />
                 </button>

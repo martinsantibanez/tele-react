@@ -7,7 +7,6 @@ import {
 } from '@/lib/zapping';
 import { canalesZapping } from '../components/SelectSource/ZappingSelector/canales';
 import { SourceType } from '../sources';
-import { useCustomSources } from './useCustomSources';
 import { useZappingLoginToken } from './useZappingConfig';
 
 /** How long a cached catalogue is served without re-fetching. */
@@ -72,35 +71,11 @@ export const zappingSlug = (channel: ZappingChannel) =>
   `custom_zapping_${channel.id}`;
 
 /**
- * Mount once (see ClientProviders). `createSource` never overwrites an existing
- * entry, so zapping channels the user already selected would keep playing the
- * stream URL from whenever they were first added. Re-point them at the URL from
- * the refreshed catalogue.
+ * The catalogue mapped onto the app's `SourceType`. A screen keeps only the
+ * slug and a snapshot of the channel, and `useResolveSource` prefers whatever
+ * this returns, so a channel whose stream url moved on is re-pointed by being
+ * looked up rather than by rewriting anything stored.
  */
-export function useZappingSourceSync() {
-  const { channels, isFallback } = useZappingChannels();
-  const { customSources, setCustomSources } = useCustomSources();
-
-  useEffect(() => {
-    if (isFallback) return;
-    const urlBySlug = new Map(channels.map(c => [zappingSlug(c), c.url]));
-    const needsUpdate = customSources.some(src => {
-      const url = urlBySlug.get(src.slug);
-      return url && url !== src.zappingChannel;
-    });
-    if (!needsUpdate) return;
-    setCustomSources(sources =>
-      sources.map(src => {
-        const url = urlBySlug.get(src.slug);
-        return url && url !== src.zappingChannel
-          ? { ...src, zappingChannel: url }
-          : src;
-      })
-    );
-  }, [channels, isFallback, customSources, setCustomSources]);
-}
-
-/** The catalogue mapped onto the app's `SourceType`. */
 export function useZappingSources(): SourceType[] {
   const { channels } = useZappingChannels();
   return useMemo(

@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
-import { useCustomSources } from '../../hooks/useCustomSources';
 import {
   DEFAULT_GRID_SIZE,
   useDisplayConfig
@@ -11,7 +10,7 @@ import {
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
-import { SourceType } from '../../sources';
+import { embeddedSource, SourceType } from '../../sources';
 import {
   DisplayMode,
   GridSize,
@@ -46,7 +45,6 @@ export const Monitor = () => {
   } = useTeleContext();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const { customSources } = useCustomSources();
   const [, setFeaturedMonitor] = useFeaturedScreen();
   const [activeCategory, setActiveCategory] = useActiveCategory();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -69,13 +67,14 @@ export const Monitor = () => {
 
   const activeSources = isYoutubeMode ? youtubeSources : selectedSources;
 
+  // Each node carries its own source, so the screen is complete on its own —
+  // it can be promoted, saved or shared without anything travelling beside it.
   const screen: ScreenType = useMemo(
     () => ({
       config: displayConfig,
-      sources: activeSources,
-      customSources
+      sources: activeSources
     }),
-    [displayConfig, activeSources, customSources]
+    [displayConfig, activeSources]
   );
 
   const fullscreenIdx = isFullscreen ? editingSourceIdx : undefined;
@@ -167,7 +166,12 @@ export const Monitor = () => {
         // A signal key only means something for the source it came from, so a
         // new channel starts on its own default.
         if (editingSourceIdx === idx)
-          return { ...src, sourceSlug: source.slug, activeSignal: undefined };
+          return {
+            ...src,
+            sourceSlug: source.slug,
+            source: embeddedSource(source),
+            activeSignal: undefined
+          };
         else return src;
       });
     });

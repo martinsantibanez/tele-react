@@ -3,7 +3,6 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { useCustomSources } from '../../hooks/useCustomSources';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { MainLayout } from '../../layout/MainLayout';
@@ -40,25 +39,18 @@ const MonitorPage = ({
   console.log({ initialScreen });
   const [, setSelectedSources] = useSavedGrid();
   const [, setDisplayConfig] = useDisplayConfig();
-  const { setCustomSources } = useCustomSources();
   const router = useRouter();
   useEffect(() => {
     if (!initialScreen) {
       router.push('/monitor');
       return;
     }
+    // The nodes carry their own sources, so the whole screen arrives with them
+    // — nothing has to be merged into a registry first.
     setSelectedSources(initialScreen.sources);
     setDisplayConfig(initialScreen.config);
-    if (initialScreen.customSources)
-      setCustomSources(initialScreen.customSources);
     router.push('/monitor');
-  }, [
-    initialScreen,
-    router,
-    setDisplayConfig,
-    setSelectedSources,
-    setCustomSources
-  ]);
+  }, [initialScreen, router, setDisplayConfig, setSelectedSources]);
   return (
     <MainLayout>
       <Head>

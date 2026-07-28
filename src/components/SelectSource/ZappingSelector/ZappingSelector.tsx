@@ -4,7 +4,6 @@ import {
   AccordionItem,
   AccordionTrigger
 } from '../../../../components/ui/accordion';
-import { useCustomSources } from '../../../hooks/useCustomSources';
 import { useZappingSources } from '../../../hooks/useZappingChannels';
 import { useZappingLoginToken } from '../../../hooks/useZappingConfig';
 import { SourceType } from '../../../sources';
@@ -23,13 +22,7 @@ export function ZappingSelector({
 }: Props) {
   const [loginToken] = useZappingLoginToken();
 
-  const { createSource } = useCustomSources();
   const zappingSources = useZappingSources();
-
-  const updateSelectedChannel = (source: SourceType) => {
-    createSource(source);
-    onSourceSelect(source);
-  };
 
   return (
     <AccordionItem value={accordionEventKey}>
@@ -38,7 +31,7 @@ export function ZappingSelector({
         {zappingSources.map(source => {
           return (
             <SourceButton
-              onSelect={() => updateSelectedChannel(source)}
+              onSelect={onSourceSelect}
               source={source}
               isSelected={source.slug === selectedSourceSlug}
               key={source.slug}
