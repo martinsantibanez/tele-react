@@ -685,7 +685,7 @@ export function SourceSlider({
 
     if (row.kind === 'category')
       return (
-        <div className="flex h-full items-end px-2 pb-0.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
+        <div className="bg-background flex h-full items-end px-2 pb-0.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
           {row.label}
         </div>
       );
@@ -695,7 +695,7 @@ export function SourceSlider({
         type="button"
         aria-expanded={row.isOpen}
         onClick={() => toggleCountry(row.group.country)}
-        className="flex h-full w-full items-center gap-2 border-t border-gray-800 px-1 text-left outline-none hover:bg-gray-800/60 focus-visible:ring-2 focus-visible:ring-white"
+        className="bg-background flex h-full w-full items-center gap-2 border-t border-gray-800 px-1 text-left outline-none hover:bg-gray-800/60 focus-visible:ring-2 focus-visible:ring-white"
       >
         <ChevronRight
           size={16}
@@ -779,6 +779,9 @@ export function SourceSlider({
         itemHeight={tvRowHeight}
         activeIndex={selectedTvRowIndex}
         getItemKey={row => row.key}
+        // The country and its category head the channels under them, so the
+        // one being scrolled through stays named at the top of the list.
+        isStickyHeader={row => row.kind !== 'source'}
         renderItem={row => renderTvRow(row)}
         className="min-h-0 w-full flex-1"
       />

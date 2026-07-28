@@ -22,6 +22,13 @@ type Props<T> = {
   activeIndex?: number;
   /** Rows rendered above and below the viewport to absorb fast scrolling. */
   overscan?: number;
+  /**
+   * Marks the rows that head a section. The last header at or above the top of
+   * the viewport is pinned there, until the next one shoulders it out, so the
+   * section a row belongs to is always named on screen. A pinned header is
+   * rendered in the pinned slot instead of in the list, never in both.
+   */
+  isStickyHeader?: (item: T, index: number) => boolean;
   getItemKey?: (item: T, index: number) => string;
   className?: string;
 };
@@ -51,6 +58,7 @@ export function VirtualList<T>({
   activeIndex,
   overscan = 4,
   getItemKey,
+  isStickyHeader,
   className
 }: Props<T>) {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -70,6 +78,24 @@ export function VirtualList<T>({
   }, [items, itemHeight]);
   const totalHeight = offsets[items.length];
 
+  const rowHeight = (index: number) => offsets[index + 1] - offsets[index];
+
+  /** Last header at or before `index`, or -1 when no header precedes it. */
+  const headerAtOrBefore = (index: number) => {
+    if (!isStickyHeader) return -1;
+    for (let candidate = index; candidate >= 0; candidate--)
+      if (isStickyHeader(items[candidate], candidate)) return candidate;
+    return -1;
+  };
+
+  // A row scrolled flush with the top of the viewport would end up under the
+  // pinned header, so the list stops short of it by the header's height.
+  const activeHeader =
+    activeIndex !== undefined && activeIndex > 0
+      ? headerAtOrBefore(activeIndex - 1)
+      : -1;
+  const activeHeaderInset = activeHeader >= 0 ? rowHeight(activeHeader) : 0;
+
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -88,12 +114,18 @@ export function VirtualList<T>({
     if (!el || !viewportHeight) return;
     if (activeIndex === undefined || activeIndex < 0) return;
     if (activeIndex >= items.length) return;
-    const top = offsets[activeIndex];
+    const top = offsets[activeIndex] - activeHeaderInset;
     const bottom = offsets[activeIndex + 1];
-    if (top < el.scrollTop) el.scrollTop = top;
+    if (top < el.scrollTop) el.scrollTop = Math.max(top, 0);
     else if (bottom > el.scrollTop + viewportHeight)
       el.scrollTop = bottom - viewportHeight;
-  }, [activeIndex, offsets, items.length, viewportHeight]);
+  }, [
+    activeIndex,
+    activeHeaderInset,
+    offsets,
+    items.length,
+    viewportHeight
+  ]);
 
   const firstIndex = items.length
     ? Math.max(indexAtOffset(offsets, scrollTop) - overscan, 0)
@@ -105,12 +137,31 @@ export function VirtualList<T>({
       )
     : -1;
 
+  // The header covering the top of the viewport. Its natural place is at or
+  // above that top edge, so pinning it never moves it out from under the eye.
+  const stickyIndex = items.length
+    ? headerAtOrBefore(indexAtOffset(offsets, scrollTop))
+    : -1;
+  const stickyHeight = stickyIndex >= 0 ? rowHeight(stickyIndex) : 0;
+  // Once the next header reaches the pinned one it shoulders it off the top.
+  let stickyShift = 0;
+  if (isStickyHeader && stickyIndex >= 0)
+    for (let index = stickyIndex + 1; index < items.length; index++) {
+      if (!isStickyHeader(items[index], index)) continue;
+      stickyShift = Math.min(offsets[index] - scrollTop - stickyHeight, 0);
+      break;
+    }
+
+  // The pinned header is left out here: it is already on screen, in the slot
+  // above, and drawing it twice would double it up in the reading order too.
   const indices: number[] = [];
-  for (let index = firstIndex; index <= lastIndex; index++) indices.push(index);
+  for (let index = firstIndex; index <= lastIndex; index++)
+    if (index !== stickyIndex) indices.push(index);
   if (
     activeIndex !== undefined &&
     activeIndex >= 0 &&
     activeIndex < items.length &&
+    activeIndex !== stickyIndex &&
     (activeIndex < firstIndex || activeIndex > lastIndex)
   )
     indices.push(activeIndex);
@@ -123,6 +174,20 @@ export function VirtualList<T>({
         className ?? ''
       }`}
     >
+      {stickyIndex >= 0 && (
+        // Zero-height so the rows below keep their offsets, with the header
+        // spilling out of it: that leaves the browser to do the sticking.
+        <div className="sticky top-0 z-10 h-0">
+          <div
+            style={{
+              height: stickyHeight,
+              transform: stickyShift ? `translateY(${stickyShift}px)` : undefined
+            }}
+          >
+            {renderItem(items[stickyIndex], stickyIndex)}
+          </div>
+        </div>
+      )}
       <div className="relative w-full" style={{ height: totalHeight }}>
         {indices.map(index => (
           <div
