@@ -1,4 +1,4 @@
-import { defaultDisplayConfig } from '../../hooks/useDisplayConfig';
+import { defaultDisplayConfig } from '../../hooks/defaultScreen';
 import { DisplayConfig, DisplayMode } from '../../types/Monitor';
 import { initialLayout, twoBigLayout } from '../Monitor/predefinedLayouts';
 

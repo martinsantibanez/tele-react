@@ -3,8 +3,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { useDisplayConfig } from '../../hooks/useDisplayConfig';
-import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { useAddSavedScreen } from '../../hooks/useSavedScreens';
 import { MainLayout } from '../../layout/MainLayout';
 import { ScreenType } from '../../types/Monitor';
 
@@ -37,8 +36,7 @@ const MonitorPage = ({
   initialScreen
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   console.log({ initialScreen });
-  const [, setSelectedSources] = useSavedGrid();
-  const [, setDisplayConfig] = useDisplayConfig();
+  const addScreen = useAddSavedScreen();
   const router = useRouter();
   useEffect(() => {
     if (!initialScreen) {
@@ -46,11 +44,12 @@ const MonitorPage = ({
       return;
     }
     // The nodes carry their own sources, so the whole screen arrives with them
-    // — nothing has to be merged into a registry first.
-    setSelectedSources(initialScreen.sources);
-    setDisplayConfig(initialScreen.config);
+    // — nothing has to be merged into a registry first. It lands as a screen of
+    // its own: a shared link is something to look at beside your own screens,
+    // not something that replaces the one you were working on.
+    addScreen('Compartida', initialScreen);
     router.push('/monitor');
-  }, [initialScreen, router, setDisplayConfig, setSelectedSources]);
+  }, [initialScreen, router, addScreen]);
   return (
     <MainLayout>
       <Head>

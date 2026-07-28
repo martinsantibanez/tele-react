@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { useDisplayConfig } from '../../hooks/useDisplayConfig';
-import { useSavedGrid } from '../../hooks/useSavedGrid';
-import { SavedScreen, useSavedScreens } from '../../hooks/useSavedScreens';
+import {
+  useActiveScreen,
+  useActiveScreenIndex,
+  useSavedScreens
+} from '../../hooks/useSavedScreens';
 import {
   findLayoutIndex,
   possibleLayouts
@@ -16,20 +18,10 @@ import { ScreenThumbnail } from '../SelectSource/ScreenThumbnail';
 const THUMB_WIDTH = 96;
 const THUMB_HEIGHT = 54;
 
-/**
- * The screens the user has stored, laid out under the monitor: a whole setup
- * (layout + which source sits in each slot) can be brought back with one key.
- *
- * It lives outside the sidebar so switching setups doesn't mean opening edit
- * mode first, which is why its keys are bound globally: Z/X walk the strip,
- * S stores the screen on air and Shift+D drops the selected one. Shift+D
- * rather than D because D already removes a screen from the grid.
- */
 export function SavedScreensBar() {
   const [savedScreens, setSavedScreens] = useSavedScreens();
-  const [selectedSources, setSelectedSources] = useSavedGrid();
-  const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useActiveScreenIndex();
+  const [activeScreen] = useActiveScreen();
   const [pendingName, setPendingName] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
@@ -48,50 +40,38 @@ export function SavedScreensBar() {
       block: 'nearest',
       inline: 'nearest'
     });
-  }, [selectedIndex]);
+  }, [activeIndex]);
 
   const suggestedName = () => {
-    const layout = possibleLayouts[findLayoutIndex(displayConfig)];
+    const layout = possibleLayouts[findLayoutIndex(activeScreen.config)];
     return `${layout?.name ?? 'Pantalla'} ${savedScreens.length + 1}`;
   };
 
-  // The field opens empty — the suggested name is only the fallback for when
-  // the user saves without typing one.
-  const startSave = () => setPendingName('');
+  const startAdd = () => setPendingName('');
 
-  const confirmSave = () => {
+  const confirmAdd = () => {
     const name = pendingName?.trim() || suggestedName();
-    setSavedScreens(saved => [
-      ...saved,
-      { name, screen: { config: displayConfig, sources: selectedSources } }
-    ]);
-    setSelectedIndex(savedScreens.length);
+    setSavedScreens(saved => [...saved, { name, screen: activeScreen }]);
+    setActiveIndex(savedScreens.length);
     setPendingName(null);
   };
 
-  const restore = (saved: SavedScreen) => {
-    setDisplayConfig(saved.screen.config);
-    setSelectedSources(saved.screen.sources);
-  };
-
   const select = (index: number) => {
-    const saved = savedScreens[index];
-    if (!saved) return;
-    setSelectedIndex(index);
-    restore(saved);
+    if (!savedScreens[index]) return;
+    setActiveIndex(index);
   };
 
   // Stops at the ends instead of wrapping, like the sidebar's lists: holding a
   // key down should settle on the last screen, not cycle past it.
   const step = (delta: number) => {
-    if (!savedScreens.length) return;
-    select(
-      Math.min(Math.max(selectedIndex + delta, 0), savedScreens.length - 1)
-    );
+    select(Math.min(Math.max(activeIndex + delta, 0), savedScreens.length - 1));
   };
 
-  const startDelete = (index = selectedIndex) => {
-    if (!savedScreens[index]) return;
+  // The user is always working on a screen, so the last one can't be dropped.
+  const canDelete = savedScreens.length > 1;
+
+  const startDelete = (index = activeIndex) => {
+    if (!canDelete || !savedScreens[index]) return;
     setPendingDelete(index);
   };
 
@@ -100,14 +80,11 @@ export function SavedScreensBar() {
   const confirmDelete = () => {
     if (pendingDelete === null) return;
     const index = pendingDelete;
-    const remaining = savedScreens.length - 1;
     setSavedScreens(saved => saved.filter((_, idx) => idx !== index));
-    // Keep the caret inside the strip after the list shrinks, and let it go
-    // when there is nothing left to point at.
-    setSelectedIndex(current => {
-      if (!remaining) return -1;
-      return current >= index ? Math.max(current - 1, 0) : current;
-    });
+    // Whatever the user was working on has to stay on air: dropping a screen
+    // before it shifts the rest down, dropping the one on air falls back to
+    // its neighbour.
+    if (index <= activeIndex) setActiveIndex(Math.max(activeIndex - 1, 0));
     setPendingDelete(null);
   };
 
@@ -115,25 +92,25 @@ export function SavedScreensBar() {
     'z',
     () => (isPrompting ? undefined : step(-1)),
     { preventDefault: true },
-    [isPrompting, selectedIndex, savedScreens]
+    [isPrompting, activeIndex, savedScreens]
   );
   useHotkeys(
     'x',
     () => (isPrompting ? undefined : step(1)),
     { preventDefault: true },
-    [isPrompting, selectedIndex, savedScreens]
+    [isPrompting, activeIndex, savedScreens]
   );
   useHotkeys(
     's',
-    () => (isPrompting ? undefined : startSave()),
+    () => (isPrompting ? undefined : startAdd()),
     { preventDefault: true },
-    [isPrompting, displayConfig, savedScreens]
+    [isPrompting]
   );
   useHotkeys(
     'shift+d',
     () => (isPrompting ? undefined : startDelete()),
     { preventDefault: true },
-    [isPrompting, selectedIndex, savedScreens]
+    [isPrompting, activeIndex, savedScreens]
   );
   useHotkeys(
     'y',
@@ -154,17 +131,17 @@ export function SavedScreensBar() {
           scrolls from the first one once they don't. */}
       <div className="mx-auto flex w-max items-end gap-2">
         {savedScreens.map((saved, index) => {
-          const isSelected = index === selectedIndex;
+          const isActive = index === activeIndex;
           return (
             <div
               key={`${saved.name}-${index}`}
-              ref={isSelected ? selectedRef : undefined}
+              ref={isActive ? selectedRef : undefined}
               onClick={() => select(index)}
-              aria-current={isSelected}
+              aria-current={isActive}
               // The name under the thumbnail is truncated to the tile's width.
               title={saved.name}
               className={`shrink-0 cursor-pointer rounded-sm p-1 ${
-                isSelected ? 'bg-gray-800' : ''
+                isActive ? 'bg-gray-800' : ''
               }`}
             >
               <div className="flex flex-col items-center gap-1">
@@ -173,18 +150,20 @@ export function SavedScreensBar() {
                     screen={saved.screen}
                     width={THUMB_WIDTH}
                     height={THUMB_HEIGHT}
-                    className={isSelected ? 'ring-2 ring-white' : undefined}
+                    className={isActive ? 'ring-2 ring-white' : undefined}
                   />
-                  <button
-                    title="Eliminar"
-                    onClick={event => {
-                      event.stopPropagation();
-                      startDelete(index);
-                    }}
-                    className="absolute -top-1.5 -right-1.5 rounded-full bg-black/70 p-0.5"
-                  >
-                    <X size={12} className="text-white" />
-                  </button>
+                  {canDelete && (
+                    <button
+                      title="Eliminar"
+                      onClick={event => {
+                        event.stopPropagation();
+                        startDelete(index);
+                      }}
+                      className="absolute -top-1.5 -right-1.5 rounded-full bg-black/70 p-0.5"
+                    >
+                      <X size={12} className="text-white" />
+                    </button>
+                  )}
                 </div>
                 <div
                   className="max-w-full truncate text-[10px] font-semibold"
@@ -205,7 +184,7 @@ export function SavedScreensBar() {
       className="flex items-center justify-center gap-2"
       onSubmit={event => {
         event.preventDefault();
-        confirmSave();
+        confirmAdd();
       }}
     >
       <Input
@@ -223,7 +202,7 @@ export function SavedScreensBar() {
         className="h-7 max-w-xs"
       />
       <Button type="submit" variant="default" className="h-7">
-        Guardar
+        Crear
       </Button>
       <Button
         type="button"
@@ -264,17 +243,14 @@ export function SavedScreensBar() {
 
   const hint = (
     <div className="text-center text-[9px] leading-none text-gray-400">
-      {savedScreens.length ? (
-        <>Z ◀ X ▶ cambiar · S guardar · ⇧D eliminar</>
-      ) : (
-        <>Sin pantallas guardadas · S guarda la actual</>
-      )}
+      Z ◀ X ▶ cambiar · S nueva pantalla
+      {canDelete && <> · ⇧D eliminar</>}
     </div>
   );
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col justify-center gap-1 px-3 py-2">
-      {!!savedScreens.length && strip}
+      {strip}
       {isNaming ? namePrompt : isConfirmingDelete ? deletePrompt : hint}
     </div>
   );

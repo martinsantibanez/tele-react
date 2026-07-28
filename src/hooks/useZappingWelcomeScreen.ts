@@ -1,8 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { zappingWelcomeScreen } from '../components/GridDisplay/zappingWelcomeScreen';
 import { embeddedSource } from '../sources';
-import { useDisplayConfig } from './useDisplayConfig';
-import { useSavedGrid } from './useSavedGrid';
+import { useAddSavedScreen } from './useSavedScreens';
 import { useZappingSources } from './useZappingChannels';
 
 /**
@@ -10,10 +9,12 @@ import { useZappingSources } from './useZappingChannels';
  * Zapping channels once their account is linked — otherwise a fresh pairing
  * leaves them on the default grid with nothing from the account they just
  * connected. Wired to the activation poll in ClientProviders.
+ *
+ * It arrives as a screen of its own rather than on top of the one they were
+ * working on, which the linking would otherwise overwrite.
  */
 export function useZappingWelcomeScreen() {
-  const [, setGrid] = useSavedGrid();
-  const [, setDisplayConfig] = useDisplayConfig();
+  const addScreen = useAddSavedScreen();
   // Read at call time, not render time: the catalogue may still be the bundled
   // snapshot when this hook renders, and the callback has to stay stable so it
   // doesn't restart the activation poll.
@@ -25,12 +26,12 @@ export function useZappingWelcomeScreen() {
     const bySlug = new Map(sourcesRef.current.map(src => [src.slug, src]));
     // Seeding from the bundled snapshot is safe: the node only carries a copy,
     // and the live catalogue is preferred over it once it has loaded.
-    setGrid(
-      zappingWelcomeScreen.sources.map(node => {
+    addScreen('Zapping', {
+      config: zappingWelcomeScreen.config,
+      sources: zappingWelcomeScreen.sources.map(node => {
         const source = node.sourceSlug && bySlug.get(node.sourceSlug);
         return source ? { ...node, source: embeddedSource(source) } : node;
       })
-    );
-    setDisplayConfig(zappingWelcomeScreen.config);
-  }, [setDisplayConfig, setGrid]);
+    });
+  }, [addScreen]);
 }

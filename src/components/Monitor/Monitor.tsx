@@ -3,10 +3,8 @@ import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
-import {
-  DEFAULT_GRID_SIZE,
-  useDisplayConfig
-} from '../../hooks/useDisplayConfig';
+import { DEFAULT_GRID_SIZE } from '../../hooks/defaultScreen';
+import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
