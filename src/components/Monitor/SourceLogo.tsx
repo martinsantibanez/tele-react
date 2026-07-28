@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { SourceType } from '../../sources';
+import { SourceImage } from '../SourceImage';
 
 type Props = {
   source: SourceType;
@@ -14,33 +14,24 @@ type Props = {
  * over a bright frame.
  */
 export function SourceLogo({ source }: Props) {
-  // Plenty of feed logos 404; a broken-image glyph and its alt text over the
-  // video is worse than no badge at all, so a failed load drops the whole thing.
-  const [broken, setBroken] = useState(false);
   const url = source.logoUrl ?? source.imageUrl;
-  useEffect(() => setBroken(false), [url]);
+  const icons = source.titleIcons?.length ? (
+    // The `!important` overrides neutralise the inline sizing baked into each
+    // source's titleIcons so they scale to the badge, not past it.
+    <div className="flex h-full max-w-full items-center gap-0.5 [&_img]:!max-h-full [&_img]:!max-w-none [&_img]:!w-auto [&_img]:!object-contain [&_svg]:!h-full [&_svg]:!w-auto">
+      {source.titleIcons}
+    </div>
+  ) : null;
 
-  const logo = broken ? undefined : url;
-  const hasIcons = !logo && !!source.titleIcons?.length;
-  if (!logo && !hasIcons) return null;
+  if (!url && !icons) return null;
 
   return (
     <div className="pointer-events-none flex h-full min-w-0 items-center opacity-70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-      {logo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={logo}
-          alt=""
-          onError={() => setBroken(true)}
-          className="h-full w-auto max-w-full object-contain object-left"
-        />
-      ) : (
-        // The `!important` overrides neutralise the inline sizing baked into
-        // each source's titleIcons so they scale to the badge, not past it.
-        <div className="flex h-full max-w-full items-center gap-0.5 [&_img]:!max-h-full [&_img]:!max-w-none [&_img]:!w-auto [&_img]:!object-contain [&_svg]:!h-full [&_svg]:!w-auto">
-          {source.titleIcons}
-        </div>
-      )}
+      <SourceImage
+        src={url}
+        className="h-full w-auto max-w-full object-contain object-left"
+        fallback={icons}
+      />
     </div>
   );
 }

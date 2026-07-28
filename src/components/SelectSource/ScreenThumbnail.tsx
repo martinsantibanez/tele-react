@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
+import { SourceImage } from '../SourceImage';
 
 type Props = {
   screen: ScreenType;
@@ -116,30 +117,31 @@ function LayoutPreview({
 }
 
 /**
- * A single tile. Shows the channel logo when we have one; the `!important`
+ * A single tile. Shows the channel logo when we have a working one, and falls
+ * back to the source's own icons or its name otherwise; the `!important`
  * overrides neutralise the inline sizing baked into each source's titleIcons so
  * they scale down to the tile instead of overflowing it.
  */
 function Slot({ source }: { source?: SourceType }) {
   const label = useMemo(() => source?.name ?? source?.slug, [source]);
+  const fallback = source?.titleIcons?.length ? (
+    <div className="flex max-h-full max-w-full items-center justify-center gap-0.5 [&_img]:!max-h-full [&_img]:!w-auto [&_img]:!object-contain">
+      {source.titleIcons}
+    </div>
+  ) : label ? (
+    <span className="truncate text-[8px] font-semibold leading-none text-gray-200">
+      {label}
+    </span>
+  ) : null;
+
   return (
     <div className="flex h-full w-full items-center justify-center overflow-hidden bg-gray-900 p-1">
-      {source?.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={source.imageUrl}
-          alt={label ?? ''}
-          className="max-h-full max-w-full object-contain"
-        />
-      ) : source?.titleIcons?.length ? (
-        <div className="flex max-h-full max-w-full items-center justify-center gap-0.5 [&_img]:!max-h-full [&_img]:!w-auto [&_img]:!object-contain">
-          {source.titleIcons}
-        </div>
-      ) : label ? (
-        <span className="truncate text-[8px] font-semibold leading-none text-gray-200">
-          {label}
-        </span>
-      ) : null}
+      <SourceImage
+        src={source?.imageUrl}
+        alt={label ?? ''}
+        className="max-h-full max-w-full object-contain"
+        fallback={fallback}
+      />
     </div>
   );
 }

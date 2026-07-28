@@ -46,6 +46,7 @@ import {
   sliderRow
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
+import { SourceImage } from '../SourceImage';
 import { useSavedScreensRow } from './SavedScreensRow';
 import {
   categoryOrder,
@@ -641,13 +642,15 @@ export function SourceSlider({
           <div className="flex items-center gap-1.5">
             <div className="relative">
               {source.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <SourceImage
                   src={source.imageUrl}
                   // Logos come in every aspect ratio; boxing them keeps the
                   // sidebar rows the height the virtual list assumes.
                   className="h-[44px] w-[44px] object-contain"
                   alt={source.name || ''}
+                  // A dead logo still holds its slot, so the heart pinned to
+                  // its corner doesn't land on top of the channel name.
+                  fallback={<div className="h-[44px] w-[44px]" />}
                 />
               )}
               <div className="flex flex-col">
