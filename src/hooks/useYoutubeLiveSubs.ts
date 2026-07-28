@@ -204,6 +204,9 @@ export function useYoutubeLiveSources(): SourceType[] {
         youtubeVideoId: v.videoId,
         youtubeChatVideoId: v.videoId,
         name: v.channelTitle,
+        // The row is named for the channel, so the stream's own title is what
+        // tells two of its lives apart — and what it is actually showing.
+        description: v.title,
         imageUrl: v.thumbnailUrl,
         logoUrl: avatarByChannel.get(v.channelId),
         fuente: `https://www.youtube.com/channel/${v.channelId}`

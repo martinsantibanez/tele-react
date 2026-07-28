@@ -4,6 +4,8 @@ export const ZAPPING_HEARTBEAT_URL =
   'https://drhouse.zappingtv.com/hb/v1/webplayer/';
 export const ZAPPING_CHANNELS_URL =
   'https://alquinta.zappingtv.com/v31/webplayer/channelswithurl';
+export const ZAPPING_NOWPLAYING_URL =
+  'https://charly.zappingtv.com/v3/webplayer/nowplaying';
 
 export const ZAPPING_GETCODE_URL =
   'https://benja.zappingtv.com/activation/v20/smarttv/getcode';
@@ -204,3 +206,115 @@ export async function fetchZappingChannels(
 /** Logo for a channel's `image` slug, at one of Zapping's rendered sizes. */
 export const zappingLogoUrl = (image: string, size = 62) =>
   `https://davinci.zappingtv.com/gato/media/${size}/canales/white/${image}.png`;
+
+/** One entry of a channel's schedule. */
+export type ZappingProgram = {
+  /** Unix **seconds**, not ms. */
+  start_time: number;
+  end_time: number;
+  /** Display title; `"Programa | Episodio"` when there is an episode. */
+  title: string;
+  /** Series title, without the episode suffix. */
+  program_title: string;
+  image_wide: string;
+  parent_image_wide: string;
+  is_live: boolean;
+  episode_info: { title: string; season: number; number: number } | null;
+  sub_type: string;
+  zapping_type: string;
+  program_id: string;
+  parent_id: string;
+  listing_id: number;
+  has_moments?: boolean;
+  sport_extended: boolean;
+  sport_extended_id: number | null;
+};
+
+/** What is on a channel: the last two programs, the current one, the next two. */
+export type ZappingScheduleEntry = {
+  past: ZappingProgram[];
+  now: ZappingProgram | null;
+  next: ZappingProgram[];
+};
+
+export type ZappingNowPlaying = {
+  /** Milliseconds until the data is worth re-fetching (~60s). */
+  nextUpdate: number;
+  /** Keyed by channel **alias** — resolve through `zappingAliasIndex`. */
+  schedule: Record<string, ZappingScheduleEntry>;
+  /** The "Más vistos" ranking, best first, as aliases. */
+  topChannels: string[];
+};
+
+type NowPlayingResponse = {
+  data?: {
+    next_update?: number;
+    schedule?: Record<string, ZappingScheduleEntry>;
+    top_channels?: string[];
+  };
+};
+
+/** Artwork for a program's `image_wide`. */
+export const zappingProgramImageUrl = (imageWide: string, width = 500) =>
+  `https://davinci.zappingtv.com/epg/${imageWide}?w=${width}`;
+
+/**
+ * The `<track>` slug of a channel's HLS url (`ringeling…/v1/<track>/…`). Not
+ * unique — `mega` and `hbo2` each cover two channels — so it is only ever a
+ * fallback key, never the primary one.
+ */
+export const zappingTrackOf = (channel: ZappingChannel) =>
+  channel.url.match(/\/v1\/([^/]+)\//)?.[1];
+
+/**
+ * The catalogue indexed by the alias `nowplaying` keys its data on.
+ *
+ * That alias is `image` for most channels and the HLS track slug for the rest
+ * (they agree for only 132 of 178), so both are indexed. `image` is unique and
+ * wins every collision; the track only fills gaps. There are exactly two
+ * collisions — `mega` and `hbo2` — and in both the alias is one channel's
+ * `image` and a duplicate signal's track, so preferring `image` picks the
+ * primary channel.
+ *
+ * Zapping's own webplayer looks these up by `image` alone, which is why its
+ * "Más vistos" silently renders 11 of the 20 ranked channels and drops
+ * Chilevisión, Canal 13 and TVN. Indexing both resolves all 20.
+ */
+export function zappingAliasIndex(channels: ZappingChannel[]) {
+  const index = new Map<string, ZappingChannel>();
+  for (const channel of channels) {
+    const track = zappingTrackOf(channel);
+    if (track && !index.has(track)) index.set(track, channel);
+  }
+  for (const channel of channels) index.set(channel.image, channel);
+  return index;
+}
+
+/**
+ * What every channel is airing right now, plus the most-viewed ranking.
+ *
+ * Takes **no credential** — the webplayer posts its loginToken but the endpoint
+ * answers the same to an empty body, and it serves `access-control-allow-origin:
+ * *`. So unlike the heartbeat it is callable straight from the browser, on
+ * `localhost` included, with no proxy.
+ */
+export async function fetchZappingNowPlaying(): Promise<ZappingNowPlaying> {
+  const res = await fetch(ZAPPING_NOWPLAYING_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'data='
+  });
+  const json: NowPlayingResponse = await res.json();
+  const schedule = json?.data?.schedule;
+  if (!schedule || typeof schedule !== 'object') {
+    throw new Error('Zapping: no se pudo obtener la programación actual');
+  }
+  return {
+    nextUpdate:
+      typeof json.data?.next_update === 'number' && json.data.next_update > 0
+        ? json.data.next_update
+        : 60_000,
+    schedule,
+    topChannels: json.data?.top_channels ?? []
+  };
+}

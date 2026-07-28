@@ -26,7 +26,8 @@ import {
   SourceType
 } from '../../sources';
 import { pruebasSources } from '../../sources/pruebas';
-import { useZappingSources } from '../../hooks/useZappingChannels';
+import { useZappingSources, zappingSlug } from '../../hooks/useZappingChannels';
+import { useZappingNowPlaying } from '../../hooks/useZappingNowPlaying';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeAuth } from '../../hooks/useYoutubeAuth';
@@ -75,12 +76,12 @@ const TV_CATEGORY_ROW_HEIGHT = 24;
  * A row of the TV list: the country headers fold their channels away, and each
  * open country labels its channels by the category the feed gives them.
  */
-type TvRow =
+type ListRow =
   | { kind: 'country'; key: string; group: TvCountryGroup; isOpen: boolean }
   | { kind: 'category'; key: string; label: string }
   | { kind: 'source'; key: string; source: SourceType; sourceIndex: number };
 
-const tvRowHeight = (row: TvRow) => {
+const listRowHeight = (row: ListRow) => {
   if (row.kind === 'source') return SIDEBAR_ROW_HEIGHT;
   return row.kind === 'country' ? COUNTRY_ROW_HEIGHT : TV_CATEGORY_ROW_HEIGHT;
 };
@@ -174,6 +175,7 @@ export function SourceSlider({
   const { favourites, isFavourite, toggleFavourite } = useFavourites();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const zappingSources = useZappingSources();
+  const { nowBySlug, topChannels } = useZappingNowPlaying();
   const youtubeSources = useYoutubeLiveSources();
   const { isConnected: youtubeConnected } = useYoutubeAuth();
   // The TV feed is fetched once for the whole app, alongside the other
@@ -201,7 +203,7 @@ export function SourceSlider({
   // The rows the TV list renders, plus the channels they expose: folded-away
   // countries drop out of both, so the arrows only walk what is on screen.
   const { tvRows, tvSources } = useMemo(() => {
-    const rows: TvRow[] = [];
+    const rows: ListRow[] = [];
     const sources: SourceType[] = [];
     tvGroups.forEach(group => {
       const categories = searchQuery
@@ -257,6 +259,52 @@ export function SourceSlider({
     return { tvRows: rows, tvSources: sources };
   }, [tvGroups, openCountries, searchQuery]);
 
+  // The Zapping list, headed by the live "Más vistos" ranking. A ranked channel
+  // is listed in both sections — up in the ranking and again down in the
+  // catalogue at its channel number — so the two rows share a slug and are told
+  // apart by their section-scoped key and their index in the flat list.
+  const { zappingRows, zappingRowSources } = useMemo(() => {
+    const rows: ListRow[] = [];
+    const sources: SourceType[] = [];
+    const bySlug = new Map(zappingSources.map(source => [source.slug, source]));
+    const topSources = topChannels
+      .map(channel => bySlug.get(zappingSlug(channel)))
+      .filter((source): source is SourceType => !!source);
+
+    // Until the ranking lands there is only one section, and a lone header
+    // would just be a label over the whole catalogue.
+    const sections = topSources.length
+      ? [
+          { id: 'top', label: 'Más vistos', list: topSources },
+          { id: 'all', label: 'Todos los canales', list: zappingSources }
+        ]
+      : [{ id: 'all', label: undefined, list: zappingSources }];
+
+    sections.forEach(section => {
+      const hits = searchQuery
+        ? section.list.filter(source => sourceMatches(source, searchQuery))
+        : section.list;
+      // A section with no hit has nothing to say about the search.
+      if (!hits.length) return;
+      if (section.label)
+        rows.push({
+          kind: 'category',
+          key: `zapping_${section.id}`,
+          label: section.label
+        });
+      hits.forEach(source => {
+        rows.push({
+          kind: 'source',
+          key: `${section.id}_${source.slug}`,
+          source,
+          sourceIndex: sources.length
+        });
+        sources.push(source);
+      });
+    });
+    return { zappingRows: rows, zappingRowSources: sources };
+  }, [zappingSources, topChannels, searchQuery]);
+
   const activeCategorySources: SourceType[] = useMemo(() => {
     const categorySources = () => {
       if (activeCategory === 'tv') {
@@ -276,10 +324,12 @@ export function SourceSlider({
       } else if (activeCategory === 'layouts') {
         return [];
       }
-      return zappingSources;
+      // Already filtered, and ordered as the sections lay them out.
+      return zappingRowSources;
     };
     const sources = categorySources();
-    if (!searchQuery || activeCategory === 'tv') return sources;
+    if (!searchQuery || activeCategory === 'tv' || activeCategory === 'zapping')
+      return sources;
     return sources.filter(source => sourceMatches(source, searchQuery));
   }, [
     activeCategory,
@@ -287,7 +337,7 @@ export function SourceSlider({
     twitchSources,
     favourites,
     catalogueBySlug,
-    zappingSources,
+    zappingRowSources,
     youtubeSources,
     searchQuery
   ]);
@@ -300,9 +350,21 @@ export function SourceSlider({
   const selectedSlug = youtubeLiveSelected
     ? YOUTUBE_LIVE_SLUG
     : selectedSourceSlug;
+  // Zapping lists its ranked channels twice, so the slug alone no longer says
+  // *which* row the user is standing on. The caret remembers the row that was
+  // last picked and is trusted only while it still points at the selection —
+  // the list re-orders underneath it (the ranking polls, the search narrows,
+  // the tab changes) and the screen can be re-pointed from outside the picker.
+  const [caretIndex, setCaretIndex] = useState<number | null>(null);
+  const caretOnSelection =
+    caretIndex !== null &&
+    !!selectedSlug &&
+    activeCategorySources[caretIndex]?.slug === selectedSlug;
   const selectedIndex = isLayouts
     ? selectedLayoutIndex
-    : activeCategorySources.findIndex(src => src.slug === selectedSlug);
+    : caretOnSelection
+      ? caretIndex
+      : activeCategorySources.findIndex(src => src.slug === selectedSlug);
   const itemCount = isLayouts
     ? possibleLayouts.length
     : activeCategorySources.length;
@@ -316,6 +378,7 @@ export function SourceSlider({
       selectLayout(index);
       return;
     }
+    setCaretIndex(index);
     const source = activeCategorySources[index];
     if (!source) return;
     if (isYoutube) setYoutubeLiveCaret(source.slug === YOUTUBE_LIVE_SLUG);
@@ -644,13 +707,21 @@ export function SourceSlider({
     if (source.slug === YOUTUBE_LIVE_SLUG)
       return renderYoutubeLiveCard(canalIndex);
 
+    // A channel listed twice is playing in both places, so both rows are lit.
+    // Only the one the caret is on carries the focus and the signal controls —
+    // those belong to a position in the list, not to the channel.
     const isActive = source.slug === selectedSourceSlug && !youtubeLiveSelected;
+    const isCaret = isActive && canalIndex === selectedIndex;
     const starred = isFavourite(source.slug);
+    // What the source is showing right now. Zapping's comes from the live EPG,
+    // keyed by slug so a channel starred into Favourites keeps saying what is
+    // on it there too; every other catalogue carries its own on the source.
+    const description = nowBySlug.get(source.slug)?.title ?? source.description;
 
     return (
       <div
-        ref={isActive ? selectedItemRef : undefined}
-        tabIndex={isActive ? 0 : -1}
+        ref={isCaret ? selectedItemRef : undefined}
+        tabIndex={isCaret ? 0 : -1}
         aria-current={isActive}
         className={`h-full w-full cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white ${
           isActive ? 'bg-gray-800' : ''
@@ -693,14 +764,14 @@ export function SourceSlider({
                     }
                   />
                 </button>
-                {isActive && (
+                {isCaret && (
                   <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
                     F
                   </span>
                 )}
               </div>
             </div>
-            {isActive && availableSignals.length > 1 && (
+            {isCaret && availableSignals.length > 1 && (
               <div className="ml-2 flex flex-row items-center gap-1 rounded bg-black/70 p-1">
                 {signalGroups.map(({ type, signals }) => {
                   const Icon = signalIcons[type];
@@ -740,15 +811,22 @@ export function SourceSlider({
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1 truncate text-base font-semibold">
-            {source.name}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-base font-semibold">
+              {source.name}
+            </div>
+            {description && (
+              <div className="truncate text-xs text-gray-400">
+                {description}
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   };
 
-  const renderTvRow = (row: TvRow) => {
+  const renderListRow = (row: ListRow) => {
     if (row.kind === 'source')
       return renderSourceCard(row.source, row.sourceIndex);
 
@@ -783,13 +861,25 @@ export function SourceSlider({
     );
   };
 
-  // Zapping and YouTube have nothing to list until the account is connected;
-  // the indices still line up with `activeCategorySources` because the list is
-  // either shown whole or not at all.
+  // YouTube has nothing to list until the account is connected; the indices
+  // still line up with `activeCategorySources` because the list is either shown
+  // whole or not at all. (Zapping is gated the same way, on its rows.)
   const listedSources =
-    (isZapping && !zappingToken) || (isYoutube && !youtubeConnected)
-      ? []
-      : activeCategorySources;
+    isYoutube && !youtubeConnected ? [] : activeCategorySources;
+
+  // The TV and Zapping lists carry their headers as rows, so the row to scroll
+  // to has to be found rather than reused from the flat channel index. Matched
+  // on that index and not on the slug: a Zapping channel listed in both
+  // sections has two rows, and the one to bring into view is the caret's.
+  // Zapping has nothing to list until the account is connected.
+  const sectionRows = isTv
+    ? tvRows
+    : isZapping && zappingToken
+      ? zappingRows
+      : [];
+  const selectedRowIndex = sectionRows.findIndex(
+    row => row.kind === 'source' && row.sourceIndex === selectedIndex
+  );
 
   const sourcesStatus = (
     <>
@@ -812,7 +902,7 @@ export function SourceSlider({
         !youtubeSources.length &&
         'Ningún canal suscrito está en vivo'}
       {!!searchQuery &&
-        !(isTv ? tvRows.length : listedSources.length) &&
+        !(isTv || isZapping ? sectionRows.length : listedSources.length) &&
         `Sin resultados para «${query.trim()}»`}
     </>
   );
@@ -839,23 +929,17 @@ export function SourceSlider({
     </>
   );
 
-  // The TV list carries its headers as rows, so the selection has to be looked
-  // up by slug rather than reused from the flat channel index.
-  const selectedTvRowIndex = tvRows.findIndex(
-    row => row.kind === 'source' && row.source.slug === selectedSourceSlug
-  );
-
-  const sourcesList = isTv ? (
-    !!tvRows.length && (
+  const sourcesList = isTv || isZapping ? (
+    !!sectionRows.length && (
       <VirtualList
-        items={tvRows}
-        itemHeight={tvRowHeight}
-        activeIndex={selectedTvRowIndex}
+        items={sectionRows}
+        itemHeight={listRowHeight}
+        activeIndex={selectedRowIndex}
         getItemKey={row => row.key}
-        // The country and its category head the channels under them, so the
-        // one being scrolled through stays named at the top of the list.
+        // A section heads the channels under it, so the one being scrolled
+        // through stays named at the top of the list.
         isStickyHeader={row => row.kind !== 'source'}
-        renderItem={row => renderTvRow(row)}
+        renderItem={row => renderListRow(row)}
         className="min-h-0 w-full flex-1"
       />
     )

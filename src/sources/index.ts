@@ -39,6 +39,13 @@ export type SignalType =
 export interface SourceType extends SourceInput {
   slug: string;
   name?: string;
+  /**
+   * Second line under the name in the picker: what this source is showing
+   * right now, when the catalogue knows. YouTube puts the stream's title here
+   * (the name is the channel's). Left out, the row is the single line it has
+   * always been.
+   */
+  description?: string;
   flag?: string;
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
