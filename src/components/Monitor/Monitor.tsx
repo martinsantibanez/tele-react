@@ -409,28 +409,34 @@ export const Monitor = () => {
           </div>
         </div>
       )}
-      <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
-        style={{ containerType: 'size' }}
-      >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {/* The bar below takes the height it needs, so the screen is measured
+            against what is left rather than against the whole column. */}
         <div
-          className="aspect-video flex-none self-center"
-          style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+          className="flex min-h-0 min-w-0 flex-1 flex-col justify-center"
+          style={{ containerType: 'size' }}
         >
-          <Screen
-            screen={screen}
-            onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-            onRemove={
-              isYoutubeMode || !canRemoveScreen ? undefined : handleSourceRemove
-            }
-            editingSourceIdx={editingSourceIdx}
-            swapSourceIdx={swapSourceIdx}
-            fullscreenIdx={fullscreenIdx}
-            onSwitch={isYoutubeMode ? undefined : handleSwitch}
-          />
+          <div
+            className="aspect-video flex-none self-center"
+            style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+          >
+            <Screen
+              screen={screen}
+              onEdit={isYoutubeMode ? undefined : handleSourceEdit}
+              onRemove={
+                isYoutubeMode || !canRemoveScreen
+                  ? undefined
+                  : handleSourceRemove
+              }
+              editingSourceIdx={editingSourceIdx}
+              swapSourceIdx={swapSourceIdx}
+              fullscreenIdx={fullscreenIdx}
+              onSwitch={isYoutubeMode ? undefined : handleSwitch}
+            />
+          </div>
         </div>
 
-        <ControlBar className="min-h-0 w-full flex-1" />
+        <ControlBar className="w-full flex-none" />
       </div>
     </div>
   );

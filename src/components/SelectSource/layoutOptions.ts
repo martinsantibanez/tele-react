@@ -10,27 +10,9 @@ export type PossibleLayout = {
 
 export const possibleLayouts: PossibleLayout[] = [
   {
-    name: '1 + 5',
+    name: 'Vista general',
     config: defaultDisplayConfig,
     imgName: 'layout1.png'
-  },
-  {
-    name: 'Grid 3',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 3 }
-    },
-    imgName: 'layout2.png'
-  },
-  {
-    name: 'Grid 2',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 2 }
-    },
-    imgName: 'layout3.png'
   },
   {
     name: '2 grandes',
@@ -42,6 +24,24 @@ export const possibleLayouts: PossibleLayout[] = [
     imgName: 'layout4.png'
   },
   {
+    name: 'Grid 2',
+    config: {
+      layout: initialLayout,
+      mode: DisplayMode.Grid,
+      grid: { size: 2 }
+    },
+    imgName: 'layout3.png'
+  },
+  {
+    name: 'Grid 3',
+    config: {
+      layout: initialLayout,
+      mode: DisplayMode.Grid,
+      grid: { size: 3 }
+    },
+    imgName: 'layout2.png'
+  },
+  {
     name: 'Grid 4',
     config: {
       layout: initialLayout,
@@ -49,7 +49,16 @@ export const possibleLayouts: PossibleLayout[] = [
       grid: { size: 4 }
     },
     imgName: 'layout5.png'
-  }
+  },
+   {
+    name: 'Grid 1',
+    config: {
+      layout: initialLayout,
+      mode: DisplayMode.Grid,
+      grid: { size: 1 }
+    },
+    imgName: 'layout6.png'
+  },
 ];
 
 /**

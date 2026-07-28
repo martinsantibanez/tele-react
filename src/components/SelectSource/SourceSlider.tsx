@@ -47,7 +47,6 @@ import {
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
-import { useSavedScreensRow } from './SavedScreensRow';
 import {
   categoryOrder,
   SelectorCategories,
@@ -167,20 +166,6 @@ export function SourceSlider({
   );
   const youtubeLiveSelected =
     isYoutube && youtubeLiveCaret && displayConfig.mode === DisplayMode.Youtube;
-  const {
-    row: savedScreensRow,
-    startSave,
-    namePrompt,
-    isNaming,
-    startDelete,
-    confirmDelete,
-    cancelDelete,
-    deletePrompt,
-    isConfirmingDelete
-  } = useSavedScreensRow();
-  // Which RowSlider row Tab is on, so D only deletes from the saved row.
-  const [activeRowKey, setActiveRowKey] = useState<string | undefined>();
-
   const { favourites, isFavourite, toggleFavourite } = useFavourites();
   const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
   const zappingSources = useZappingSources();
@@ -379,37 +364,6 @@ export function SourceSlider({
     },
     { preventDefault: true }
   );
-  useHotkeys(
-    's',
-    () => {
-      if (!isLayouts || isNaming || isConfirmingDelete) return;
-      startSave();
-    },
-    { preventDefault: true },
-    [isLayouts, isNaming, isConfirmingDelete, startSave]
-  );
-  useHotkeys(
-    'd',
-    () => {
-      if (!isLayouts || isNaming || isConfirmingDelete) return;
-      if (activeRowKey !== 'saved') return;
-      startDelete();
-    },
-    { preventDefault: true },
-    [isLayouts, isNaming, isConfirmingDelete, activeRowKey, startDelete]
-  );
-  useHotkeys(
-    'y',
-    () => (isConfirmingDelete ? confirmDelete() : undefined),
-    { preventDefault: true },
-    [isConfirmingDelete, confirmDelete]
-  );
-  useHotkeys(
-    'n',
-    () => (isConfirmingDelete ? cancelDelete() : undefined),
-    { preventDefault: true },
-    [isConfirmingDelete, cancelDelete]
-  );
   // Zapping and YouTube both put a connect/disconnect panel where the signals
   // TAB would otherwise be.
   const isConfigCategory = isZapping || isYoutube;
@@ -471,7 +425,6 @@ export function SourceSlider({
   );
 
   const layoutRows = [
-    savedScreensRow,
     sliderRow<PossibleLayout>({
       key: 'layouts',
       items: possibleLayouts,
@@ -856,20 +809,7 @@ export function SourceSlider({
   const layoutsContent = (
     // The sidebar rows scroll, so they need the leftover height.
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2">
-      {namePrompt}
-      {deletePrompt}
-      {/* While a prompt is open the keys belong to it, not the rows. */}
-      <RowSlider
-        rows={layoutRows}
-        enabled={!isNaming && !isConfirmingDelete}
-        onActiveRowChange={setActiveRowKey}
-      />
-    </div>
-  );
-
-  const savedScreensHint = isLayouts && (
-    <div className="text-[9px] leading-none text-gray-400 text-center">
-      S guarda la pantalla actual · D elimina la guardada
+      <RowSlider rows={layoutRows} />
     </div>
   );
 
@@ -885,7 +825,6 @@ export function SourceSlider({
       <div className="text-[9px] leading-none text-gray-400 text-center">
         ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
       </div>
-      {savedScreensHint}
       {isLayouts ? (
         layoutsContent
       ) : (
