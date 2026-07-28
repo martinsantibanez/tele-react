@@ -42,6 +42,12 @@ export interface SourceType extends SourceInput {
   titleHtml?: string;
   titleIcons?: React.ReactNode[];
   imageUrl?: string;
+  /**
+   * The channel's own mark, for the badge each tile shows. Only needed when
+   * `imageUrl` is something else — YouTube lives put the video thumbnail there,
+   * and a still of the stream is not a logo.
+   */
+  logoUrl?: string;
   favourite?: boolean;
 
   inputs?: SourceInput[];

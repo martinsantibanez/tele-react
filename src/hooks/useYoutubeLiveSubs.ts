@@ -186,7 +186,13 @@ export function assignLiveSlugs(
 
 /** The live subs mapped onto the app's `SourceType`. */
 export function useYoutubeLiveSources(): SourceType[] {
-  const { live } = useYoutubeLiveSubs();
+  const { live, subscriptions } = useYoutubeLiveSubs();
+  // A live's own thumbnail is a still of the stream, so the channel's mark has
+  // to come from the subscription it was found through.
+  const avatarByChannel = useMemo(
+    () => new Map(subscriptions.map(s => [s.channelId, s.thumbnailUrl])),
+    [subscriptions]
+  );
   return useMemo(
     () =>
       assignLiveSlugs(live).map(v => ({
@@ -195,9 +201,10 @@ export function useYoutubeLiveSources(): SourceType[] {
         youtubeChatVideoId: v.videoId,
         name: v.channelTitle,
         imageUrl: v.thumbnailUrl,
+        logoUrl: avatarByChannel.get(v.channelId),
         fuente: `https://www.youtube.com/channel/${v.channelId}`
       })),
-    [live]
+    [live, avatarByChannel]
   );
 }
 
@@ -243,26 +250,29 @@ export function useYoutubeGridSources() {
  * YouTube analogue of `useZappingSourceSync`.
  */
 export function useYoutubeLiveSourceSync() {
-  const { live } = useYoutubeLiveSubs();
+  const fresh = useYoutubeLiveSources();
   const { customSources, setCustomSources } = useCustomSources();
 
   useEffect(() => {
-    if (!live.length) return;
-    const videoBySlug = new Map(
-      assignLiveSlugs(live).map(v => [v.slug, v.videoId])
-    );
-    const needsUpdate = customSources.some(src => {
-      const videoId = videoBySlug.get(src.slug);
-      return videoId && videoId !== src.youtubeVideoId;
-    });
-    if (!needsUpdate) return;
+    if (!fresh.length) return;
+    const bySlug = new Map(fresh.map(src => [src.slug, src]));
+    // The thumbnail and the channel avatar are re-pointed along with the
+    // videoId: a source saved before this carries a still of a stream that
+    // ended, and no logo at all.
+    const isStale = (src: SourceType) => {
+      const live = bySlug.get(src.slug);
+      return (
+        !!live &&
+        (live.youtubeVideoId !== src.youtubeVideoId ||
+          live.imageUrl !== src.imageUrl ||
+          live.logoUrl !== src.logoUrl)
+      );
+    };
+    if (!customSources.some(isStale)) return;
     setCustomSources(sources =>
-      sources.map(src => {
-        const videoId = videoBySlug.get(src.slug);
-        return videoId && videoId !== src.youtubeVideoId
-          ? { ...src, youtubeVideoId: videoId, youtubeChatVideoId: videoId }
-          : src;
-      })
+      sources.map(src =>
+        isStale(src) ? { ...src, ...bySlug.get(src.slug) } : src
+      )
     );
-  }, [live, customSources, setCustomSources]);
+  }, [fresh, customSources, setCustomSources]);
 }

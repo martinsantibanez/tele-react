@@ -5,6 +5,7 @@ import { useTeleContext } from '../../context/TeleContext';
 import { useCustomSources } from '../../hooks/useCustomSources';
 import { getSource } from '../../sources';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
+import { SourceLogo } from './SourceLogo';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
 export type OnSwitchCb = (left: number, right: number) => void;
@@ -95,11 +96,20 @@ export function MonitorSource({
             }}
           />
         )}
+        {/* Number and logo are one badge, sized to the tile so the mark stays
+            legible on a big screen without swamping a small one. The number
+            keeps its own type size and centres against the taller mark, so it
+            gets its own box rather than riding the button row. */}
         {(isEditing || swapSourceIdx !== undefined) && (
-          <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-between w-full opacity-100 z-[2]">
-            <span className="ml-1 rounded bg-black/70 px-2 font-bold text-white">
+          <div className="absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5">
+            <span className="shrink-0 rounded bg-black/70 px-2 leading-[20px] font-bold text-white">
               {getSourceShortcutLabel(idx)}
             </span>
+            {!!source && <SourceLogo source={source} />}
+          </div>
+        )}
+        {(isEditing || swapSourceIdx !== undefined) && (
+          <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-end w-full opacity-100 z-[2]">
             {isEditing && (
               <div className="flex">
                 {onChangeClick && (
