@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import useLocalStorageState from 'use-local-storage-state';
 import { Button } from '../../../components/ui/button';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useFavourites } from '../../hooks/useFavourites';
@@ -48,7 +47,14 @@ import {
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { useSavedScreensRow } from './SavedScreensRow';
-import { HOME_COUNTRY, TvCountryGroup } from './tvChannels';
+import {
+  categoryOrder,
+  SelectorCategories,
+  showPruebas,
+  useActiveCategory,
+  useOpenCountries
+} from './sourceCategories';
+import { TvCountryGroup } from './tvChannels';
 
 /**
  * Height of a source row in the sidebar: the 44px logo box plus its padding.
@@ -85,9 +91,6 @@ const youtubeLiveEntry: SourceType = {
   name: YOUTUBE_LAYOUT_NAME
 };
 
-/** The test bench is for trying sources out, so it never ships to production. */
-const showPruebas = process.env.NODE_ENV === 'development';
-
 /** Hand-written sources for trying things out; they come from no feed. */
 const pruebasList = showPruebas ? Object.values(pruebasSources) : [];
 
@@ -106,25 +109,6 @@ type Props = {
   activeSignal?: string;
   onSelectSignal?: (key: string) => void;
 };
-
-type SelectorCategories =
-  | 'tv'
-  | 'twitch'
-  | 'zapping'
-  | 'youtube'
-  | 'favourites'
-  | 'pruebas'
-  | 'layouts';
-
-const categoryOrder: SelectorCategories[] = [
-  'tv',
-  'zapping',
-  'youtube',
-  'favourites',
-  'twitch',
-  ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : []),
-  'layouts'
-];
 
 const categoryLabels: Record<SelectorCategories, string> = {
   tv: 'TV',
@@ -154,22 +138,6 @@ const categoryIcons: Record<
 };
 
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
-
-export const useActiveCategory = () => {
-  return useLocalStorageState<SelectorCategories>('_active_category_', {
-    defaultValue: 'tv'
-  });
-};
-
-/**
- * Countries whose channels are unfolded in the TV list. Only the home country
- * starts open, so the catalogue reads as a short list of countries.
- */
-const useOpenCountries = () => {
-  return useLocalStorageState<string[]>('_open_tv_countries_', {
-    defaultValue: [HOME_COUNTRY]
-  });
-};
 
 export function SourceSlider({
   onSelect,

@@ -23,7 +23,11 @@ import {
 } from '../../utils/sourceShortcut';
 import { uuid } from '../../utils/uuid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
-import { SourceSlider, useActiveCategory } from '../SelectSource/SourceSlider';
+import { SourceSlider } from '../SelectSource/SourceSlider';
+import {
+  useActiveCategory,
+  useRevealSource
+} from '../SelectSource/sourceCategories';
 import { ControlBar } from './ControlBar';
 import { OnSwitchCb } from './MonitorSource';
 import { Screen } from './Screen';
@@ -46,7 +50,8 @@ export const Monitor = () => {
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
-  const [activeCategory, setActiveCategory] = useActiveCategory();
+  const [activeCategory] = useActiveCategory();
+  const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
@@ -203,13 +208,14 @@ export const Monitor = () => {
     });
   };
 
-  // Leaving the layouts category falls back to the channels list.
-  const showSources = () =>
-    setActiveCategory(category => (category === 'layouts' ? 'tv' : category));
+  // Picking a screen to edit points the sidebar at what it is playing: its
+  // category's tab, scrolled to the channel.
+  const revealScreenSource = (idx: number) =>
+    revealSource(selectedSources[idx]?.sourceSlug);
 
   const handleSourceEdit = (newIdx: number) => {
     setEditingSourceIdx(newIdx);
-    showSources();
+    revealScreenSource(newIdx);
   };
 
   const handleShare = async () => {
@@ -270,9 +276,15 @@ export const Monitor = () => {
       }
       setEditingSourceIdx(idx);
       if (swapSourceIdx === undefined) handleSoloAudio(idx);
-      showSources();
+      revealScreenSource(idx);
     },
-    [visibleScreenCount, swapSourceIdx, isYoutubeMode]
+    [
+      visibleScreenCount,
+      swapSourceIdx,
+      isYoutubeMode,
+      selectedSources,
+      revealSource
+    ]
   );
   useHotkeys(
     'enter',
