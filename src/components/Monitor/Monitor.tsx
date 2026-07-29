@@ -414,8 +414,11 @@ export const Monitor = () => {
           className="flex min-h-0 min-w-0 flex-1 flex-col justify-center"
           style={{ containerType: 'size' }}
         >
+          {/* min-h-0: as a flex item its automatic minimum size is the content's
+              min-content height, which is taller than the 16:9 box and would
+              stretch the screen over the bar below. */}
           <div
-            className="aspect-video flex-none self-center"
+            className="aspect-video min-h-0 flex-none self-center"
             style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
           >
             <Screen
