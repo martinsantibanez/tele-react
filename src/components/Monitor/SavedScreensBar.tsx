@@ -1,5 +1,5 @@
 'use client';
-import { X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
@@ -9,6 +9,7 @@ import {
   useActiveScreenIndex,
   useSavedScreens
 } from '../../hooks/useSavedScreens';
+import { useIsMobile } from '../../hooks/useViewport';
 import {
   findLayoutIndex,
   possibleLayouts
@@ -18,10 +19,17 @@ import { ScreenThumbnail } from '../SelectSource/ScreenThumbnail';
 const THUMB_WIDTH = 96;
 const THUMB_HEIGHT = 54;
 
+// A phone gives the strip the height it can spare, which is less.
+const MOBILE_THUMB_WIDTH = 72;
+const MOBILE_THUMB_HEIGHT = 40;
+
 // Both prompts ask for a name; what differs is where the answer lands.
 type NamePrompt = { mode: 'add' | 'rename'; value: string };
 
 export function SavedScreensBar() {
+  const isMobile = useIsMobile();
+  const thumbWidth = isMobile ? MOBILE_THUMB_WIDTH : THUMB_WIDTH;
+  const thumbHeight = isMobile ? MOBILE_THUMB_HEIGHT : THUMB_HEIGHT;
   const [savedScreens, setSavedScreens] = useSavedScreens();
   const [activeIndex, setActiveIndex] = useActiveScreenIndex();
   const [activeScreen] = useActiveScreen();
@@ -175,8 +183,8 @@ export function SavedScreensBar() {
                 <div className="relative">
                   <ScreenThumbnail
                     screen={saved.screen}
-                    width={THUMB_WIDTH}
-                    height={THUMB_HEIGHT}
+                    width={thumbWidth}
+                    height={thumbHeight}
                     className={isActive ? 'ring-2 ring-white' : undefined}
                   />
                   {canDelete && (
@@ -194,7 +202,7 @@ export function SavedScreensBar() {
                 </div>
                 <div
                   className="max-w-full truncate text-[10px] font-semibold"
-                  style={{ width: THUMB_WIDTH }}
+                  style={{ width: thumbWidth }}
                 >
                   {saved.name}
                 </div>
@@ -202,6 +210,20 @@ export function SavedScreensBar() {
             </div>
           );
         })}
+        {/* S is out of a thumb's reach, and a phone is where the strip is most
+            worth adding to: the screen on air is what gets kept. */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={startAdd}
+            aria-label="Nueva pantalla"
+            title="Nueva pantalla"
+            className="mb-4 flex shrink-0 items-center justify-center rounded-sm border border-dashed border-gray-700 text-gray-300"
+            style={{ width: thumbHeight, height: thumbHeight }}
+          >
+            <Plus size={18} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -210,7 +232,7 @@ export function SavedScreensBar() {
 
   const namePrompt = (
     <form
-      className="flex items-center justify-center gap-2"
+      className="flex flex-wrap items-center justify-center gap-2"
       onSubmit={event => {
         event.preventDefault();
         confirmName();
@@ -248,7 +270,11 @@ export function SavedScreensBar() {
       >
         Cancelar
       </Button>
-      <span className="text-[9px] leading-none text-gray-400">ESC cancela</span>
+      {!isMobile && (
+        <span className="text-[9px] leading-none text-gray-400">
+          ESC cancela
+        </span>
+      )}
     </form>
   );
 
@@ -287,7 +313,13 @@ export function SavedScreensBar() {
   return (
     <div className="flex h-full min-h-0 w-full flex-col justify-center gap-1 px-3 py-2">
       {strip}
-      {isNaming ? namePrompt : isConfirmingDelete ? deletePrompt : hint}
+      {/* The hint is a list of keys, which a phone doesn't have; its prompts
+          still come up, since they are how the strip is answered. */}
+      {isNaming
+        ? namePrompt
+        : isConfirmingDelete
+          ? deletePrompt
+          : !isMobile && hint}
     </div>
   );
 }

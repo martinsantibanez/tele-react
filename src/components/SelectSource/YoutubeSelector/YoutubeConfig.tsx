@@ -19,9 +19,11 @@ export function YoutubeConfig() {
   return (
     <>
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline">YouTube Config</Button>
-        </PopoverTrigger>
+        {!isConnected && (
+          <PopoverTrigger asChild>
+            <Button variant="outline">YouTube Config</Button>
+          </PopoverTrigger>
+        )}
         <PopoverContent className="w-80">
           <div className="grid gap-4">
             <div className="space-y-2">
@@ -31,10 +33,10 @@ export function YoutubeConfig() {
                 suscritos están transmitiendo en vivo ahora.
               </p>
               <p className="text-xs text-muted-foreground">
-                Usamos el permiso de solo lectura{' '}
-                <code>youtube.readonly</code>. La sesión se guarda de forma
-                segura en el servidor y se mantiene conectada sin volver a pedir
-                permiso. Puedes desconectarte cuando quieras. Código en{' '}
+                Usamos el permiso de solo lectura <code>youtube.readonly</code>.
+                La sesión se guarda de forma segura en el servidor y se mantiene
+                conectada sin volver a pedir permiso. Puedes desconectarte
+                cuando quieras. Código en{' '}
                 <a
                   href="https://github.com/martinsantibanez/tele-react"
                   target="_blank"

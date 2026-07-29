@@ -4,8 +4,10 @@ import { ScreenType } from '../types/Monitor';
 import {
   defaultDisplayConfig,
   defaultSavedScreens,
-  defaultScreen
+  defaultScreen,
+  mobileSavedScreens
 } from './defaultScreen';
+import { isMobileViewport } from './useViewport';
 
 export type SavedScreen = {
   name: string;
@@ -51,6 +53,33 @@ function migrateLegacyScreen() {
 }
 
 migrateLegacyScreen();
+
+/**
+ * Gives a phone the screen meant for it the first time the app is opened there.
+ * Written straight to storage, at import time like the migration above, because
+ * `useLocalStorageState` keeps whatever default it is handed on its first
+ * render *and* stores it there and then: by the time an effect could report the
+ * viewport, the desktop screen would already be the user's.
+ *
+ * Only the very first visit is seeded — afterwards the screens are the user's,
+ * whatever they are being looked at on.
+ */
+function seedMobileScreen() {
+  if (typeof window === 'undefined') return;
+  if (!isMobileViewport()) return;
+  try {
+    if (window.localStorage.getItem(SAVED_SCREENS_KEY)) return;
+    window.localStorage.setItem(
+      SAVED_SCREENS_KEY,
+      JSON.stringify(mobileSavedScreens)
+    );
+  } catch {
+    // Storage can be off altogether (private mode, blocked cookies); the app
+    // still runs, just on the desktop default.
+  }
+}
+
+seedMobileScreen();
 
 /**
  * The screens the user works on — tabs rather than snapshots: every change

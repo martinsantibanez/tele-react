@@ -77,6 +77,31 @@ const categoryLabels: Record<string, string> = {
 /** Categories run in this order; anything unlisted follows, alphabetically. */
 const categoryOrder = Object.keys(categoryLabels);
 
+/** The hand-picked list heading the home country. */
+const RECOMMENDED_CATEGORY = 'recommended';
+
+/**
+ * The channels the home country's list opens on, in the order they are shown.
+ * Each one is still listed under its own category further down: this is a
+ * shortcut to the handful most people are after, not a category of its own.
+ * Slugs rather than feed ids, so a channel that leaves the feed simply drops
+ * out of the list.
+ */
+const recommendedSlugs = [
+  'custom_canal-13',
+  'custom_chilevision',
+  'custom_mega-cl',
+  'custom_puranoticia',
+  'custom_24-horas',
+  'custom_tvn-cl',
+  'custom_chv-noticias',
+  'custom_cnn-cl',
+  'custom_meganoticias',
+  'custom_t13',
+  'custom_manupuntocl',
+  'custom_mediabanco-cl'
+];
+
 export type TvCategoryGroup = {
   category: string;
   label: string;
@@ -124,6 +149,26 @@ function compareCategories(a: string, b: string) {
 }
 
 /**
+ * The recommended channels a country has, in the order they are listed rather
+ * than the feed's. Only the home country has one; everywhere else the list is
+ * empty and no header is rendered for it.
+ */
+function recommendedList(
+  country: string,
+  categories: Record<string, SourceType[]>
+): SourceType[] {
+  if (country !== HOME_COUNTRY) return [];
+  const bySlug = new Map(
+    Object.values(categories)
+      .flat()
+      .map(source => [source.slug, source])
+  );
+  return recommendedSlugs
+    .map(slug => bySlug.get(slug))
+    .filter((source): source is SourceType => !!source);
+}
+
+/**
  * Buckets the feed by country and then by category. The home country leads and
  * the countryless bucket trails; the rest are alphabetical by display name.
  */
@@ -141,23 +186,36 @@ export function groupChannelsByCountry(channels: Channel[]): TvCountryGroup[] {
   return Object.keys(byCountry)
     .map(country => {
       const categories = byCountry[country];
+      const grouped: TvCategoryGroup[] = Object.keys(categories)
+        .sort(compareCategories)
+        .map(category => ({
+          category,
+          label: categoryLabels[category] ?? 'Otros',
+          sources: categories[category].sort((a, b) =>
+            (a.name ?? '').localeCompare(b.name ?? '', 'es')
+          )
+        }));
+      const recommended = recommendedList(country, categories);
       return {
         country,
         label: countryLabel(country),
         flag: countryFlag(country),
+        // The recommended channels are the same ones counted below, so the
+        // header still counts the country's channels rather than its rows.
         count: Object.keys(categories).reduce(
           (total, category) => total + categories[category].length,
           0
         ),
-        categories: Object.keys(categories)
-          .sort(compareCategories)
-          .map(category => ({
-            category,
-            label: categoryLabels[category] ?? 'Otros',
-            sources: categories[category].sort((a, b) =>
-              (a.name ?? '').localeCompare(b.name ?? '', 'es')
-            )
-          }))
+        categories: recommended.length
+          ? [
+              {
+                category: RECOMMENDED_CATEGORY,
+                label: 'Recomendados',
+                sources: recommended
+              },
+              ...grouped
+            ]
+          : grouped
       };
     })
     .sort((a, b) => {

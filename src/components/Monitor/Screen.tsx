@@ -12,13 +12,12 @@ type Props = {
   swapSourceIdx?: number;
   fullscreenIdx?: number;
   onSwitch?: OnSwitchCb;
-};
-
-const gridSizeClass = {
-  [1]: 'grid-cols-1',
-  [2]: 'grid-cols-2',
-  [3]: 'grid-cols-3',
-  [4]: 'grid-cols-4'
+  /**
+   * How wide to lay the grid out, when that is not the screen's own setting: a
+   * phone held sideways turns the grid on its side. The screen itself is left
+   * as saved — this is only how it is being shown.
+   */
+  gridColumns?: number;
 };
 
 export function Screen({
@@ -27,7 +26,8 @@ export function Screen({
   onRemove,
   editingSourceIdx,
   swapSourceIdx,
-  fullscreenIdx
+  fullscreenIdx,
+  gridColumns
 }: Props) {
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Youtube) {
@@ -63,11 +63,15 @@ export function Screen({
     );
   }
   if (config.mode === DisplayMode.Grid) {
-    const rows = Math.ceil((sources?.length ?? 0) / config.grid.size) || 1;
+    const cols = gridColumns || config.grid.size;
+    const rows = Math.ceil((sources?.length ?? 0) / cols) || 1;
     return (
       <div
-        className={`grid h-full w-full ${gridSizeClass[config.grid.size]}`}
-        style={{ gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
+        className="grid h-full w-full"
+        style={{
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`
+        }}
       >
         <GridDisplay
           sources={sources}

@@ -2,9 +2,7 @@ import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider } from '@twurple/auth';
 import {
   ChevronRight,
-  FlaskConical,
   Heart,
-  LayoutGrid,
   Search,
   Tv,
   Video,
@@ -13,9 +11,8 @@ import {
   TwitchIcon,
   Music
 } from 'lucide-react';
-import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
 import { useFavourites } from '../../hooks/useFavourites';
@@ -40,7 +37,6 @@ import {
 import { SpotifyConfig } from './SpotifySelector/SpotifyConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
-import { ZappingLogo } from './ZappingSelector/ZappingLogo';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
 import {
   findLayoutIndex,
@@ -58,10 +54,10 @@ import {
 } from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
+import { CategoryTabs } from './CategoryTabs';
 import {
   categoryOrder,
   normalizeSearch,
-  SelectorCategories,
   showPruebas,
   sourceMatches,
   useActiveCategory,
@@ -171,35 +167,13 @@ type Props = {
   /** Signal the edited screen is playing; owned by the grid, not the source. */
   activeSignal?: string;
   onSelectSignal?: (key: string) => void;
-};
-
-const categoryLabels: Record<SelectorCategories, string> = {
-  tv: 'TV',
-  twitch: 'Twitch',
-  zapping: 'Zapping',
-  youtube: 'YouTube',
-  spotify: 'Spotify',
-  favourites: 'Favoritos',
-  pruebas: 'Pruebas',
-  layouts: 'Layouts'
-};
-
-/**
- * The nav shows only these; the label rides along as the accessible name.
- * Zapping brings its own wordmark, so the map is not lucide-only.
- */
-const categoryIcons: Record<
-  SelectorCategories,
-  ComponentType<{ size?: number; 'aria-hidden'?: boolean }>
-> = {
-  tv: Tv,
-  twitch: TwitchIcon,
-  zapping: ZappingLogo,
-  youtube: YoutubeIcon,
-  spotify: Music,
-  favourites: Heart,
-  pruebas: FlaskConical,
-  layouts: LayoutGrid
+  /**
+   * On a phone the tabs are the app's bottom bar and stay put while the picker
+   * folds away above them, so the picker doesn't carry its own copy — and the
+   * keyboard hints mean nothing to a thumb.
+   */
+  showCategories?: boolean;
+  showHints?: boolean;
 };
 
 const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
@@ -208,7 +182,9 @@ export function SourceSlider({
   onSelect,
   selectedSourceSlug,
   activeSignal,
-  onSelectSignal
+  onSelectSignal,
+  showCategories = true,
+  showHints = true
 }: Props) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
   // A stored category can stop existing — `pruebas` outside dev — and the
@@ -316,7 +292,10 @@ export function SourceSlider({
         category.sources.forEach(source => {
           rows.push({
             kind: 'source',
-            key: source.slug,
+            // Scoped to the category, as in the sectioned lists: a recommended
+            // channel is listed again under its own category, and the two rows
+            // are told apart only by where they sit.
+            key: `${group.country}_${category.category}_${source.slug}`,
             source,
             sourceIndex: sources.length
           });
@@ -732,30 +711,6 @@ export function SourceSlider({
     </div>
   );
 
-  const categoryButtons = categoryOrder.map(category => {
-    const Icon = categoryIcons[category];
-    const isActive = activeCategory === category;
-    return (
-      <Button
-        key={category}
-        variant={isActive ? 'default' : 'outline'}
-        onClick={() => setActiveCategory(category)}
-        // Equal shares of the row, free to shrink: the nav is one line whatever
-        // the sidebar's width and however many tabs are shown. The padding is
-        // spelled out for the icon-only case too, or the button's own
-        // `has-[>svg]:px-3` would keep the wider default.
-        className="h-8 min-w-0 shrink grow basis-0 px-1 text-xs has-[>svg]:px-1"
-        // The icon carries no text, so the label has to be spelled out for
-        // screen readers and pointed out on hover for everyone else.
-        aria-label={categoryLabels[category]}
-        title={categoryLabels[category]}
-        aria-pressed={isActive}
-      >
-        <Icon size={16} aria-hidden />
-      </Button>
-    );
-  });
-
   // The live display shares the channels' rows but has no logo, no signals and
   // nothing to favourite, so it gets a card of its own.
   const renderYoutubeLiveCard = (index: number) => (
@@ -1137,16 +1092,17 @@ export function SourceSlider({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
-      <div
-        role="group"
-        aria-label="Categorías"
-        className="flex flex-nowrap gap-1"
-      >
-        {categoryButtons}
-      </div>
-      <div className="text-[9px] leading-none text-gray-400 text-center">
-        ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
-      </div>
+      {showCategories && (
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+        />
+      )}
+      {showHints && (
+        <div className="text-[9px] leading-none text-gray-400 text-center">
+          ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
+        </div>
+      )}
       {isLayouts ? (
         layoutsContent
       ) : (

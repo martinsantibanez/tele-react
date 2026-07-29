@@ -9,6 +9,7 @@ function useValue() {
 
   return {
     isEditing,
+    setIsEditing,
     toggleEditting,
     editingSourceIdx,
     setEditingSourceIdx,

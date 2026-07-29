@@ -1,13 +1,23 @@
 'use client';
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronUp,
+  Maximize2,
+  Minimize2,
+  Volume2,
+  VolumeX
+} from 'lucide-react';
+import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
+import { useControlBarVisible } from '../../hooks/useControlBarVisible';
 import { DEFAULT_GRID_SIZE } from '../../hooks/defaultScreen';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { useViewport } from '../../hooks/useViewport';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
+import { MobileNav } from '../../layout/MobileNav';
 import { embeddedSource, SourceType } from '../../sources';
 import {
   DisplayMode,
@@ -36,15 +46,35 @@ const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
   </div>
 );
 
+/** A control laid over the picture: legible, but faint until it is wanted. */
+const FloatingButton = ({
+  onClick,
+  label,
+  children
+}: PropsWithChildren<{ onClick: () => void; label: string }>) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={label}
+    title={label}
+    className="rounded-full bg-black/60 p-2.5 text-white opacity-50 backdrop-blur-sm transition-opacity hover:opacity-100 focus-visible:opacity-100 active:opacity-100"
+  >
+    {children}
+  </button>
+);
+
 export const Monitor = () => {
   const {
     toggleEditting,
     isEditing,
+    setIsEditing,
     editingSourceIdx,
     setEditingSourceIdx,
     swapSourceIdx,
     setSwapSourceIdx
   } = useTeleContext();
+  const { isMobile, isLandscape, isMobileLandscape } = useViewport();
+  const [controlBarVisible, setControlBarVisible] = useControlBarVisible();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
@@ -82,6 +112,34 @@ export const Monitor = () => {
 
   const fullscreenIdx = isFullscreen ? editingSourceIdx : undefined;
 
+  const isGrid = displayConfig.mode === DisplayMode.Grid;
+
+  /**
+   * How wide the grid is laid out. Its own setting, except on a phone held
+   * sideways: a column of channels down a screen 400px tall leaves them postage
+   * stamps, while the same grid on its side — rows for columns — fills the
+   * width the phone has plenty of. The saved screen is untouched; turning the
+   * phone back stands it up again.
+   */
+  const gridColumns = useMemo(() => {
+    const columns = displayConfig.grid.size;
+    if (!isMobileLandscape || !isGrid) return columns;
+    return Math.ceil((activeSources?.length ?? 0) / columns) || 1;
+  }, [isMobileLandscape, isGrid, displayConfig.grid.size, activeSources]);
+
+  /**
+   * The shape of the monitor. A television is 16:9 and the layouts are drawn to
+   * fill one, so that is what it stays — except for a grid on a phone, which is
+   * measured by its tiles instead: one channel per row down a tall screen wants
+   * a tall monitor, and squeezing three of them into a 16:9 box would leave
+   * three slivers with black on either side.
+   */
+  const monitorRatio = useMemo(() => {
+    if (!isMobile || !isGrid) return 16 / 9;
+    const rows = Math.ceil((activeSources?.length ?? 0) / gridColumns) || 1;
+    return (16 * gridColumns) / (9 * rows);
+  }, [isMobile, isGrid, gridColumns, activeSources]);
+
   const selectedSourceSlug = useMemo(
     () => selectedSources[editingSourceIdx]?.sourceSlug,
     [editingSourceIdx, selectedSources]
@@ -107,6 +165,14 @@ export const Monitor = () => {
     if (!visibleScreenCount) return;
     setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
   }, [visibleScreenCount, setEditingSourceIdx]);
+
+  // On a phone the picker is a sheet over the bottom bar rather than a column
+  // beside the monitor, and it opening on arrival would leave half a screen of
+  // television. `isEditing` is what the sheet is folded out by, so arriving on
+  // a hand-held folds it away — the bar itself stays.
+  useEffect(() => {
+    if (isMobile) setIsEditing(false);
+  }, [isMobile, setIsEditing]);
 
   const handlePromote = () => {
     setFeaturedMonitor(screen);
@@ -204,6 +270,50 @@ export const Monitor = () => {
       if (!sources) return sources;
       return sources.map((src, index) => ({ ...src, muted: index !== idx }));
     });
+  };
+
+  const handleMuteAll = () => {
+    setSelectedSources(sources => {
+      if (!sources) return sources;
+      return sources.map(src => ({ ...src, muted: true }));
+    });
+  };
+
+  const isSelectedMuted = isYoutubeMode
+    ? youtubeSoloIdx !== editingSourceIdx
+    : (selectedSources?.[editingSourceIdx]?.muted ?? true);
+
+  /**
+   * The screen being heard. There is only ever one — the audio is handed from
+   * screen to screen rather than stacked — so the first one left unmuted is it.
+   */
+  const audibleIdx = useMemo(() => {
+    if (isYoutubeMode) return youtubeSoloIdx;
+    const idx = selectedSources?.findIndex(node => !(node.muted ?? true)) ?? -1;
+    return idx < 0 ? undefined : idx;
+  }, [isYoutubeMode, youtubeSoloIdx, selectedSources]);
+
+  // A screen the layout doesn't show has no sound to be handed.
+  const audibleCount = isYoutubeMode
+    ? youtubeSources.length
+    : Math.min(visibleScreenCount, selectedSources?.length ?? 0);
+
+  /**
+   * Hands the sound on to the next screen, and after the last one to none at
+   * all. The whole of the audio on a single button, for want of the number keys
+   * a phone doesn't have — and the silence at the end of the round is the way
+   * back to a quiet grid.
+   */
+  const cycleAudio = () => {
+    if (!audibleCount) return;
+    const next = audibleIdx === undefined ? 0 : audibleIdx + 1;
+    const target = next >= audibleCount ? undefined : next;
+    if (isYoutubeMode) {
+      setYoutubeSoloIdx(target);
+      return;
+    }
+    if (target === undefined) handleMuteAll();
+    else handleSoloAudio(target);
   };
 
   // Picking a screen to edit points the sidebar at what it is playing: its
@@ -342,103 +452,209 @@ export const Monitor = () => {
     },
     [displayConfig.mode]
   );
+  useHotkeys('c', () => setControlBarVisible(!controlBarVisible), [
+    controlBarVisible,
+    setControlBarVisible
+  ]);
+
+  const picker = (
+    <>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <SourceSlider
+          onSelect={handleSourceChange}
+          selectedSourceSlug={selectedSourceSlug}
+          activeSignal={selectedSignal}
+          onSelectSignal={handleSignalChange}
+          // The phone's tabs live in the bar the sheet folds out of, and its
+          // keyboard hints have no keyboard to speak of.
+          showCategories={!isMobile}
+          showHints={!isMobile}
+        />
+      </div>
+
+      {activeCategory === 'layouts' && (
+        <div className="mt-3 flex-none">
+          <ScreenOptions
+            onSizeChange={handleSizeChange}
+            onSourceAdd={
+              displayConfig.mode === DisplayMode.Grid
+                ? handleSourceAdd
+                : undefined
+            }
+            onModeChange={handleModeChange}
+            onPromote={handlePromote}
+            onShare={handleShare}
+            mode={displayConfig.mode}
+            size={displayConfig.grid.size}
+          />
+        </div>
+      )}
+
+      {!isMobile && (
+        <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
+          <Shortcut keys="E" label="Toggle Edit Mode" />
+          <Shortcut
+            keys="Enter"
+            label={
+              swapSourceIdx === undefined
+                ? 'Marcar para Intercambiar'
+                : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
+            }
+          />
+          <Shortcut
+            keys="G"
+            label={
+              isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
+            }
+          />
+          <Shortcut
+            keys="M"
+            label={isSelectedMuted ? 'Activar Audio' : 'Silenciar'}
+          />
+          <Shortcut
+            keys="C"
+            label={controlBarVisible ? 'Ocultar Pantallas' : 'Ver Pantallas'}
+          />
+          {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
+            <Shortcut keys="D" label="Quitar" />
+          )}
+          {displayConfig.mode === DisplayMode.Grid && (
+            <Shortcut keys="A" label="Agregar" />
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  // Over the picture, bottom right, faded until they are reached for: the
+  // controls a phone has no keys for, and the way back to the screens strip
+  // once it has been folded away.
+  const floatingControls = (
+    <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
+      {isMobile && (
+        <>
+          <FloatingButton
+            onClick={cycleAudio}
+            label={
+              audibleIdx === undefined
+                ? 'Activar el audio de la primera pantalla'
+                : `Audio en la pantalla ${getSourceShortcutLabel(audibleIdx)} — pasar a la siguiente`
+            }
+          >
+            {audibleIdx === undefined ? (
+              <VolumeX size={20} />
+            ) : (
+              <span className="flex items-center gap-1">
+                <Volume2 size={20} />
+                {/* Which screen is being heard, since the button no longer
+                    speaks about the one that happens to be selected. */}
+                <span className="text-xs leading-none font-bold">
+                  {getSourceShortcutLabel(audibleIdx)}
+                </span>
+              </span>
+            )}
+          </FloatingButton>
+          <FloatingButton
+            onClick={() => setIsFullscreen(current => !current)}
+            label={
+              isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
+            }
+          >
+            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          </FloatingButton>
+        </>
+      )}
+      {!controlBarVisible && (
+        <FloatingButton
+          onClick={() => setControlBarVisible(true)}
+          label="Ver pantallas"
+        >
+          <ChevronUp size={20} />
+        </FloatingButton>
+      )}
+    </div>
+  );
+
+  // What is on air, with the strip of screens under it.
+  const monitorColumn = (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {/* The bar below takes the height it needs, so the screen is measured
+          against what is left rather than against the whole column. */}
+      <div
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col justify-center"
+        style={{ containerType: 'size' }}
+      >
+        {/* min-h-0: as a flex item its automatic minimum size is the content's
+            min-content height, which is taller than the 16:9 box and would
+            stretch the screen over the bar below. */}
+        <div
+          className="min-h-0 flex-none self-center"
+          style={{
+            aspectRatio: monitorRatio,
+            width: `min(100cqw, calc(100cqh * ${monitorRatio}))`
+          }}
+        >
+          <Screen
+            screen={screen}
+            onEdit={isYoutubeMode ? undefined : handleSourceEdit}
+            onRemove={
+              isYoutubeMode || !canRemoveScreen ? undefined : handleSourceRemove
+            }
+            editingSourceIdx={editingSourceIdx}
+            swapSourceIdx={swapSourceIdx}
+            fullscreenIdx={fullscreenIdx}
+            onSwitch={isYoutubeMode ? undefined : handleSwitch}
+            gridColumns={gridColumns}
+          />
+        </div>
+        {floatingControls}
+      </div>
+
+      {controlBarVisible && (
+        <ControlBar
+          className="w-full flex-none"
+          onHide={() => setControlBarVisible(false)}
+        />
+      )}
+    </div>
+  );
+
+  if (isMobile)
+    return (
+      // `dvh` rather than `vh`: on a phone the address bar is part of the
+      // viewport height right until it slides away, and `vh` would leave the
+      // bottom bar underneath it.
+      <div className="flex h-[100dvh] flex-col overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-row">
+          {/* Sideways there is width to spare and no height at all, so the
+              picker stands beside the monitor instead of folding out under it —
+              a sheet would leave a strip of television above it. */}
+          {isLandscape && isEditing && (
+            <div className="flex h-full w-[300px] max-w-[45%] flex-none flex-col overflow-y-auto border-r border-gray-800 p-2">
+              {picker}
+            </div>
+          )}
+          {monitorColumn}
+        </div>
+
+        <MobileNav
+          isOpen={isEditing}
+          onOpenChange={setIsEditing}
+          isLandscape={isLandscape}
+        >
+          {!isLandscape && picker}
+        </MobileNav>
+      </div>
+    );
 
   return (
     <div className="flex h-screen overflow-hidden">
       {isEditing && (
         <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            <SourceSlider
-              onSelect={handleSourceChange}
-              selectedSourceSlug={selectedSourceSlug}
-              activeSignal={selectedSignal}
-              onSelectSignal={handleSignalChange}
-            />
-          </div>
-
-          {activeCategory === 'layouts' && (
-            <div className="mt-3">
-              <ScreenOptions
-                onSizeChange={handleSizeChange}
-                onSourceAdd={
-                  displayConfig.mode === DisplayMode.Grid
-                    ? handleSourceAdd
-                    : undefined
-                }
-                onModeChange={handleModeChange}
-                onPromote={handlePromote}
-                onShare={handleShare}
-                mode={displayConfig.mode}
-                size={displayConfig.grid.size}
-              />
-            </div>
-          )}
-
-          <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
-            <Shortcut keys="E" label="Toggle Edit Mode" />
-            <Shortcut
-              keys="Enter"
-              label={
-                swapSourceIdx === undefined
-                  ? 'Marcar para Intercambiar'
-                  : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
-              }
-            />
-            <Shortcut
-              keys="G"
-              label={
-                isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
-              }
-            />
-            <Shortcut
-              keys="M"
-              label={
-                (selectedSources?.[editingSourceIdx]?.muted ?? true)
-                  ? 'Activar Audio'
-                  : 'Silenciar'
-              }
-            />
-            {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
-              <Shortcut keys="D" label="Quitar" />
-            )}
-            {displayConfig.mode === DisplayMode.Grid && (
-              <Shortcut keys="A" label="Agregar" />
-            )}
-          </div>
+          {picker}
         </div>
       )}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* The bar below takes the height it needs, so the screen is measured
-            against what is left rather than against the whole column. */}
-        <div
-          className="flex min-h-0 min-w-0 flex-1 flex-col justify-center"
-          style={{ containerType: 'size' }}
-        >
-          {/* min-h-0: as a flex item its automatic minimum size is the content's
-              min-content height, which is taller than the 16:9 box and would
-              stretch the screen over the bar below. */}
-          <div
-            className="aspect-video min-h-0 flex-none self-center"
-            style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
-          >
-            <Screen
-              screen={screen}
-              onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-              onRemove={
-                isYoutubeMode || !canRemoveScreen
-                  ? undefined
-                  : handleSourceRemove
-              }
-              editingSourceIdx={editingSourceIdx}
-              swapSourceIdx={swapSourceIdx}
-              fullscreenIdx={fullscreenIdx}
-              onSwitch={isYoutubeMode ? undefined : handleSwitch}
-            />
-          </div>
-        </div>
-
-        {isEditing && <ControlBar className="w-full flex-none" />}
-      </div>
+      {monitorColumn}
     </div>
   );
 };

@@ -114,6 +114,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    height: 100%;
+    /* The app fills the viewport and scrolls only inside its own panels, so a
+       drag on the picture is a stray gesture — not a pull-to-refresh. */
+    overscroll-behavior: none;
+  }
   body {
     @apply bg-background text-foreground;
   }

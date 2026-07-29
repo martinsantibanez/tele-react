@@ -1,8 +1,10 @@
 'use client';
+import { X } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
+import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
 import { SourceLogo } from './SourceLogo';
@@ -37,6 +39,7 @@ export function MonitorSource({
   idx
 }: Props) {
   const { isEditing, swapSourceIdx } = useTeleContext();
+  const isMobile = useIsMobile();
   const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
   const resolveSource = useResolveSource();
   const source = useMemo(
@@ -96,36 +99,63 @@ export function MonitorSource({
         {/* Number and logo are one badge, sized to the tile so the mark stays
             legible on a big screen without swamping a small one. The number
             keeps its own type size and centres against the taller mark, so it
-            gets its own box rather than riding the button row. */}
+            gets its own box rather than riding the button row.
+
+            It is also the tile's own handle: a thumb has no number keys, and
+            the player underneath swallows any tap meant for the tile itself. */}
         {(isEditing || swapSourceIdx !== undefined) && (
-          <div className="absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5">
-            <span className="shrink-0 rounded bg-black/70 px-2 leading-[20px] font-bold text-white">
+          <button
+            type="button"
+            onClick={handleChangeClick}
+            disabled={!onChangeClick}
+            aria-label={`Seleccionar pantalla ${getSourceShortcutLabel(idx)}`}
+            aria-pressed={isBeingEdited}
+            className="absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5"
+          >
+            <span
+              className={`shrink-0 rounded px-2 leading-[20px] font-bold ${
+                isBeingEdited ? 'bg-white text-black' : 'bg-black/70 text-white'
+              }`}
+            >
               {getSourceShortcutLabel(idx)}
             </span>
             {!!source && <SourceLogo source={source} />}
-          </div>
+          </button>
         )}
         {(isEditing || swapSourceIdx !== undefined) && (
-          <div className="absolute top-[1%] h-[20px] leading-[20px] text-center flex justify-end w-full opacity-100 z-[2]">
-            {isEditing && (
-              <div className="flex">
-                {onChangeClick && (
-                  <>
+          <div className="absolute top-[1%] right-1 z-[2] flex justify-end">
+            {isEditing &&
+              (isMobile ? (
+                // Two words of Spanish do not fit across a tile a third of a
+                // phone wide, and the badge to their left already selects.
+                onRemove && (
+                  <button
+                    type="button"
+                    onClick={onRemove}
+                    aria-label="Quitar pantalla"
+                    title="Quitar"
+                    className="rounded-full bg-black/60 p-1.5 text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                )
+              ) : (
+                <div className="flex h-[20px] leading-[20px]">
+                  {onChangeClick && (
                     <Button
                       variant={isBeingEdited ? 'outline' : 'default'}
                       onClick={handleChangeClick}
                     >
                       Cambiar
                     </Button>
-                  </>
-                )}
-                {onRemove && (
-                  <Button variant={'destructive'} onClick={onRemove}>
-                    Quitar
-                  </Button>
-                )}
-              </div>
-            )}
+                  )}
+                  {onRemove && (
+                    <Button variant={'destructive'} onClick={onRemove}>
+                      Quitar
+                    </Button>
+                  )}
+                </div>
+              ))}
           </div>
         )}
       </div>
