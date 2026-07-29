@@ -463,7 +463,8 @@ export async function fetchRecentContexts(
   const seen = new Set<string>();
   const contexts: SpotifyRecentRef[] = [];
   const albums: SpotifyRecentRef[] = [];
-  let path: string | undefined = `/me/player/recently-played?limit=${HISTORY_PAGE}`;
+  let path: string | undefined =
+    `/me/player/recently-played?limit=${HISTORY_PAGE}`;
   for (let page = 0; path && page < HISTORY_PAGES; page++) {
     const json: Page<PlayHistory> = await spGet<Page<PlayHistory>>(
       path,
@@ -498,23 +499,26 @@ const contextKinds: Partial<Record<SpotifyType, SpotifyLibraryKind>> = {
 };
 
 /**
- * Contexts as listable items. One the account already owns is reused from the
- * library rows — its name, cover and subtitle are already in hand and better
- * than oEmbed's — and everything else, which is where the Daily Mixes land, is
- * looked up publicly. A lookup that fails costs its row: an unnamed id is not
- * worth a line in the list.
+ * Contexts as listable items, named from whichever source already knows them.
+ * One the account owns is reused from the library rows — its name, cover and
+ * subtitle are in hand and better than oEmbed's — and an album read off a play
+ * came named out of the history. Only what neither covers, which is where the
+ * Daily Mixes land, is looked up publicly. A lookup that fails costs its row:
+ * an unnamed id is not worth a line in the list.
  */
 async function recentItems(
-  refs: SpotifyRef[],
+  refs: SpotifyRecentRef[],
   library: SpotifyLibraryItem[]
 ): Promise<SpotifyLibraryItem[]> {
-  const known = new Map(library.map(item => [item.uri, item]));
+  const inLibrary = new Map(library.map(item => [item.uri, item]));
   const resolved = await Promise.all(
     refs.map(async (ref): Promise<SpotifyLibraryItem | undefined> => {
-      const owned = known.get(ref.uri);
+      const owned = inLibrary.get(ref.uri);
       if (owned) return { ...owned, section: 'recent' };
       const kind = contextKinds[ref.type];
       if (!kind) return undefined;
+      if (ref.known)
+        return { kind, section: 'recent', uri: ref.uri, ...ref.known };
       try {
         const { name, imageUrl } = await fetchSpotifyOembed(ref);
         if (!name) return undefined;
@@ -557,7 +561,7 @@ export async function fetchSpotifyLibrary(
       if (err instanceof SpotifyAuthError) throw err;
       if (err instanceof SpotifyScopeError) recentDenied = true;
       else console.error('[spotify] recently played failed', err);
-      return [] as SpotifyRef[];
+      return [] as SpotifyRecentRef[];
     }),
     Promise.all(
       [
