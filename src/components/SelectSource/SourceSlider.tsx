@@ -10,7 +10,8 @@ import {
   Video,
   X,
   YoutubeIcon,
-  TwitchIcon
+  TwitchIcon,
+  Music
 } from 'lucide-react';
 import { ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -31,6 +32,12 @@ import { useZappingNowPlaying } from '../../hooks/useZappingNowPlaying';
 import { useZappingToken } from '../../hooks/useZappingConfig';
 import { useYoutubeLiveSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeAuth } from '../../hooks/useYoutubeAuth';
+import { useCustomSpotifyItems } from '../../hooks/useCustomSpotifyItems';
+import {
+  useSpotifyLibrary,
+  useSpotifyTabSections
+} from '../../hooks/useSpotifyLibrary';
+import { SpotifyConfig } from './SpotifySelector/SpotifyConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { ZappingLogo } from './ZappingSelector/ZappingLogo';
@@ -86,6 +93,55 @@ const listRowHeight = (row: ListRow) => {
   return row.kind === 'country' ? COUNTRY_ROW_HEIGHT : TV_CATEGORY_ROW_HEIGHT;
 };
 
+/** A run of rows under one header, which is how Zapping and Spotify list. */
+type SourceSection = { id: string; label: string; sources: SourceType[] };
+
+/**
+ * Sections as list rows, with the flat run of sources they lay out — the one
+ * the arrows and the caret count through, which is why it comes back from here
+ * rather than being rebuilt alongside.
+ *
+ * A section whose sources are all filtered out by the search goes with them,
+ * header included, and a list left with a single section gets no header at all:
+ * a label over the whole of it says nothing.
+ *
+ * Keys are section-scoped because a source can be listed under more than one
+ * header — a Zapping channel in the ranking and again in the catalogue at its
+ * number, a playlist both recently played and saved — and the rows are then
+ * told apart only by where they sit.
+ */
+function buildSectionRows(sections: SourceSection[], searchQuery: string) {
+  const hits = sections
+    .map(section => ({
+      ...section,
+      sources: searchQuery
+        ? section.sources.filter(source => sourceMatches(source, searchQuery))
+        : section.sources
+    }))
+    .filter(section => section.sources.length);
+
+  const rows: ListRow[] = [];
+  const sources: SourceType[] = [];
+  hits.forEach(section => {
+    if (hits.length > 1)
+      rows.push({
+        kind: 'category',
+        key: `${section.id}_header`,
+        label: section.label
+      });
+    section.sources.forEach(source => {
+      rows.push({
+        kind: 'source',
+        key: `${section.id}_${source.slug}`,
+        source,
+        sourceIndex: sources.length
+      });
+      sources.push(source);
+    });
+  });
+  return { rows, sources };
+}
+
 /**
  * The dynamic YouTube display heads that category's list. It rides along as a
  * source so the arrows and the virtual list keep counting plain rows, but it
@@ -105,7 +161,8 @@ const signalIcons: Record<SignalType, typeof Tv> = {
   m3u8: Video,
   youtube: YoutubeIcon,
   youtubeChannel: YoutubeIcon,
-  twitch: TwitchIcon
+  twitch: TwitchIcon,
+  spotify: Music
 };
 
 type Props = {
@@ -121,6 +178,7 @@ const categoryLabels: Record<SelectorCategories, string> = {
   twitch: 'Twitch',
   zapping: 'Zapping',
   youtube: 'YouTube',
+  spotify: 'Spotify',
   favourites: 'Favoritos',
   pruebas: 'Pruebas',
   layouts: 'Layouts'
@@ -138,6 +196,7 @@ const categoryIcons: Record<
   twitch: TwitchIcon,
   zapping: ZappingLogo,
   youtube: YoutubeIcon,
+  spotify: Music,
   favourites: Heart,
   pruebas: FlaskConical,
   layouts: LayoutGrid
@@ -164,6 +223,7 @@ export function SourceSlider({
   const isTv = activeCategory === 'tv';
   const isZapping = activeCategory === 'zapping';
   const isYoutube = activeCategory === 'youtube';
+  const isSpotify = activeCategory === 'spotify';
   // Picking the live display leaves the edited screen — and so `selectedSourceSlug`
   // — untouched, so the list remembers the caret sat on it. The display mode has
   // the last word: switching to a layout drops the highlight on its own.
@@ -178,6 +238,14 @@ export function SourceSlider({
   const { nowBySlug, topChannels } = useZappingNowPlaying();
   const youtubeSources = useYoutubeLiveSources();
   const { isConnected: youtubeConnected } = useYoutubeAuth();
+  // What the user pasted, what the account has been playing, what it has saved.
+  const spotifySections = useSpotifyTabSections();
+  const { items: spotifyCustomItems } = useCustomSpotifyItems();
+  const {
+    isConnected: spotifyConnected,
+    isLoading: spotifyLoading,
+    recentDenied: spotifyRecentDenied
+  } = useSpotifyLibrary();
   // The TV feed is fetched once for the whole app, alongside the other
   // catalogues the picker reads from.
   const { tvGroups, bySlug: catalogueBySlug } = useSourceCatalog();
@@ -259,51 +327,30 @@ export function SourceSlider({
     return { tvRows: rows, tvSources: sources };
   }, [tvGroups, openCountries, searchQuery]);
 
-  // The Zapping list, headed by the live "Más vistos" ranking. A ranked channel
-  // is listed in both sections — up in the ranking and again down in the
-  // catalogue at its channel number — so the two rows share a slug and are told
-  // apart by their section-scoped key and their index in the flat list.
-  const { zappingRows, zappingRowSources } = useMemo(() => {
-    const rows: ListRow[] = [];
-    const sources: SourceType[] = [];
+  // The Zapping list, headed by the live "Más vistos" ranking. Until the
+  // ranking lands there is only the catalogue, and `buildSectionRows` leaves a
+  // lone section unheaded.
+  const { rows: zappingRows, sources: zappingRowSources } = useMemo(() => {
     const bySlug = new Map(zappingSources.map(source => [source.slug, source]));
     const topSources = topChannels
       .map(channel => bySlug.get(zappingSlug(channel)))
       .filter((source): source is SourceType => !!source);
-
-    // Until the ranking lands there is only one section, and a lone header
-    // would just be a label over the whole catalogue.
-    const sections = topSources.length
-      ? [
-          { id: 'top', label: 'Más vistos', list: topSources },
-          { id: 'all', label: 'Todos los canales', list: zappingSources }
-        ]
-      : [{ id: 'all', label: undefined, list: zappingSources }];
-
-    sections.forEach(section => {
-      const hits = searchQuery
-        ? section.list.filter(source => sourceMatches(source, searchQuery))
-        : section.list;
-      // A section with no hit has nothing to say about the search.
-      if (!hits.length) return;
-      if (section.label)
-        rows.push({
-          kind: 'category',
-          key: `zapping_${section.id}`,
-          label: section.label
-        });
-      hits.forEach(source => {
-        rows.push({
-          kind: 'source',
-          key: `${section.id}_${source.slug}`,
-          source,
-          sourceIndex: sources.length
-        });
-        sources.push(source);
-      });
-    });
-    return { zappingRows: rows, zappingRowSources: sources };
+    return buildSectionRows(
+      [
+        { id: 'top', label: 'Más vistos', sources: topSources },
+        { id: 'all', label: 'Todos los canales', sources: zappingSources }
+      ],
+      searchQuery
+    );
   }, [zappingSources, topChannels, searchQuery]);
+
+  // The Spotify list: pasted links, then the mixes and playlists the account
+  // has been playing, then its saved things. `useSpotifyTabSections` has
+  // already dropped the runs that are empty.
+  const { rows: spotifyRows, sources: spotifyRowSources } = useMemo(
+    () => buildSectionRows(spotifySections, searchQuery),
+    [spotifySections, searchQuery]
+  );
 
   const activeCategorySources: SourceType[] = useMemo(() => {
     const categorySources = () => {
@@ -315,6 +362,9 @@ export function SourceSlider({
         return twitchSources;
       } else if (activeCategory === 'youtube') {
         return [youtubeLiveEntry, ...youtubeSources];
+      } else if (activeCategory === 'spotify') {
+        // Already filtered, and ordered as its sections lay them out.
+        return spotifyRowSources;
       } else if (activeCategory === 'favourites') {
         // The stored copy is a snapshot; show the catalogue's when it has one,
         // so a starred channel is listed with its current logo and signals.
@@ -328,7 +378,14 @@ export function SourceSlider({
       return zappingRowSources;
     };
     const sources = categorySources();
-    if (!searchQuery || activeCategory === 'tv' || activeCategory === 'zapping')
+    // The sectioned lists filter themselves, along with the headers their hits
+    // are listed under.
+    if (
+      !searchQuery ||
+      activeCategory === 'tv' ||
+      activeCategory === 'zapping' ||
+      activeCategory === 'spotify'
+    )
       return sources;
     return sources.filter(source => sourceMatches(source, searchQuery));
   }, [
@@ -339,6 +396,7 @@ export function SourceSlider({
     catalogueBySlug,
     zappingRowSources,
     youtubeSources,
+    spotifyRowSources,
     searchQuery
   ]);
 
@@ -490,11 +548,16 @@ export function SourceSlider({
     { preventDefault: true }
   );
   // Zapping and YouTube both put a connect/disconnect panel where the signals
-  // TAB would otherwise be.
-  const isConfigCategory = isZapping || isYoutube;
+  // TAB would otherwise be; Spotify puts the box its catalogue is typed into.
+  const isConfigCategory = isZapping || isYoutube || isSpotify;
   const zappingConfigRef = useRef<HTMLDivElement>(null);
   const youtubeConfigRef = useRef<HTMLDivElement>(null);
-  const activeConfigRef = isYoutube ? youtubeConfigRef : zappingConfigRef;
+  const spotifyConfigRef = useRef<HTMLDivElement>(null);
+  const activeConfigRef = isYoutube
+    ? youtubeConfigRef
+    : isSpotify
+      ? spotifyConfigRef
+      : zappingConfigRef;
 
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -508,10 +571,23 @@ export function SourceSlider({
   }, [selectedSourceSlug, activeCategory, isLayouts, youtubeLiveSelected]);
 
   const focusActiveConfig = () => {
-    activeConfigRef.current?.querySelector('button')?.focus();
+    const config = activeConfigRef.current;
+    // Spotify's panel is a box to paste a link into; the others are buttons.
+    const target = isSpotify
+      ? config?.querySelector('input')
+      : config?.querySelector('button');
+    target?.focus();
   };
 
-  const configNeedsAuth = isYoutube ? !youtubeConnected : !zappingToken;
+  // Spotify has two ways to fill its list, so neither one missing is enough:
+  // an empty tab is one with no account connected *and* nothing pasted in.
+  // Counted off the unfiltered sections — a search that matches nothing is not
+  // an empty tab, and must not move the caret onto the config panel.
+  const configNeedsAuth = isYoutube
+    ? !youtubeConnected
+    : isSpotify
+      ? !spotifyConnected && !spotifySections.length
+      : !zappingToken;
 
   // Without a connection there is nothing to browse, so the config is the only
   // thing worth reaching: put the caret on it as soon as the tab opens.
@@ -867,16 +943,19 @@ export function SourceSlider({
   const listedSources =
     isYoutube && !youtubeConnected ? [] : activeCategorySources;
 
-  // The TV and Zapping lists carry their headers as rows, so the row to scroll
-  // to has to be found rather than reused from the flat channel index. Matched
-  // on that index and not on the slug: a Zapping channel listed in both
+  // The TV, Zapping and Spotify lists carry their headers as rows, so the row
+  // to scroll to has to be found rather than reused from the flat channel
+  // index. Matched on that index and not on the slug: a channel listed in two
   // sections has two rows, and the one to bring into view is the caret's.
   // Zapping has nothing to list until the account is connected.
+  const isSectioned = isTv || isZapping || isSpotify;
   const sectionRows = isTv
     ? tvRows
     : isZapping && zappingToken
       ? zappingRows
-      : [];
+      : isSpotify
+        ? spotifyRows
+        : [];
   const selectedRowIndex = sectionRows.findIndex(
     row => row.kind === 'source' && row.sourceIndex === selectedIndex
   );
@@ -901,8 +980,16 @@ export function SourceSlider({
         youtubeConnected &&
         !youtubeSources.length &&
         'Ningún canal suscrito está en vivo'}
+      {isSpotify &&
+        !searchQuery &&
+        !spotifyRowSources.length &&
+        (spotifyLoading
+          ? 'Cargando...'
+          : spotifyConnected
+            ? 'Tu cuenta no tiene playlists ni álbumes guardados'
+            : 'Conecta tu cuenta, o agrega una playlist con su link')}
       {!!searchQuery &&
-        !(isTv || isZapping ? sectionRows.length : listedSources.length) &&
+        !(isSectioned ? sectionRows.length : listedSources.length) &&
         `Sin resultados para «${query.trim()}»`}
     </>
   );
@@ -926,10 +1013,35 @@ export function SourceSlider({
         </div>
       )}
       {isYoutube && youtubeConfigPanel}
+      {isSpotify && (
+        <div
+          ref={spotifyConfigRef}
+          className="flex w-full shrink-0 flex-col items-center gap-2 p-3"
+        >
+          <SpotifyConfig
+            onSourceSelect={onSelect}
+            selectedUri={selectedSource?.spotifyUri}
+            // Only a pasted row can be taken out of the list; one that comes
+            // from the account is removed in Spotify, not here.
+            isSelectedCustom={spotifyCustomItems.some(
+              item => item.uri === selectedSource?.spotifyUri
+            )}
+          />
+          {spotifyRecentDenied && (
+            // An older grant cannot read the play history, and the row it feeds
+            // just isn't there — indistinguishable from having played nothing
+            // unless it is said out loud.
+            <span className="text-center text-[10px] leading-tight text-gray-400">
+              Reconecta tu cuenta para ver lo que escuchaste hace poco
+            </span>
+          )}
+          <span className="text-[9px] leading-none text-gray-400">TAB</span>
+        </div>
+      )}
     </>
   );
 
-  const sourcesList = isTv || isZapping ? (
+  const sourcesList = isSectioned ? (
     !!sectionRows.length && (
       <VirtualList
         items={sectionRows}

@@ -31,10 +31,12 @@ export interface SourceInput {
   twitterAcount?: string;
   twitchAccount?: string;
   zappingChannel?: string;
+  /** Canonical `spotify:type:id`; see `parseSpotifyRef` in `lib/spotify`. */
+  spotifyUri?: string;
 }
 
 export type SignalType =
-  'iframe' | 'm3u8' | 'youtube' | 'twitch' | 'youtubeChannel';
+  'iframe' | 'm3u8' | 'youtube' | 'twitch' | 'youtubeChannel' | 'spotify';
 
 export interface SourceType extends SourceInput {
   slug: string;
@@ -67,7 +69,8 @@ const signalTypeField: Record<SignalType, keyof SourceInput> = {
   m3u8: 'm3u8Url',
   youtube: 'youtubeVideoId',
   youtubeChannel: 'youtubeChannelId',
-  twitch: 'twitchAccount'
+  twitch: 'twitchAccount',
+  spotify: 'spotifyUri'
 };
 
 export interface Signal {

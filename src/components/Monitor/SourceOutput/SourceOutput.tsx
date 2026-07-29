@@ -2,6 +2,7 @@
 import { findSignal, Signal, SourceType } from '../../../sources';
 import { TwitchSource } from './SourceProvider/TwitchSource';
 import { TwitterTimeline } from './SourceProvider/TwitterTimeline';
+import { SpotifySource } from './SourceProvider/SpotifySource';
 import VideoPlayer from './SourceProvider/VideoJS';
 import { YoutubeSource } from './SourceProvider/YoutubeSource';
 import { ZappingSource } from './SourceProvider/ZappingSource';
@@ -28,7 +29,15 @@ type Props = {
 };
 
 /** The one input the screen asked for, mirror included. */
-function SignalOutput({ signal, muted }: { signal: Signal; muted: boolean }) {
+function SignalOutput({
+  signal,
+  source,
+  muted
+}: {
+  signal: Signal;
+  source: SourceType;
+  muted: boolean;
+}) {
   const { type, input } = signal;
   if (type === 'iframe' && input.iframeSrc) {
     return <IframeOutput src={input.iframeSrc} />;
@@ -40,6 +49,17 @@ function SignalOutput({ signal, muted }: { signal: Signal; muted: boolean }) {
     return <TwitchSource channel={input.twitchAccount} muted={muted} />;
   } else if (type === 'youtubeChannel' && input.youtubeChannelId) {
     return <YoutubeSource channelId={input.youtubeChannelId} muted={muted} />;
+  } else if (type === 'spotify' && input.spotifyUri) {
+    // The Connect tile has no iframe to fill itself with, so it renders the
+    // channel's own name and cover until the session says otherwise.
+    return (
+      <SpotifySource
+        uri={input.spotifyUri}
+        muted={muted}
+        name={source.name}
+        imageUrl={source.imageUrl}
+      />
+    );
   }
   return null;
 }
@@ -49,7 +69,7 @@ export function SourceOutput({ source, activeSignal, muted = true }: Props) {
   // to the default chain rather than leaving the tile blank.
   const signal = activeSignal ? findSignal(source, activeSignal) : undefined;
   if (signal) {
-    return <SignalOutput signal={signal} muted={muted} />;
+    return <SignalOutput signal={signal} source={source} muted={muted} />;
   }
 
   if (source.iframeSrc) {
@@ -75,6 +95,15 @@ export function SourceOutput({ source, activeSignal, muted = true }: Props) {
     return <TwitchSource channel={source.twitchAccount} muted={muted} />;
   } else if (source.zappingChannel) {
     return <ZappingSource channelId={source.zappingChannel} muted={muted} />;
+  } else if (source.spotifyUri) {
+    return (
+      <SpotifySource
+        uri={source.spotifyUri}
+        muted={muted}
+        name={source.name}
+        imageUrl={source.imageUrl}
+      />
+    );
   }
 
   return null;

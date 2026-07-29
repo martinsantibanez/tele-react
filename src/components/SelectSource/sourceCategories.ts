@@ -14,6 +14,7 @@ export type SelectorCategories =
   | 'twitch'
   | 'zapping'
   | 'youtube'
+  | 'spotify'
   | 'favourites'
   | 'pruebas'
   | 'layouts';
@@ -24,6 +25,7 @@ export const categoryOrder: SelectorCategories[] = [
   'youtube',
   'favourites',
   'twitch',
+  'spotify',
   ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : []),
   'layouts'
 ];
@@ -72,6 +74,7 @@ function categoryOfSlug(slug: string): SelectorCategories | undefined {
   if (slug.startsWith('custom_zapping_')) return 'zapping';
   if (slug.startsWith('custom_twitch-')) return 'twitch';
   if (slug.startsWith('custom_yt_live_')) return 'youtube';
+  if (slug.startsWith('custom_spotify_')) return 'spotify';
   if (slug.startsWith('custom_')) return 'tv';
   if (showPruebas && Object.values(pruebasSources).some(s => s.slug === slug))
     return 'pruebas';

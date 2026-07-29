@@ -9,6 +9,7 @@ import {
 } from '../hooks/useZappingConfig';
 import { useFavourites } from '../hooks/useFavourites';
 import { SourceCatalogProvider } from '../hooks/useSourceCatalog';
+import { SpotifyPlayerProvider } from '../hooks/useSpotifyPlayer';
 import { useZappingPresetScreens } from '../hooks/useZappingPresetScreens';
 
 const ThemeProvider = dynamic(
@@ -50,7 +51,13 @@ export const ClientProviders = ({
       <SourceCatalogProvider>
         <ZappingSessionManager />
         <StorageMigration />
-        <TeleProvider>{children}</TeleProvider>
+        {/* App-wide on purpose: the Spotify device and the session it plays are
+            one per browser, not one per tile, so the thing that owns them has
+            to sit above every tile that might want it. It stays dormant — no
+            device, no polling — until a tile asks. */}
+        <SpotifyPlayerProvider>
+          <TeleProvider>{children}</TeleProvider>
+        </SpotifyPlayerProvider>
       </SourceCatalogProvider>
     </ThemeProvider>
   );
