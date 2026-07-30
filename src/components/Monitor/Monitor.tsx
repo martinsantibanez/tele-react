@@ -4,6 +4,8 @@ import {
   ChevronUp,
   Maximize2,
   Minimize2,
+  PanelLeftClose,
+  PanelLeftOpen,
   Volume2,
   VolumeX
 } from 'lucide-react';
@@ -65,7 +67,6 @@ const FloatingButton = ({
 
 export const Monitor = () => {
   const {
-    toggleEditting,
     isEditing,
     setIsEditing,
     editingSourceIdx,
@@ -173,6 +174,18 @@ export const Monitor = () => {
   useEffect(() => {
     if (isMobile) setIsEditing(false);
   }, [isMobile, setIsEditing]);
+
+  /**
+   * Going in and out of edit mode. The strip of saved screens is part of the
+   * same furniture as the picker, so the two travel together: leaving edit mode
+   * puts all of it away and what is left is the picture, entering it brings the
+   * whole of it back. The floating button (and C) is still there to fold the
+   * strip away on its own.
+   */
+  const setEditing = (editing: boolean) => {
+    setIsEditing(editing);
+    setControlBarVisible(editing);
+  };
 
   const handlePromote = () => {
     setFeaturedMonitor(screen);
@@ -366,7 +379,7 @@ export const Monitor = () => {
     };
   }, []);
 
-  useHotkeys('e', () => toggleEditting());
+  useHotkeys('e', () => setEditing(!isEditing), [isEditing]);
   useHotkeys(
     [
       '1,2,3,4,5,6,7,8,9',
@@ -572,6 +585,17 @@ export const Monitor = () => {
           <ChevronUp size={20} />
         </FloatingButton>
       )}
+      {/* A tablet gets the desktop layout but has no E key to call the picker
+          back with, so the way in is on the picture too. On a phone the bottom
+          bar is already that door. */}
+      {!isMobile && !isEditing && (
+        <FloatingButton
+          onClick={() => setEditing(true)}
+          label="Ver panel de canales"
+        >
+          <PanelLeftOpen size={20} />
+        </FloatingButton>
+      )}
     </div>
   );
 
@@ -651,6 +675,20 @@ export const Monitor = () => {
     <div className="flex h-screen overflow-hidden">
       {isEditing && (
         <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
+          {/* Its own way out, for the tablets that have no keyboard to press E
+              on. Part of the column rather than laid over it, so it doesn't
+              cover the tabs it sits above nor scroll away with them. */}
+          <div className="mb-1 flex flex-none justify-end">
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              aria-label="Ocultar panel de canales"
+              title="Ocultar panel (E)"
+              className="rounded-md p-1.5 text-gray-400 opacity-70 hover:bg-gray-800 hover:text-white hover:opacity-100"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          </div>
           {picker}
         </div>
       )}
