@@ -1,5 +1,3 @@
-import { ApiClient } from '@twurple/api';
-import { StaticAuthProvider } from '@twurple/auth';
 import {
   ChevronRight,
   Heart,
@@ -15,6 +13,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Input } from '../../../components/ui/input';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
+import {
+  TWITCH_CLIENT_ID,
+  useTwitchFollowedSources
+} from '../../hooks/useTwitchFollowedSources';
+import { useNowPlayingLabel } from '../../hooks/useNowPlayingLabel';
 import { useFavourites } from '../../hooks/useFavourites';
 import { useSourceCatalog } from '../../hooks/useSourceCatalog';
 import {
@@ -176,8 +179,6 @@ type Props = {
   showHints?: boolean;
 };
 
-const clientId = '0u3rttp1lk618elmdh5sg5b338dlrs';
-
 export function SourceSlider({
   onSelect,
   selectedSourceSlug,
@@ -209,9 +210,11 @@ export function SourceSlider({
   const youtubeLiveSelected =
     isYoutube && youtubeLiveCaret && displayConfig.mode === DisplayMode.Youtube;
   const { favourites, isFavourite, toggleFavourite } = useFavourites();
-  const [twitchSources, setTwitchSources] = useState<SourceType[]>([]);
+  const { sources: twitchSources, isLoading: isLoadingTwitch } =
+    useTwitchFollowedSources();
   const zappingSources = useZappingSources();
-  const { nowBySlug, topChannels } = useZappingNowPlaying();
+  const { topChannels } = useZappingNowPlaying();
+  const nowPlayingLabel = useNowPlayingLabel();
   const youtubeSources = useYoutubeLiveSources();
   const { isConnected: youtubeConnected } = useYoutubeAuth();
   // What the user pasted, what the account has been playing, what it has saved.
@@ -638,61 +641,15 @@ export function SourceSlider({
     })
   ];
 
-  const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
-
   // Twitch sends the token back in the fragment of the page that started the
-  // flow, which is whichever page is hosting the picker.
+  // flow, which is whichever page is hosting the picker. The list it unlocks is
+  // fetched by `useTwitchFollowedSources`, off the token this stores.
   useEffect(() => {
     if (!document.location.hash) return;
     const parsedHash = new URLSearchParams(window.location.hash.substring(1));
     const token = parsedHash.get('access_token');
     if (token) setTwitchToken(token);
   }, [setTwitchToken]);
-
-  useEffect(() => {
-    const getFollowing = async () => {
-      try {
-        setIsLoadingTwitch(true);
-        if (!accessToken) return;
-        const authProvider = new StaticAuthProvider(clientId, accessToken);
-        const apiClient = new ApiClient({ authProvider });
-
-        const currentUserResponse = await fetch(
-          'https://api.twitch.tv/helix/users',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Client-Id': clientId
-            }
-          }
-        );
-        const currentUser = await currentUserResponse.json();
-        const userId = currentUser.data[0].id;
-
-        const followedResponse =
-          await apiClient.streams.getFollowedStreams(userId);
-
-        setTwitchSources(
-          await Promise.all(
-            followedResponse.data.map(async followed => {
-              const avatar = await apiClient.users.getUserById(followed.userId);
-              return {
-                slug: `custom_twitch-${followed.userName}`,
-                name: followed.userName,
-                imageUrl: avatar?.profilePictureUrl,
-                twitchAccount: followed.userName
-              };
-            })
-          )
-        );
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoadingTwitch(false);
-      }
-    };
-    getFollowing();
-  }, [accessToken]);
 
   const youtubeConfigPanel = (
     <div
@@ -744,10 +701,7 @@ export function SourceSlider({
     const isActive = source.slug === selectedSourceSlug && !youtubeLiveSelected;
     const isCaret = isActive && canalIndex === selectedIndex;
     const starred = isFavourite(source.slug);
-    // What the source is showing right now. Zapping's comes from the live EPG,
-    // keyed by slug so a channel starred into Favourites keeps saying what is
-    // on it there too; every other catalogue carries its own on the source.
-    const description = nowBySlug.get(source.slug)?.title ?? source.description;
+    const description = nowPlayingLabel(source);
 
     return (
       <div
@@ -919,7 +873,7 @@ export function SourceSlider({
     <>
       {activeCategory === 'twitch' && !accessToken && (
         <a
-          href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
+          href={`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${window.location.href}&response_type=token&scope=user:read:follows`}
         >
           Connect with Twitch
         </a>

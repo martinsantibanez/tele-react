@@ -40,7 +40,12 @@ export enum DisplayMode {
   // Auto-tiles every currently-live YouTube subscription; the tiles are derived
   // from the live channels, not from the saved grid, and the count follows how
   // many channels are live right now.
-  Youtube = 'Youtube'
+  Youtube = 'Youtube',
+  // One channel on air, with the one before and the one after it named above
+  // and below. What is being walked is a whole catalogue — the picker's active
+  // tab — rather than the screen's own sources, of which it keeps exactly one:
+  // whatever is playing. See `ChannelReel`.
+  Zapping = 'Zapping'
 }
 
 export type GridSize = 1 | 2 | 3 | 4;

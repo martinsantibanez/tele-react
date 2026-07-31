@@ -4,6 +4,8 @@ import { MonitorSource } from '../Monitor/MonitorSource';
 type Props = {
   layout: LayoutType;
   sources: SourceNode[];
+  /** Picking a screen by clicking it, the way its number key would. */
+  onSelect?: (idx: number) => void;
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
@@ -44,6 +46,7 @@ export const rowSizeClass = {
 
 export function Layout({
   layout,
+  onSelect,
   onEdit,
   onRemove,
   sources,
@@ -66,6 +69,7 @@ export function Layout({
               sourceSlug={node.sourceSlug}
               storedSource={node.source}
               activeSignal={node.activeSignal}
+              onSelect={() => onSelect?.(idx)}
               onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}

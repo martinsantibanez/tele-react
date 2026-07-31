@@ -9,7 +9,7 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useControlBarVisible } from '../../hooks/useControlBarVisible';
@@ -19,6 +19,7 @@ import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useViewport } from '../../hooks/useViewport';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
+import { useYoutubeLoginScreen } from '../../hooks/useYoutubeLoginScreen';
 import { MobileNav } from '../../layout/MobileNav';
 import { embeddedSource, SourceType } from '../../sources';
 import {
@@ -82,6 +83,10 @@ export const Monitor = () => {
   const [activeCategory] = useActiveCategory();
   const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Coming back from the YouTube login lands on the live view, as a screen of
+  // its own; the picker is the only place the connect is launched from, so
+  // this is where the return trip ends.
+  useYoutubeLoginScreen();
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
   const { nodes: youtubeNodes } = useYoutubeGridSources();
@@ -114,6 +119,10 @@ export const Monitor = () => {
   const fullscreenIdx = isFullscreen ? editingSourceIdx : undefined;
 
   const isGrid = displayConfig.mode === DisplayMode.Grid;
+  // The reel is not a picture inside a frame: the strips naming the channel
+  // above and below are part of it, so it takes the whole of the space rather
+  // than a 16:9 box within it.
+  const isZappingMode = displayConfig.mode === DisplayMode.Zapping;
 
   /**
    * How wide the grid is laid out. Its own setting, except on a phone held
@@ -155,9 +164,11 @@ export const Monitor = () => {
 
   const visibleScreenCount = isYoutubeMode
     ? youtubeSources.length
-    : displayConfig.mode === DisplayMode.Layout
-      ? displayConfig.layout.length
-      : (selectedSources?.length ?? 0);
+    : isZappingMode
+      ? 1
+      : displayConfig.mode === DisplayMode.Layout
+        ? displayConfig.layout.length
+        : (selectedSources?.length ?? 0);
 
   // A screen is always selected (the first one to begin with), so when the
   // tile it pointed at is gone — removed, layout change, fewer live channels —
@@ -339,6 +350,31 @@ export const Monitor = () => {
     revealScreenSource(newIdx);
   };
 
+  /**
+   * Picking a screen — by its number key, or by putting a finger on it. The
+   * screen becomes the one being edited, it takes the sound off whichever had
+   * it, and the sidebar follows it to the channel it is playing. While a swap
+   * is marked the sound stays put: that pick is the other half of the trade.
+   */
+  const selectScreen = (idx: number) => {
+    if (idx < 0 || idx >= visibleScreenCount) return;
+    // The YouTube grid is auto-managed: picking a tile selects it (so G can
+    // fullscreen it) and solos its audio; there is no per-tile source editing.
+    if (isYoutubeMode) {
+      setEditingSourceIdx(idx);
+      setYoutubeSoloIdx(idx);
+      return;
+    }
+    setEditingSourceIdx(idx);
+    if (swapSourceIdx === undefined) handleSoloAudio(idx);
+    revealScreenSource(idx);
+  };
+
+  // The <iframe> handler below fires from an event listener bound once, so it
+  // reads the current pick through a ref rather than closing over a stale one.
+  const selectScreenRef = useRef(selectScreen);
+  selectScreenRef.current = selectScreen;
+
   const handleShare = async () => {
     const response = await axios.post('/api/share', screen);
     prompt(
@@ -369,7 +405,13 @@ export const Monitor = () => {
     const refocus = () => {
       timer = setTimeout(() => {
         const active = document.activeElement;
-        if (active instanceof HTMLIFrameElement) active.blur();
+        if (!(active instanceof HTMLIFrameElement)) return;
+        // A frame only takes the focus when it is clicked, and that click is
+        // the one its screen never sees — so this is also how a tap on an
+        // embedded player reaches the tile it landed on.
+        const tile = active.closest<HTMLElement>('[data-screen-idx]');
+        if (tile) selectScreenRef.current(Number(tile.dataset.screenIdx));
+        active.blur();
       }, 0);
     };
     window.addEventListener('blur', refocus);
@@ -387,17 +429,8 @@ export const Monitor = () => {
     ].join(','),
     e => {
       const idx = getIndexFromKeyEvent(e);
-      if (idx === undefined || idx >= visibleScreenCount) return;
-      // The YouTube grid is auto-managed: a number key selects a tile (so G can
-      // fullscreen it) and solos its audio; there is no per-tile source editing.
-      if (isYoutubeMode) {
-        setEditingSourceIdx(idx);
-        setYoutubeSoloIdx(idx);
-        return;
-      }
-      setEditingSourceIdx(idx);
-      if (swapSourceIdx === undefined) handleSoloAudio(idx);
-      revealScreenSource(idx);
+      if (idx === undefined) return;
+      selectScreen(idx);
     },
     [
       visibleScreenCount,
@@ -612,23 +645,35 @@ export const Monitor = () => {
             min-content height, which is taller than the 16:9 box and would
             stretch the screen over the bar below. */}
         <div
-          className="min-h-0 flex-none self-center"
-          style={{
-            aspectRatio: monitorRatio,
-            width: `min(100cqw, calc(100cqh * ${monitorRatio}))`
-          }}
+          className={
+            isZappingMode
+              ? 'flex min-h-0 min-w-0 flex-1 self-stretch'
+              : 'min-h-0 flex-none self-center'
+          }
+          style={
+            isZappingMode
+              ? undefined
+              : {
+                  aspectRatio: monitorRatio,
+                  width: `min(100cqw, calc(100cqh * ${monitorRatio}))`
+                }
+          }
         >
           <Screen
             screen={screen}
+            onSelect={selectScreen}
             onEdit={isYoutubeMode ? undefined : handleSourceEdit}
             onRemove={
-              isYoutubeMode || !canRemoveScreen ? undefined : handleSourceRemove
+              isYoutubeMode || isZappingMode || !canRemoveScreen
+                ? undefined
+                : handleSourceRemove
             }
             editingSourceIdx={editingSourceIdx}
             swapSourceIdx={swapSourceIdx}
             fullscreenIdx={fullscreenIdx}
             onSwitch={isYoutubeMode ? undefined : handleSwitch}
             gridColumns={gridColumns}
+            onSourceChange={isZappingMode ? handleSourceChange : undefined}
           />
         </div>
         {floatingControls}

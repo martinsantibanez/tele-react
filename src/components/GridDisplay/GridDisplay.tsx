@@ -3,6 +3,8 @@ import { MonitorSource } from '../Monitor/MonitorSource';
 
 type Props = {
   sources: SourceNode[];
+  /** Picking a screen by clicking it, the way its number key would. */
+  onSelect?: (idx: number) => void;
   onEdit?: (idx: number) => void;
   onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
@@ -12,6 +14,7 @@ type Props = {
 
 export function GridDisplay({
   sources,
+  onSelect,
   onEdit,
   onRemove,
   editingSourceIdx,
@@ -28,6 +31,7 @@ export function GridDisplay({
           activeSignal={node.activeSignal}
           muted={node.muted ?? true}
           key={`${node.uuid}`}
+          onSelect={() => onSelect?.(idx)}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}
           onRemove={() => (onRemove ? onRemove(idx) : undefined)}
           isBeingEdited={idx === editingSourceIdx}

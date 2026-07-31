@@ -59,6 +59,19 @@ export const possibleLayouts: PossibleLayout[] = [
     },
     imgName: 'layout6.png'
   },
+  {
+    name: 'Zapeo',
+    config: {
+      layout: initialLayout,
+      mode: DisplayMode.Zapping,
+      // Placeholders the mode never reads: the reel shows one channel, and
+      // which one comes from the band being walked rather than from a grid.
+      grid: { size: 1 }
+    },
+    // Borrowed from Grid 1: both are a single picture filling the screen, which
+    // is as much as a thumbnail this size can say.
+    imgName: 'layout6.png'
+  },
 ];
 
 /**

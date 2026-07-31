@@ -42,6 +42,10 @@ export function ScreenThumbnail({
         <div className="flex h-full w-full items-center justify-center bg-gray-900">
           <YoutubeIcon size={40} className="text-red-500" />
         </div>
+      ) : config.mode === DisplayMode.Zapping ? (
+        // One channel with a sliver of the band above and below it: the shape
+        // of the reel, and the channel it was left on.
+        <ZappingPreview node={sources[0]} resolve={resolve} />
       ) : config.mode === DisplayMode.Grid ? (
         <GridPreview
           sources={sources}
@@ -60,6 +64,27 @@ export function ScreenThumbnail({
 }
 
 type SlotResolver = (node: SourceNode) => SourceType | undefined;
+
+function ZappingPreview({
+  node,
+  resolve
+}: {
+  node?: SourceNode;
+  resolve: SlotResolver;
+}) {
+  // The neighbours are whatever the band holds when the reel is opened, which
+  // no saved screen knows; they are drawn as the bars they will be.
+  const bar = <div className="h-[15%] w-full flex-none bg-gray-800" />;
+  return (
+    <div className="flex h-full w-full flex-col gap-px">
+      {bar}
+      <div className="min-h-0 flex-1">
+        <Slot source={node ? resolve(node) : undefined} />
+      </div>
+      {bar}
+    </div>
+  );
+}
 
 function GridPreview({
   sources,

@@ -18,6 +18,8 @@ type Props = {
   storedSource?: SourceType;
   activeSignal?: string;
   muted?: boolean;
+  /** Clicking the picture picks the screen, as its number key would. */
+  onSelect?: () => void;
   onChangeClick?: () => void;
   onRemove?: () => void;
   isBeingEdited?: boolean;
@@ -31,6 +33,7 @@ export function MonitorSource({
   storedSource,
   activeSignal,
   muted = true,
+  onSelect,
   onChangeClick,
   onRemove,
   isBeingEdited,
@@ -66,6 +69,9 @@ export function MonitorSource({
 
   return (
     <div
+      // How a screen is named to the page outside it: the iframe trick in the
+      // Monitor reads its number back off here.
+      data-screen-idx={idx}
       className={fullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}
     >
       <div
@@ -73,7 +79,14 @@ export function MonitorSource({
           showFocus ? 'border-2 border-slate-400' : ''
         }`}
       >
-        <div className="w-full h-full">
+        {/* The picture is the screen's own handle. It picks on the way down
+            and lets the press carry on, so a player's controls still answer to
+            it; the frames that keep their clicks to themselves are caught by
+            the focus they steal instead (see the Monitor). */}
+        <div
+          className={`w-full h-full ${onSelect ? 'cursor-pointer' : ''}`}
+          onPointerDownCapture={onSelect}
+        >
           {!!source && (
             <SourceOutput
               source={source}

@@ -10,6 +10,9 @@ type Props = {
 };
 let hlsQualitySelectorRegistered = false;
 
+const STALL_TIMEOUT_MS = 12000;
+const WATCHDOG_INTERVAL_MS = 3000;
+
 const VideoPlayer = ({ src, muted = true }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<any>(undefined);
@@ -64,8 +67,64 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     });
     playerRef.current = p;
     currentSrcRef.current = src;
+
+    // Keep the stream running: resume on any pause, and reload it if it stalls.
+    const resume = () => {
+      if (p.isDisposed() || !p.paused()) return;
+      const liveTracker = p.liveTracker;
+      if (liveTracker?.isLive() && liveTracker.atLiveEdge?.() === false) {
+        liveTracker.seekToLiveEdge();
+      }
+      const playPromise = p.play();
+      if (playPromise?.catch) playPromise.catch(() => {});
+    };
+
+    const reload = () => {
+      if (p.isDisposed()) return;
+      p.src([
+        { src: currentSrcRef.current, type: 'application/vnd.apple.mpegurl' }
+      ]);
+      p.load();
+      resume();
+    };
+
+    p.on('pause', resume);
+    p.on('ended', reload);
+    p.on('error', reload);
+
+    let lastTime = 0;
+    let lastProgressAt = Date.now();
+    const watchdog = window.setInterval(() => {
+      if (p.isDisposed()) return;
+      const time = p.currentTime();
+      if (time !== lastTime) {
+        lastTime = time;
+        lastProgressAt = Date.now();
+        return;
+      }
+      if (p.paused()) {
+        resume();
+        return;
+      }
+      // Not paused but the clock is frozen: the stream is stuck, re-fetch it.
+      if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
+        lastProgressAt = Date.now();
+        reload();
+      }
+    }, WATCHDOG_INTERVAL_MS);
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) resume();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
+      window.clearInterval(watchdog);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.off('pause', resume);
+        playerRef.current.off('ended', reload);
+        playerRef.current.off('error', reload);
         playerRef.current.dispose();
       }
       playerRef.current = undefined;
