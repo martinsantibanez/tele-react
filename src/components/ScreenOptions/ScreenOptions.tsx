@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CSSProperties } from 'react';
 import { DisplayMode, GridSize } from '../../types/Monitor';
 import { ActionButton } from '../ActionButton/ActionButton';
@@ -89,6 +90,12 @@ export function ScreenOptions({
             Compartir
           </Button>
         )}
+
+        {/* The way into the layout editor, where a shape that isn't in the
+            list can be drawn. */}
+        <Button asChild variant="outline">
+          <Link href="/layout-editor">Editor de layouts</Link>
+        </Button>
       </div>
     </div>
   );
