@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import {
   fetchLiveFromChannels,
@@ -215,26 +215,49 @@ export function useYoutubeLiveSources(): SourceType[] {
   );
 }
 
+const byChannelTitle = (a: SourceType, b: SourceType) => {
+  const an = a.name ?? '';
+  const bn = b.name ?? '';
+  if (an !== bn) return an < bn ? -1 : 1;
+  return a.slug < b.slug ? -1 : 1;
+};
+
 /**
- * Feeds the dynamic YouTube layout: every live channel as a grid node, in a
- * stable order (channel title, slug as tie-break) so tiles don't shuffle on
- * every poll. Each node carries its source, so the tiles resolve without
- * anything being registered anywhere — these nodes are derived on every render
- * and never stored.
+ * Feeds the dynamic YouTube layout: every live channel as a grid node. Each
+ * node carries its source, so the tiles resolve without anything being
+ * registered anywhere — these nodes are derived on every render and never
+ * stored.
+ *
+ * Tiles keep the order the channels were first seen live in, rather than being
+ * re-sorted alphabetically on every poll. React moves a keyed child that
+ * changed place, and moving an <iframe> in the DOM reloads it — so one channel
+ * going live under a name early in the alphabet would restart every player on
+ * the wall. Channels join at the end (alphabetically among those arriving
+ * together) and one going off air takes its own tile with it, leaving the rest
+ * exactly where they are.
+ *
+ * @param frozen Hold the tiles as they are and ignore the poll entirely. A
+ * stream being watched fullscreen should not be pulled from under the viewer:
+ * not by the list reordering, not by the channel briefly dropping out of it.
+ * The list catches up in full the moment it is let go.
  */
-export function useYoutubeGridSources() {
+export function useYoutubeGridSources({ frozen = false } = {}) {
   const sources = useYoutubeLiveSources();
 
-  const ordered = useMemo(
-    () =>
-      [...sources].sort((a, b) => {
-        const an = a.name ?? '';
-        const bn = b.name ?? '';
-        if (an !== bn) return an < bn ? -1 : 1;
-        return a.slug < b.slug ? -1 : 1;
-      }),
-    [sources]
-  );
+  const orderRef = useRef<string[]>([]);
+  const ordered = useMemo(() => {
+    const bySlug = new Map(sources.map(src => [src.slug, src]));
+    const kept = orderRef.current.filter(slug => bySlug.has(slug));
+    const known = new Set(kept);
+    const added = sources
+      .filter(src => !known.has(src.slug))
+      .sort(byChannelTitle)
+      .map(src => src.slug);
+    // Idempotent — re-running it with the order it just produced gives the
+    // same order back — so a double render can't shuffle anything.
+    orderRef.current = [...kept, ...added];
+    return orderRef.current.map(slug => bySlug.get(slug)!);
+  }, [sources]);
 
   const nodes = useMemo<SourceNode[]>(
     () =>
@@ -246,5 +269,10 @@ export function useYoutubeGridSources() {
     [ordered]
   );
 
-  return { nodes, count: nodes.length };
+  const frozenRef = useRef<SourceNode[] | undefined>(undefined);
+  if (!frozen) frozenRef.current = undefined;
+  else frozenRef.current ??= nodes;
+  const visible = frozenRef.current ?? nodes;
+
+  return { nodes: visible, count: visible.length };
 }

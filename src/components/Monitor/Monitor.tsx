@@ -9,7 +9,14 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useControlBarVisible } from '../../hooks/useControlBarVisible';
@@ -89,9 +96,37 @@ export const Monitor = () => {
   useYoutubeLoginScreen();
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
-  const { nodes: youtubeNodes } = useYoutubeGridSources();
-  // Which YouTube tile currently keeps its audio (all muted by default).
-  const [youtubeSoloIdx, setYoutubeSoloIdx] = useState<number | undefined>();
+  // Watching one stream fullscreen holds the wall still: the five-minute poll
+  // keeps running, but a channel joining or leaving it doesn't get to reshuffle
+  // what is on screen while someone is looking at it.
+  const { nodes: youtubeNodes } = useYoutubeGridSources({
+    frozen: isYoutubeMode && isFullscreen
+  });
+  // Which YouTube channel keeps its audio, and which one is selected (all muted
+  // by default). Both are held by slug rather than by tile number: a channel
+  // going off air moves every tile after it along, and the sound and the
+  // selection belong to the channel, not to the place it happened to sit in.
+  const [youtubeSoloSlug, setYoutubeSoloSlug] = useState<string | undefined>();
+  const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<string | undefined>();
+
+  const youtubeIdxOf = useCallback(
+    (slug?: string) => {
+      if (!slug) return undefined;
+      const idx = youtubeNodes.findIndex(node => node.sourceSlug === slug);
+      return idx < 0 ? undefined : idx;
+    },
+    [youtubeNodes]
+  );
+
+  const youtubeSoloIdx = youtubeIdxOf(youtubeSoloSlug);
+
+  // Keeps the selection pointed at the channel it was made on as the list
+  // moves under it — so G still fullscreens what was picked.
+  const youtubeFocusIdx = youtubeIdxOf(youtubeFocusSlug);
+  useEffect(() => {
+    if (!isYoutubeMode || youtubeFocusIdx === undefined) return;
+    setEditingSourceIdx(youtubeFocusIdx);
+  }, [isYoutubeMode, youtubeFocusIdx, setEditingSourceIdx]);
 
   // In the dynamic YouTube layout the tiles are the live channels, not the
   // saved grid, and audio-solo is tracked locally instead of per saved node.
@@ -196,6 +231,20 @@ export const Monitor = () => {
   const setEditing = (editing: boolean) => {
     setIsEditing(editing);
     setControlBarVisible(editing);
+  };
+
+  /**
+   * Full screen and back. Going in on the YouTube wall marks the channel that
+   * is being watched, so that on the way out — when the list is let go and
+   * catches up with the poll — the selection lands back on it wherever it has
+   * since moved to, rather than on whatever now sits in that tile.
+   */
+  const toggleFullscreen = () => {
+    if (isYoutubeMode && !isFullscreen) {
+      const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
+      if (slug) setYoutubeFocusSlug(slug);
+    }
+    setIsFullscreen(current => !current);
   };
 
   const handlePromote = () => {
@@ -333,7 +382,9 @@ export const Monitor = () => {
     const next = audibleIdx === undefined ? 0 : audibleIdx + 1;
     const target = next >= audibleCount ? undefined : next;
     if (isYoutubeMode) {
-      setYoutubeSoloIdx(target);
+      setYoutubeSoloSlug(
+        target === undefined ? undefined : youtubeNodes[target]?.sourceSlug
+      );
       return;
     }
     if (target === undefined) handleMuteAll();
@@ -362,7 +413,8 @@ export const Monitor = () => {
     // fullscreen it) and solos its audio; there is no per-tile source editing.
     if (isYoutubeMode) {
       setEditingSourceIdx(idx);
-      setYoutubeSoloIdx(idx);
+      setYoutubeFocusSlug(youtubeNodes[idx]?.sourceSlug);
+      setYoutubeSoloSlug(youtubeNodes[idx]?.sourceSlug);
       return;
     }
     setEditingSourceIdx(idx);
@@ -436,6 +488,7 @@ export const Monitor = () => {
       visibleScreenCount,
       swapSourceIdx,
       isYoutubeMode,
+      youtubeNodes,
       selectedSources,
       revealSource
     ]
@@ -456,7 +509,12 @@ export const Monitor = () => {
     },
     [editingSourceIdx, swapSourceIdx, isYoutubeMode]
   );
-  useHotkeys('g', () => setIsFullscreen(current => !current));
+  useHotkeys('g', () => toggleFullscreen(), [
+    isYoutubeMode,
+    isFullscreen,
+    youtubeNodes,
+    editingSourceIdx
+  ]);
   useHotkeys(
     'escape',
     () => {
@@ -473,14 +531,13 @@ export const Monitor = () => {
     () => {
       if (swapSourceIdx !== undefined) return;
       if (isYoutubeMode) {
-        setYoutubeSoloIdx(current =>
-          current === editingSourceIdx ? undefined : editingSourceIdx
-        );
+        const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
+        setYoutubeSoloSlug(current => (current === slug ? undefined : slug));
         return;
       }
       handleToggleMute(editingSourceIdx);
     },
-    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
+    [editingSourceIdx, swapSourceIdx, isYoutubeMode, youtubeNodes]
   );
   useHotkeys(
     'd',
@@ -601,7 +658,7 @@ export const Monitor = () => {
             )}
           </FloatingButton>
           <FloatingButton
-            onClick={() => setIsFullscreen(current => !current)}
+            onClick={toggleFullscreen}
             label={
               isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
             }
