@@ -142,9 +142,10 @@ function buildSectionRows(sections: SourceSection[], searchQuery: string) {
 }
 
 /**
- * The dynamic YouTube display heads that category's list. It rides along as a
- * source so the arrows and the virtual list keep counting plain rows, but it
- * plays nothing: picking it swaps the whole grid for the live tiles.
+ * The dynamic YouTube display closes that category's list, after the channels.
+ * It rides along as a source so the arrows and the virtual list keep counting
+ * plain rows, but it plays nothing: picking it swaps the whole grid for the
+ * live tiles.
  */
 const YOUTUBE_LIVE_SLUG = '_youtube_live_display_';
 const youtubeLiveEntry: SourceType = {
@@ -343,7 +344,7 @@ export function SourceSlider({
       } else if (activeCategory === 'twitch') {
         return twitchSources;
       } else if (activeCategory === 'youtube') {
-        return [youtubeLiveEntry, ...youtubeSources];
+        return [...youtubeSources, youtubeLiveEntry];
       } else if (activeCategory === 'spotify') {
         // Already filtered, and ordered as its sections lay them out.
         return spotifyRowSources;
