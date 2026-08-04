@@ -5,7 +5,7 @@
       "name": "tele-react",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3003,
+      "port": 3333,
       "autoPort": true
     }
   ]
