@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
+  experimental: {
+    // TypeScript 7 dropped the JS compiler API next build uses by default
+    useTypeScriptCli: true
+  },
   turbopack: {
     rules: {
       '*.svg': {
