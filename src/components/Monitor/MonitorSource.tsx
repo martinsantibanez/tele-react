@@ -1,7 +1,6 @@
 'use client';
-import { X } from 'lucide-react';
+import { Replace, X } from 'lucide-react';
 import { useMemo } from 'react';
-import { Button } from '../../../components/ui/button';
 import { useTeleContext } from '../../context/TeleContext';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useIsMobile } from '../../hooks/useViewport';
@@ -154,19 +153,36 @@ export function MonitorSource({
                   </button>
                 )
               ) : (
-                <div className="flex h-[20px] leading-[20px]">
+                // One pill, sized and coloured like the number badge across
+                // the tile from it, so the two overlays read as a pair rather
+                // than as chrome dropped on top of the picture.
+                <div className="flex h-5 items-center overflow-hidden rounded bg-black/70 text-white backdrop-blur-sm">
                   {onChangeClick && (
-                    <Button
-                      variant={isBeingEdited ? 'outline' : 'default'}
+                    <button
+                      type="button"
                       onClick={handleChangeClick}
+                      className={`flex h-full items-center gap-1 px-2 text-[11px] font-medium transition-colors ${
+                        isBeingEdited
+                          ? 'bg-white text-black'
+                          : 'hover:bg-white/20'
+                      }`}
                     >
+                      <Replace size={12} />
                       Cambiar
-                    </Button>
+                    </button>
+                  )}
+                  {onChangeClick && onRemove && (
+                    <span className="h-2.5 w-px bg-white/25" />
                   )}
                   {onRemove && (
-                    <Button variant={'destructive'} onClick={onRemove}>
+                    <button
+                      type="button"
+                      onClick={onRemove}
+                      className="flex h-full items-center gap-1 px-2 text-[11px] font-medium transition-colors hover:bg-red-600"
+                    >
+                      <X size={12} />
                       Quitar
-                    </Button>
+                    </button>
                   )}
                 </div>
               ))}
