@@ -92,6 +92,7 @@ export function MonitorSource({
               source={source}
               activeSignal={activeSignal}
               muted={muted}
+              fullscreen={fullscreen}
             />
           )}
         </div>

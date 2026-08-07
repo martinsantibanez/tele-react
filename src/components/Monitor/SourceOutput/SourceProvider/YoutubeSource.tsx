@@ -5,6 +5,12 @@ type Props = {
   videoId?: string;
   channelId?: string;
   muted?: boolean;
+  /**
+   * Whether the embed itself answers to the pointer. Off by default: a click on
+   * a YouTube player is a play/pause toggle, so picking a tile on the wall
+   * would stop the very stream it was picking. See `shield` below.
+   */
+  interactive?: boolean;
 };
 
 /**
@@ -60,7 +66,12 @@ function scaleToHd(box: Box | null): CSSProperties {
 // YouTube embeds bake the mute state into the URL, so changing `muted` would
 // otherwise force a full reload. Instead we enable the IFrame API and drive
 // mute/unMute over postMessage, which toggles audio without reloading.
-export function YoutubeSource({ videoId, channelId, muted = true }: Props) {
+export function YoutubeSource({
+  videoId,
+  channelId,
+  muted = true,
+  interactive = false
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [box, setBox] = useState<Box | null>(null);
@@ -116,7 +127,22 @@ export function YoutubeSource({ videoId, channelId, muted = true }: Props) {
     post('setPlaybackQuality', ['hd1080']);
   };
 
-  const style = scaleToHd(box);
+  /**
+   * The shield. A click inside the frame is YouTube's to interpret, and what it
+   * makes of one on the picture is "pause" — there is no way to take that back
+   * from out here, since the event never crosses the frame boundary. So the
+   * frame is made deaf to the pointer instead: the press falls through to the
+   * tile behind it, which is the thing that wanted the click in the first
+   * place. Mute and quality are driven over postMessage regardless, so nothing
+   * this component does actually needs the player to be clickable.
+   *
+   * Fullscreen is the exception — one channel, nothing to pick, and the
+   * player's own controls are worth having back.
+   */
+  const style = {
+    ...scaleToHd(box),
+    ...(interactive ? {} : { pointerEvents: 'none' as const })
+  };
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">

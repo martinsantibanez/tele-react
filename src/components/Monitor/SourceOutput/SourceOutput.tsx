@@ -26,17 +26,26 @@ type Props = {
   source: SourceType;
   /** Key of the signal the screen picked; unset plays the source's default. */
   activeSignal?: string;
+  /**
+   * Whether this is the tile filling the screen. Players that keep their
+   * clicks to themselves are held at arm's length on the wall — a press there
+   * is meant for the tile, not for them — and handed the pointer back here,
+   * where there is nothing left to pick and their own controls are useful.
+   */
+  fullscreen?: boolean;
 };
 
 /** The one input the screen asked for, mirror included. */
 function SignalOutput({
   signal,
   source,
-  muted
+  muted,
+  fullscreen
 }: {
   signal: Signal;
   source: SourceType;
   muted: boolean;
+  fullscreen: boolean;
 }) {
   const { type, input } = signal;
   if (type === 'iframe' && input.iframeSrc) {
@@ -44,11 +53,23 @@ function SignalOutput({
   } else if (type === 'm3u8' && input.m3u8Url && typeof window !== 'undefined') {
     return <VideoPlayer src={input.m3u8Url} muted={muted} />;
   } else if (type === 'youtube' && input.youtubeVideoId) {
-    return <YoutubeSource videoId={input.youtubeVideoId} muted={muted} />;
+    return (
+      <YoutubeSource
+        videoId={input.youtubeVideoId}
+        muted={muted}
+        interactive={fullscreen}
+      />
+    );
   } else if (type === 'twitch' && input.twitchAccount) {
     return <TwitchSource channel={input.twitchAccount} muted={muted} />;
   } else if (type === 'youtubeChannel' && input.youtubeChannelId) {
-    return <YoutubeSource channelId={input.youtubeChannelId} muted={muted} />;
+    return (
+      <YoutubeSource
+        channelId={input.youtubeChannelId}
+        muted={muted}
+        interactive={fullscreen}
+      />
+    );
   } else if (type === 'spotify' && input.spotifyUri) {
     // The Connect tile has no iframe to fill itself with, so it renders the
     // channel's own name and cover until the session says otherwise.
@@ -64,12 +85,24 @@ function SignalOutput({
   return null;
 }
 
-export function SourceOutput({ source, activeSignal, muted = true }: Props) {
+export function SourceOutput({
+  source,
+  activeSignal,
+  muted = true,
+  fullscreen = false
+}: Props) {
   // A key that no longer resolves — a mirror the feed dropped — falls through
   // to the default chain rather than leaving the tile blank.
   const signal = activeSignal ? findSignal(source, activeSignal) : undefined;
   if (signal) {
-    return <SignalOutput signal={signal} source={source} muted={muted} />;
+    return (
+      <SignalOutput
+        signal={signal}
+        source={source}
+        muted={muted}
+        fullscreen={fullscreen}
+      />
+    );
   }
 
   if (source.iframeSrc) {
@@ -88,7 +121,13 @@ export function SourceOutput({ source, activeSignal, muted = true }: Props) {
   } else if (source.m3u8Url && typeof window !== 'undefined') {
     return <VideoPlayer src={source.m3u8Url} muted={muted} />;
   } else if (source.youtubeVideoId) {
-    return <YoutubeSource videoId={source.youtubeVideoId} muted={muted} />;
+    return (
+      <YoutubeSource
+        videoId={source.youtubeVideoId}
+        muted={muted}
+        interactive={fullscreen}
+      />
+    );
   } else if (source.twitterAcount) {
     return <TwitterTimeline account={source.twitterAcount} />;
   } else if (source.twitchAccount) {
