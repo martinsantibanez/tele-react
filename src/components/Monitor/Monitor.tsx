@@ -107,7 +107,9 @@ export const Monitor = () => {
   // going off air moves every tile after it along, and the sound and the
   // selection belong to the channel, not to the place it happened to sit in.
   const [youtubeSoloSlug, setYoutubeSoloSlug] = useState<string | undefined>();
-  const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<string | undefined>();
+  const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<
+    string | undefined
+  >();
 
   const youtubeIdxOf = useCallback(
     (slug?: string) => {
@@ -345,50 +347,17 @@ export const Monitor = () => {
     });
   };
 
-  const handleMuteAll = () => {
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      return sources.map(src => ({ ...src, muted: true }));
-    });
-  };
-
   const isSelectedMuted = isYoutubeMode
     ? youtubeSoloIdx !== editingSourceIdx
     : (selectedSources?.[editingSourceIdx]?.muted ?? true);
 
-  /**
-   * The screen being heard. There is only ever one — the audio is handed from
-   * screen to screen rather than stacked — so the first one left unmuted is it.
-   */
-  const audibleIdx = useMemo(() => {
-    if (isYoutubeMode) return youtubeSoloIdx;
-    const idx = selectedSources?.findIndex(node => !(node.muted ?? true)) ?? -1;
-    return idx < 0 ? undefined : idx;
-  }, [isYoutubeMode, youtubeSoloIdx, selectedSources]);
-
-  // A screen the layout doesn't show has no sound to be handed.
-  const audibleCount = isYoutubeMode
-    ? youtubeSources.length
-    : Math.min(visibleScreenCount, selectedSources?.length ?? 0);
-
-  /**
-   * Hands the sound on to the next screen, and after the last one to none at
-   * all. The whole of the audio on a single button, for want of the number keys
-   * a phone doesn't have — and the silence at the end of the round is the way
-   * back to a quiet grid.
-   */
-  const cycleAudio = () => {
-    if (!audibleCount) return;
-    const next = audibleIdx === undefined ? 0 : audibleIdx + 1;
-    const target = next >= audibleCount ? undefined : next;
+  const toggleSelectedMute = () => {
     if (isYoutubeMode) {
-      setYoutubeSoloSlug(
-        target === undefined ? undefined : youtubeNodes[target]?.sourceSlug
-      );
+      const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
+      setYoutubeSoloSlug(current => (current === slug ? undefined : slug));
       return;
     }
-    if (target === undefined) handleMuteAll();
-    else handleSoloAudio(target);
+    handleToggleMute(editingSourceIdx);
   };
 
   // Picking a screen to edit points the sidebar at what it is playing: its
@@ -530,12 +499,7 @@ export const Monitor = () => {
     'm',
     () => {
       if (swapSourceIdx !== undefined) return;
-      if (isYoutubeMode) {
-        const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
-        setYoutubeSoloSlug(current => (current === slug ? undefined : slug));
-        return;
-      }
-      handleToggleMute(editingSourceIdx);
+      toggleSelectedMute();
     },
     [editingSourceIdx, swapSourceIdx, isYoutubeMode, youtubeNodes]
   );
@@ -629,44 +593,22 @@ export const Monitor = () => {
     </>
   );
 
-  // Over the picture, bottom right, faded until they are reached for: the
-  // controls a phone has no keys for, and the way back to the screens strip
-  // once it has been folded away.
   const floatingControls = (
     <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
-      {isMobile && (
-        <>
-          <FloatingButton
-            onClick={cycleAudio}
-            label={
-              audibleIdx === undefined
-                ? 'Activar el audio de la primera pantalla'
-                : `Audio en la pantalla ${getSourceShortcutLabel(audibleIdx)} — pasar a la siguiente`
-            }
-          >
-            {audibleIdx === undefined ? (
-              <VolumeX size={20} />
-            ) : (
-              <span className="flex items-center gap-1">
-                <Volume2 size={20} />
-                {/* Which screen is being heard, since the button no longer
-                    speaks about the one that happens to be selected. */}
-                <span className="text-xs leading-none font-bold">
-                  {getSourceShortcutLabel(audibleIdx)}
-                </span>
-              </span>
-            )}
-          </FloatingButton>
-          <FloatingButton
-            onClick={toggleFullscreen}
-            label={
-              isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
-            }
-          >
-            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-          </FloatingButton>
-        </>
-      )}
+      <FloatingButton
+        onClick={toggleSelectedMute}
+        label={isSelectedMuted ? 'Activar el audio' : 'Silenciar'}
+      >
+        {isSelectedMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+      </FloatingButton>
+      <FloatingButton
+        onClick={toggleFullscreen}
+        label={
+          isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
+        }
+      >
+        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+      </FloatingButton>
       {!controlBarVisible && (
         <FloatingButton
           onClick={() => setControlBarVisible(true)}

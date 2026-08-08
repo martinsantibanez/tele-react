@@ -210,20 +210,16 @@ export function SavedScreensBar() {
             </div>
           );
         })}
-        {/* S is out of a thumb's reach, and a phone is where the strip is most
-            worth adding to: the screen on air is what gets kept. */}
-        {isMobile && (
-          <button
-            type="button"
-            onClick={startAdd}
-            aria-label="Nueva pantalla"
-            title="Nueva pantalla"
-            className="mb-4 flex shrink-0 items-center justify-center rounded-sm border border-dashed border-gray-700 text-gray-300"
-            style={{ width: thumbHeight, height: thumbHeight }}
-          >
-            <Plus size={18} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={startAdd}
+          aria-label="Nueva pantalla"
+          title="Nueva pantalla"
+          className="mb-4 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
+          style={{ width: thumbWidth, height: thumbHeight }}
+        >
+          <Plus size={isMobile ? 18 : 22} />
+        </button>
       </div>
     </div>
   );
@@ -239,11 +235,7 @@ export function SavedScreensBar() {
       }}
     >
       <Input
-        // The prompt only exists while naming, so mounting is the right moment
-        // to take the caret.
         autoFocus
-        // A rename starts from the current name: selecting it lets the user
-        // type over it without clearing it first.
         onFocus={event => event.target.select()}
         value={pendingName?.value ?? ''}
         onChange={event =>
