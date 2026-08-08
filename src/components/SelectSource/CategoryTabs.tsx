@@ -48,6 +48,8 @@ type Props = {
   /** The bottom bar is thumbed rather than clicked, so its row is taller. */
   size?: 'sidebar' | 'touch';
   className?: string;
+  /** Which tabs to lay out, and in what order. Defaults to every catalogue. */
+  categories?: SelectorCategories[];
 };
 
 /**
@@ -58,7 +60,8 @@ export function CategoryTabs({
   activeCategory,
   onSelect,
   size = 'sidebar',
-  className = ''
+  className = '',
+  categories = categoryOrder
 }: Props) {
   const isTouch = size === 'touch';
   return (
@@ -67,7 +70,7 @@ export function CategoryTabs({
       aria-label="Categorías"
       className={`flex flex-nowrap gap-1 ${className}`}
     >
-      {categoryOrder.map(category => {
+      {categories.map(category => {
         const Icon = categoryIcons[category];
         const isActive = activeCategory === category;
         return (

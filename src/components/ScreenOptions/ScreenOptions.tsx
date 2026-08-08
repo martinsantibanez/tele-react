@@ -28,6 +28,9 @@ type Props = {
   onShare?: () => void;
   mode: DisplayMode;
   size: GridSize;
+  /** Whether fullscreening a screen hands it to the zapping reel. */
+  fullscreenZapping: boolean;
+  onFullscreenZappingChange: (enabled: boolean) => void;
 };
 export function ScreenOptions({
   onSizeChange,
@@ -36,7 +39,9 @@ export function ScreenOptions({
   onPromote,
   onShare,
   mode,
-  size
+  size,
+  fullscreenZapping,
+  onFullscreenZappingChange
 }: Props) {
   return (
     <div className="flex flex-col gap-4">
@@ -72,6 +77,12 @@ export function ScreenOptions({
           </Select>
         )}
       </div>
+      <Button
+        onClick={() => onFullscreenZappingChange(!fullscreenZapping)}
+        variant={fullscreenZapping ? 'default' : 'outline'}
+      >
+        Zapeo en pantalla completa: {fullscreenZapping ? 'activado' : 'desactivado'}
+      </Button>
       <div className="grid grid-cols-2 gap-4">
         {onSourceAdd && (
           <Button onClick={onSourceAdd} variant="outline">

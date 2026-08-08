@@ -20,9 +20,15 @@ import {
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import { useControlBarVisible } from '../../hooks/useControlBarVisible';
-import { DEFAULT_GRID_SIZE } from '../../hooks/defaultScreen';
+import {
+  DEFAULT_GRID_SIZE,
+  MOBILE_GRID_SIZE,
+  MOBILE_LANDSCAPE_SOURCE_COUNT,
+  MOBILE_SOURCE_COUNT
+} from '../../hooks/defaultScreen';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
+import { useFullscreenZapping } from '../../hooks/useFullscreenZapping';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useViewport } from '../../hooks/useViewport';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
@@ -40,6 +46,7 @@ import {
   getSourceShortcutLabel
 } from '../../utils/sourceShortcut';
 import { uuid } from '../../utils/uuid';
+import { defaultGrid } from '../GridDisplay/initialGrid';
 import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SourceSlider } from '../SelectSource/SourceSlider';
 import {
@@ -90,6 +97,7 @@ export const Monitor = () => {
   const [activeCategory] = useActiveCategory();
   const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenZapping, setFullscreenZapping] = useFullscreenZapping();
   // Coming back from the YouTube login lands on the live view, as a screen of
   // its own; the picker is the only place the connect is launched from, so
   // this is where the return trip ends.
@@ -222,6 +230,48 @@ export const Monitor = () => {
   useEffect(() => {
     if (isMobile) setIsEditing(false);
   }, [isMobile, setIsEditing]);
+
+  /**
+   * A phone doesn't design its own grid — the panel for that is hidden there
+   * — it always shows a fixed count in a single-column Grid: three screens
+   * upright, six on its side, so there is always exactly enough width for
+   * each tile to be worth watching. Kept up to date continuously rather than
+   * only on arrival, so turning the phone over adds or drops tiles on the
+   * spot. YouTube's wall is left alone: its tiles are the live channels, not
+   * this array.
+   */
+  useEffect(() => {
+    if (!isMobile || isYoutubeMode) return;
+    const target = isLandscape
+      ? MOBILE_LANDSCAPE_SOURCE_COUNT
+      : MOBILE_SOURCE_COUNT;
+    if (
+      displayConfig.mode !== DisplayMode.Grid ||
+      displayConfig.grid.size !== MOBILE_GRID_SIZE
+    ) {
+      setDisplayConfig(cfg => ({
+        ...cfg,
+        mode: DisplayMode.Grid,
+        grid: { size: MOBILE_GRID_SIZE }
+      }));
+    }
+    if (selectedSources.length !== target) {
+      setSelectedSources(sources =>
+        sources.length > target
+          ? sources.slice(0, target)
+          : [...sources, ...defaultGrid.slice(sources.length, target)]
+      );
+    }
+  }, [
+    isMobile,
+    isLandscape,
+    isYoutubeMode,
+    displayConfig.mode,
+    displayConfig.grid.size,
+    selectedSources.length,
+    setDisplayConfig,
+    setSelectedSources
+  ]);
 
   /**
    * Going in and out of edit mode. The strip of saved screens is part of the
@@ -539,7 +589,10 @@ export const Monitor = () => {
         />
       </div>
 
-      {activeCategory === 'layouts' && (
+      {/* The grid's arrangement is nothing a phone has a say over — it always
+          shows a fixed count, in a fixed shape — so the panel that configures
+          it has no reason to be there. */}
+      {activeCategory === 'layouts' && !isMobile && (
         <div className="mt-3 flex-none">
           <ScreenOptions
             onSizeChange={handleSizeChange}
@@ -553,6 +606,8 @@ export const Monitor = () => {
             onShare={handleShare}
             mode={displayConfig.mode}
             size={displayConfig.grid.size}
+            fullscreenZapping={fullscreenZapping}
+            onFullscreenZappingChange={setFullscreenZapping}
           />
         </div>
       )}
@@ -609,7 +664,7 @@ export const Monitor = () => {
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
-      {!controlBarVisible && (
+      {!controlBarVisible && !isMobile && (
         <FloatingButton
           onClick={() => setControlBarVisible(true)}
           label="Ver pantallas"
@@ -673,12 +728,17 @@ export const Monitor = () => {
             onSwitch={isYoutubeMode ? undefined : handleSwitch}
             gridColumns={gridColumns}
             onSourceChange={isZappingMode ? handleSourceChange : undefined}
+            onFullscreenSourceChange={
+              fullscreenZapping && !isYoutubeMode ? handleSourceChange : undefined
+            }
           />
         </div>
         {floatingControls}
       </div>
 
-      {controlBarVisible && (
+      {/* The strip of saved screens is nothing a phone can act on — see the
+          layouts panel above — so there is nothing here worth folding out. */}
+      {controlBarVisible && !isMobile && (
         <ControlBar
           className="w-full flex-none"
           onHide={() => setControlBarVisible(false)}

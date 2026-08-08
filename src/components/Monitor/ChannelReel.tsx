@@ -56,6 +56,13 @@ const FLICK_PX = 20;
  */
 const CONTROLS_GUTTER = 'max(15%, 48px)';
 
+/**
+ * How long the compact channel banner (the horizontal, desktop layout) stays
+ * up after a channel change or the last pointer movement, before it fades
+ * away — the way the channel banner of an old set-top box would.
+ */
+const BANNER_HIDE_MS = 3000;
+
 type Props = {
   /** The channel on air, as the screen stores it. */
   node: SourceNode;
@@ -67,6 +74,15 @@ type Props = {
   onSelectSource?: (source: SourceType) => void;
   /** Down the screen on a phone, across it where there is width to spare. */
   orientation?: 'vertical' | 'horizontal';
+  /**
+   * How this reel names its channel to the page outside it (see the Monitor's
+   * blur/refocus handler). 0 when the reel fills the whole screen; the tile's
+   * own index when it is one screen among several, fullscreened in place.
+   */
+  screenIdx?: number;
+  /** Whether the picture is the one filling the screen right now — same as a
+   * fullscreened tile gets outside the reel. */
+  fullscreen?: boolean;
 };
 
 /**
@@ -197,6 +213,98 @@ function Peek({
 }
 
 /**
+ * The desktop layout's banner: one pill docked at the foot of the picture,
+ * naming the channel on air with a hint of what a nudge either way brings up
+ * — instead of a strip of channel art bolted to each side of the screen. It
+ * only earns its keep around a channel change, the way the channel banner of
+ * an old set-top box did: up on a change or a stir of the mouse, gone again
+ * once the screen has been left alone.
+ */
+function ZapBanner({
+  current,
+  previous,
+  next,
+  nowPlaying,
+  visible,
+  onPrev,
+  onNext
+}: {
+  current?: SourceType;
+  previous?: SourceType;
+  next?: SourceType;
+  nowPlaying?: string;
+  visible: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (!current) return null;
+  const logoUrl = current.logoUrl ?? current.imageUrl;
+
+  return (
+    <div
+      className={`absolute inset-x-0 bottom-6 z-20 flex justify-center transition-all duration-300 ease-out ${
+        visible
+          ? 'translate-y-0 opacity-100'
+          : 'pointer-events-none translate-y-3 opacity-0'
+      }`}
+      aria-hidden={!visible}
+    >
+      <div className="flex items-center gap-1 rounded-full bg-black/70 px-2 py-1.5 text-white backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={!previous}
+          aria-label={`Canal anterior${
+            previous ? `: ${previous.name ?? previous.slug}` : ''
+          }`}
+          className="flex flex-none items-center gap-1 rounded-full px-2 py-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <ChevronLeft size={16} aria-hidden />
+          {previous && (
+            <span className="max-w-24 truncate text-xs">{previous.name}</span>
+          )}
+        </button>
+
+        <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
+          <div className="flex h-7 w-7 flex-none items-center justify-center">
+            <SourceImage
+              src={logoUrl}
+              alt=""
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-sm font-semibold">
+              {current.name}
+            </div>
+            {nowPlaying && (
+              <div className="truncate text-[11px] text-gray-300">
+                {nowPlaying}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!next}
+          aria-label={`Canal siguiente${
+            next ? `: ${next.name ?? next.slug}` : ''
+          }`}
+          className="flex flex-none items-center gap-1 rounded-full px-2 py-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          {next && (
+            <span className="max-w-24 truncate text-xs">{next.name}</span>
+          )}
+          <ChevronRight size={16} aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Zapping: one channel on air, the one before and the one after it named above
  * and below, and a whole catalogue behind them to run through.
  *
@@ -213,7 +321,9 @@ function Peek({
 export function ChannelReel({
   node,
   onSelectSource,
-  orientation = 'vertical'
+  orientation = 'vertical',
+  screenIdx = 0,
+  fullscreen = false
 }: Props) {
   const { isEditing } = useTeleContext();
   const [storedCategory, setActiveCategory] = useActiveCategory();
@@ -447,6 +557,39 @@ export function ChannelReel({
   useHotkeys('left', () => stepBand(-1), options, [stepBand]);
   useHotkeys('right', () => stepBand(1), options, [stepBand]);
 
+  // ── Banner (horizontal layout only) ─────────────────────────────────────
+  // The vertical layout keeps its strips docked in the flow, always visible,
+  // so none of this applies there — `showBanner` is only ever reached from a
+  // horizontal reel.
+  const [bannerVisible, setBannerVisible] = useState(true);
+  const bannerHideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const showBanner = useCallback(() => {
+    setBannerVisible(true);
+    if (bannerHideTimer.current) clearTimeout(bannerHideTimer.current);
+    bannerHideTimer.current = setTimeout(
+      () => setBannerVisible(false),
+      BANNER_HIDE_MS
+    );
+  }, []);
+
+  useEffect(() => {
+    if (isVertical) return;
+    showBanner();
+  }, [isVertical, index, showBanner]);
+
+  useEffect(
+    () => () => {
+      if (bannerHideTimer.current) clearTimeout(bannerHideTimer.current);
+    },
+    []
+  );
+
+  const revealBanner = useCallback(() => {
+    if (isVertical) return;
+    showBanner();
+  }, [isVertical, showBanner]);
+
   // ── Drawing ───────────────────────────────────────────────────────────────
 
   const stage = (
@@ -465,7 +608,7 @@ export function ChannelReel({
             key={slug}
             // How a screen names itself to the page outside it; the Monitor
             // reads it back to bounce focus out of embedded players.
-            data-screen-idx={isOnAir ? 0 : undefined}
+            data-screen-idx={isOnAir ? screenIdx : undefined}
             aria-hidden={!isOnAir}
             className={`absolute inset-0 ${
               isOnAir ? 'z-10' : 'z-0 pointer-events-none'
@@ -482,6 +625,7 @@ export function ChannelReel({
               // the channel on air; a neighbour plays its own default.
               activeSignal={isOnAir ? node.activeSignal : undefined}
               muted={!isOnAir || (node.muted ?? true)}
+              fullscreen={isOnAir && fullscreen}
             />
           </div>
         );
@@ -524,27 +668,45 @@ export function ChannelReel({
 
   return (
     <div
-      className={`flex h-full w-full min-h-0 min-w-0 ${
+      className={`relative flex h-full w-full min-h-0 min-w-0 ${
         isVertical ? 'flex-col' : 'flex-row'
       }`}
+      onPointerMove={isVertical ? undefined : revealBanner}
     >
-      <Peek
-        source={previous}
-        towards="previous"
-        orientation={orientation}
-        nowPlaying={nowPlayingLabel(previous)}
-        onClick={() => step(-1)}
-      />
-      {stage}
-      <Peek
-        source={next}
-        towards="next"
-        orientation={orientation}
-        nowPlaying={nowPlayingLabel(next)}
-        onClick={() => step(1)}
-      />
+      {isVertical ? (
+        <>
+          <Peek
+            source={previous}
+            towards="previous"
+            orientation={orientation}
+            nowPlaying={nowPlayingLabel(previous)}
+            onClick={() => step(-1)}
+          />
+          {stage}
+          <Peek
+            source={next}
+            towards="next"
+            orientation={orientation}
+            nowPlaying={nowPlayingLabel(next)}
+            onClick={() => step(1)}
+          />
+        </>
+      ) : (
+        <>
+          {stage}
+          <ZapBanner
+            current={current}
+            previous={previous}
+            next={next}
+            nowPlaying={nowPlayingLabel(current)}
+            visible={bannerVisible}
+            onPrev={() => step(-1)}
+            onNext={() => step(1)}
+          />
+        </>
+      )}
       {/* The band and the place in it, said out loud for anyone who cannot see
-          the strips above and below. */}
+          the banner or the strips above and below. */}
       <span className="sr-only" aria-live="polite">
         {categoryLabels[band]}: {current?.name} ({index + 1} de {sources.length})
       </span>

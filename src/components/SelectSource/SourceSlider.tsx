@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Input } from '../../../components/ui/input';
 import { useTwitchToken } from '../../hooks/useTwitchToken';
+import { useIsMobile } from '../../hooks/useViewport';
 import {
   TWITCH_CLIENT_ID,
   useTwitchFollowedSources
@@ -59,12 +60,12 @@ import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
 import { CategoryTabs } from './CategoryTabs';
 import {
-  categoryOrder,
   normalizeSearch,
   showPruebas,
   sourceMatches,
   useActiveCategory,
-  useOpenCountries
+  useOpenCountries,
+  visibleCategoryOrder
 } from './sourceCategories';
 import { TvCountryGroup } from './tvChannels';
 
@@ -189,8 +190,10 @@ export function SourceSlider({
   showHints = true
 }: Props) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
-  // A stored category can stop existing — `pruebas` outside dev — and the
-  // picker would then show an empty list no button points at.
+  const isMobile = useIsMobile();
+  const categoryOrder = useMemo(() => visibleCategoryOrder(isMobile), [isMobile]);
+  // A stored category can stop existing — `pruebas` outside dev, `layouts` on
+  // a phone — and the picker would then show an empty list no button points at.
   const activeCategory = categoryOrder.includes(storedCategory)
     ? storedCategory
     : 'tv';

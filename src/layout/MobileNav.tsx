@@ -3,8 +3,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 import { CategoryTabs } from '../components/SelectSource/CategoryTabs';
 import {
-  categoryOrder,
-  useActiveCategory
+  useActiveCategory,
+  visibleCategoryOrder
 } from '../components/SelectSource/sourceCategories';
 
 type Props = {
@@ -30,9 +30,10 @@ export function MobileNav({
   children
 }: PropsWithChildren<Props>) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
-  // A stored category can stop existing — `pruebas` outside dev — and no button
-  // in the bar would then be the one lit.
-  const activeCategory = categoryOrder.includes(storedCategory)
+  const categories = visibleCategoryOrder(true);
+  // A stored category can stop existing — `pruebas` outside dev, `layouts` on
+  // a phone — and no button in the bar would then be the one lit.
+  const activeCategory = categories.includes(storedCategory)
     ? storedCategory
     : 'tv';
 
@@ -68,6 +69,7 @@ export function MobileNav({
         <CategoryTabs
           activeCategory={activeCategory}
           onSelect={handleSelect}
+          categories={categories}
           // Sideways the bar has to give some of its height back to the picture.
           size={isLandscape ? 'sidebar' : 'touch'}
           className="min-w-0 flex-1"

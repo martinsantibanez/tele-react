@@ -37,6 +37,15 @@ export const useActiveCategory = () => {
 };
 
 /**
+ * The tabs worth showing. Layouts is where the grid's arrangement gets
+ * picked, which is nothing a phone has any say over — it always shows a
+ * fixed count in a fixed shape — so the tab is dropped there rather than
+ * opening on a panel with nothing a phone can use in it.
+ */
+export const visibleCategoryOrder = (isMobile: boolean): SelectorCategories[] =>
+  isMobile ? categoryOrder.filter(category => category !== 'layouts') : categoryOrder;
+
+/**
  * Countries whose channels are unfolded in the TV list. Only the home country
  * starts open, so the catalogue reads as a short list of countries.
  */

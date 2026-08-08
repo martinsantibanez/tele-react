@@ -6,6 +6,7 @@ import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
+import { ChannelReel } from './ChannelReel';
 import { SourceLogo } from './SourceLogo';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
@@ -24,6 +25,12 @@ type Props = {
   isBeingEdited?: boolean;
   isMarkedForSwap?: boolean;
   fullscreen?: boolean;
+  /**
+   * Hands this tile to the zapping reel while it is fullscreen, so a channel
+   * can be surfed without leaving fullscreen. Only ever set for the one tile
+   * that is currently fullscreened — see the Monitor.
+   */
+  onZapChange?: (source: SourceType) => void;
   idx: number;
 };
 
@@ -38,6 +45,7 @@ export function MonitorSource({
   isBeingEdited,
   isMarkedForSwap,
   fullscreen,
+  onZapChange,
   idx
 }: Props) {
   const { isEditing, swapSourceIdx } = useTeleContext();
@@ -86,13 +94,23 @@ export function MonitorSource({
           className={`w-full h-full ${onSelect ? 'cursor-pointer' : ''}`}
           onPointerDownCapture={onSelect}
         >
-          {!!source && (
-            <SourceOutput
-              source={source}
-              activeSignal={activeSignal}
-              muted={muted}
-              fullscreen={fullscreen}
+          {fullscreen && onZapChange ? (
+            <ChannelReel
+              node={{ sourceSlug, source: storedSource, activeSignal, muted }}
+              onSelectSource={onZapChange}
+              orientation={isMobile ? 'vertical' : 'horizontal'}
+              screenIdx={idx}
+              fullscreen
             />
+          ) : (
+            !!source && (
+              <SourceOutput
+                source={source}
+                activeSignal={activeSignal}
+                muted={muted}
+                fullscreen={fullscreen}
+              />
+            )
           )}
         </div>
         {isMarkedForSwap && (

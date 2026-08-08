@@ -30,6 +30,12 @@ type Props = {
    * zap with, which is what a shared or promoted screen should be.
    */
   onSourceChange?: (source: SourceType) => void;
+  /**
+   * Hands the fullscreened tile to the zapping reel, in Grid and Layout mode:
+   * unlike `onSourceChange`, which puts the whole screen under the reel's
+   * control, this is scoped to whichever one tile is currently fullscreened.
+   */
+  onFullscreenSourceChange?: (source: SourceType) => void;
 };
 
 export function Screen({
@@ -41,7 +47,8 @@ export function Screen({
   swapSourceIdx,
   fullscreenIdx,
   gridColumns,
-  onSourceChange
+  onSourceChange,
+  onFullscreenSourceChange
 }: Props) {
   const isMobile = useIsMobile();
   const { config, sources } = screen;
@@ -99,6 +106,7 @@ export function Screen({
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
+          onFullscreenSourceChange={onFullscreenSourceChange}
         />
       </div>
     );
@@ -122,6 +130,7 @@ export function Screen({
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
+          onFullscreenSourceChange={onFullscreenSourceChange}
         />
       </div>
     );
@@ -136,6 +145,7 @@ export function Screen({
         swapSourceIdx={swapSourceIdx}
         fullscreenIdx={fullscreenIdx}
         onRemove={onRemove}
+        onFullscreenSourceChange={onFullscreenSourceChange}
       />
     );
   return null;

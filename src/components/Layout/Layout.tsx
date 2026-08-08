@@ -1,3 +1,4 @@
+import { SourceType } from '../../sources';
 import { LayoutType, SourceNode } from '../../types/Monitor';
 import { MonitorSource } from '../Monitor/MonitorSource';
 
@@ -11,6 +12,8 @@ type Props = {
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
+  /** Hands the fullscreened tile to the zapping reel — see `MonitorSource`. */
+  onFullscreenSourceChange?: (source: SourceType) => void;
 };
 
 const colSizeClass = {
@@ -52,7 +55,8 @@ export function Layout({
   sources,
   editingSourceIdx,
   swapSourceIdx,
-  fullscreenIdx
+  fullscreenIdx,
+  onFullscreenSourceChange
 }: Props) {
   return (
     <div className="grid h-full w-full grid-cols-12 grid-rows-9">
@@ -74,6 +78,9 @@ export function Layout({
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}
               fullscreen={idx === fullscreenIdx}
+              onZapChange={
+                idx === fullscreenIdx ? onFullscreenSourceChange : undefined
+              }
               muted={node.muted ?? true}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />

@@ -28,6 +28,8 @@ export const defaultScreen: ScreenType = {
  */
 export const MOBILE_GRID_SIZE: GridSize = 1;
 export const MOBILE_SOURCE_COUNT = 3;
+/** A phone on its side has the width for twice as many — the whole default grid. */
+export const MOBILE_LANDSCAPE_SOURCE_COUNT = defaultGrid.length;
 
 export const mobileDisplayConfig: DisplayConfig = {
   mode: DisplayMode.Grid,

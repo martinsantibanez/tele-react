@@ -1,3 +1,4 @@
+import { SourceType } from '../../sources';
 import { SourceNode } from '../../types/Monitor';
 import { MonitorSource } from '../Monitor/MonitorSource';
 
@@ -10,6 +11,8 @@ type Props = {
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
+  /** Hands the fullscreened tile to the zapping reel — see `MonitorSource`. */
+  onFullscreenSourceChange?: (source: SourceType) => void;
 };
 
 export function GridDisplay({
@@ -19,7 +22,8 @@ export function GridDisplay({
   onRemove,
   editingSourceIdx,
   swapSourceIdx,
-  fullscreenIdx
+  fullscreenIdx,
+  onFullscreenSourceChange
 }: Props) {
   return (
     <>
@@ -37,6 +41,7 @@ export function GridDisplay({
           isBeingEdited={idx === editingSourceIdx}
           isMarkedForSwap={idx === swapSourceIdx}
           fullscreen={idx === fullscreenIdx}
+          onZapChange={idx === fullscreenIdx ? onFullscreenSourceChange : undefined}
         />
       ))}
     </>
