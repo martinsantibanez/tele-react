@@ -1,5 +1,4 @@
 'use client';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 import { CategoryTabs } from '../components/SelectSource/CategoryTabs';
 import {
@@ -74,18 +73,6 @@ export function MobileNav({
           size={isLandscape ? 'sidebar' : 'touch'}
           className="min-w-0 flex-1"
         />
-        <button
-          type="button"
-          onClick={() => onOpenChange(!isOpen)}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? 'Ocultar canales' : 'Mostrar canales'}
-          title={isOpen ? 'Ocultar canales' : 'Mostrar canales'}
-          className={`flex w-9 flex-none items-center justify-center rounded-md border border-gray-800 text-gray-300 ${
-            isLandscape ? 'h-8' : 'h-11'
-          }`}
-        >
-          {isOpen ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-        </button>
       </div>
     </div>
   );

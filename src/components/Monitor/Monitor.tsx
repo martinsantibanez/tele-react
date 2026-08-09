@@ -1,13 +1,12 @@
 'use client';
 import axios from 'axios';
 import {
-  ChevronUp,
   Maximize2,
   Minimize2,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Pencil,
   Volume2,
-  VolumeX
+  VolumeX,
+  X
 } from 'lucide-react';
 import {
   PropsWithChildren,
@@ -19,7 +18,6 @@ import {
 } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
-import { useControlBarVisible } from '../../hooks/useControlBarVisible';
 import {
   DEFAULT_GRID_SIZE,
   MOBILE_GRID_SIZE,
@@ -84,13 +82,13 @@ export const Monitor = () => {
   const {
     isEditing,
     setIsEditing,
+    toggleEditting,
     editingSourceIdx,
     setEditingSourceIdx,
     swapSourceIdx,
     setSwapSourceIdx
   } = useTeleContext();
   const { isMobile, isLandscape, isMobileLandscape } = useViewport();
-  const [controlBarVisible, setControlBarVisible] = useControlBarVisible();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
@@ -272,18 +270,6 @@ export const Monitor = () => {
     setDisplayConfig,
     setSelectedSources
   ]);
-
-  /**
-   * Going in and out of edit mode. The strip of saved screens is part of the
-   * same furniture as the picker, so the two travel together: leaving edit mode
-   * puts all of it away and what is left is the picture, entering it brings the
-   * whole of it back. The floating button (and C) is still there to fold the
-   * strip away on its own.
-   */
-  const setEditing = (editing: boolean) => {
-    setIsEditing(editing);
-    setControlBarVisible(editing);
-  };
 
   /**
    * Full screen and back. Going in on the YouTube wall marks the channel that
@@ -492,7 +478,7 @@ export const Monitor = () => {
     };
   }, []);
 
-  useHotkeys('e', () => setEditing(!isEditing), [isEditing]);
+  useHotkeys('e', () => toggleEditting(), [toggleEditting]);
   useHotkeys(
     [
       '1,2,3,4,5,6,7,8,9',
@@ -569,11 +555,6 @@ export const Monitor = () => {
     },
     [displayConfig.mode]
   );
-  useHotkeys('c', () => setControlBarVisible(!controlBarVisible), [
-    controlBarVisible,
-    setControlBarVisible
-  ]);
-
   const picker = (
     <>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -633,10 +614,6 @@ export const Monitor = () => {
             keys="M"
             label={isSelectedMuted ? 'Activar Audio' : 'Silenciar'}
           />
-          <Shortcut
-            keys="C"
-            label={controlBarVisible ? 'Ocultar Pantallas' : 'Ver Pantallas'}
-          />
           {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
             <Shortcut keys="D" label="Quitar" />
           )}
@@ -664,25 +641,15 @@ export const Monitor = () => {
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
-      {!controlBarVisible && !isMobile && (
-        <FloatingButton
-          onClick={() => setControlBarVisible(true)}
-          label="Ver pantallas"
-        >
-          <ChevronUp size={20} />
-        </FloatingButton>
-      )}
-      {/* A tablet gets the desktop layout but has no E key to call the picker
-          back with, so the way in is on the picture too. On a phone the bottom
-          bar is already that door. */}
-      {!isMobile && !isEditing && (
-        <FloatingButton
-          onClick={() => setEditing(true)}
-          label="Ver panel de canales"
-        >
-          <PanelLeftOpen size={20} />
-        </FloatingButton>
-      )}
+      {/* The one door in and out of edit mode: the picker (and, on desktop,
+          the strip of saved screens) travel together behind this button, on
+          a phone as much as on a desktop. */}
+      <FloatingButton
+        onClick={toggleEditting}
+        label={isEditing ? 'Salir de edición' : 'Editar canales'}
+      >
+        {isEditing ? <X size={20} /> : <Pencil size={20} />}
+      </FloatingButton>
     </div>
   );
 
@@ -737,12 +704,10 @@ export const Monitor = () => {
       </div>
 
       {/* The strip of saved screens is nothing a phone can act on — see the
-          layouts panel above — so there is nothing here worth folding out. */}
-      {controlBarVisible && !isMobile && (
-        <ControlBar
-          className="w-full flex-none"
-          onHide={() => setControlBarVisible(false)}
-        />
+          layouts panel above — so there is nothing here worth folding out.
+          It travels with the picker, behind the same edit-mode button. */}
+      {isEditing && !isMobile && (
+        <ControlBar className="w-full flex-none" />
       )}
     </div>
   );
@@ -779,20 +744,6 @@ export const Monitor = () => {
     <div className="flex h-screen overflow-hidden">
       {isEditing && (
         <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
-          {/* Its own way out, for the tablets that have no keyboard to press E
-              on. Part of the column rather than laid over it, so it doesn't
-              cover the tabs it sits above nor scroll away with them. */}
-          <div className="mb-1 flex flex-none justify-end">
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              aria-label="Ocultar panel de canales"
-              title="Ocultar panel (E)"
-              className="rounded-md p-1.5 text-gray-400 opacity-70 hover:bg-gray-800 hover:text-white hover:opacity-100"
-            >
-              <PanelLeftClose size={16} />
-            </button>
-          </div>
           {picker}
         </div>
       )}
