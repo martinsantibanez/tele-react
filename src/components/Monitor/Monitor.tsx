@@ -21,6 +21,7 @@ import { useTeleContext } from '../../context/TeleContext';
 import {
   DEFAULT_GRID_SIZE,
   MOBILE_GRID_SIZE,
+  MOBILE_LANDSCAPE_GRID_COLUMNS,
   MOBILE_LANDSCAPE_SOURCE_COUNT,
   MOBILE_SOURCE_COUNT
 } from '../../hooks/defaultScreen';
@@ -169,16 +170,16 @@ export const Monitor = () => {
 
   /**
    * How wide the grid is laid out. Its own setting, except on a phone held
-   * sideways: a column of channels down a screen 400px tall leaves them postage
-   * stamps, while the same grid on its side — rows for columns — fills the
-   * width the phone has plenty of. The saved screen is untouched; turning the
-   * phone back stands it up again.
+   * sideways: a single column of tiles down a screen 400px tall leaves them
+   * postage stamps, while three across and two down fills the width the phone
+   * has plenty of. Fixed rather than derived from the tile count — a phone's
+   * count is itself fixed (see the enforcement effect below) — so this is
+   * simply the shape that count is arranged in on its side.
    */
   const gridColumns = useMemo(() => {
-    const columns = displayConfig.grid.size;
-    if (!isMobileLandscape || !isGrid) return columns;
-    return Math.ceil((activeSources?.length ?? 0) / columns) || 1;
-  }, [isMobileLandscape, isGrid, displayConfig.grid.size, activeSources]);
+    if (isMobileLandscape && isGrid) return MOBILE_LANDSCAPE_GRID_COLUMNS;
+    return displayConfig.grid.size;
+  }, [isMobileLandscape, isGrid, displayConfig.grid.size]);
 
   /**
    * The shape of the monitor. A television is 16:9 and the layouts are drawn to
@@ -563,9 +564,7 @@ export const Monitor = () => {
           selectedSourceSlug={selectedSourceSlug}
           activeSignal={selectedSignal}
           onSelectSignal={handleSignalChange}
-          // The phone's tabs live in the bar the sheet folds out of, and its
-          // keyboard hints have no keyboard to speak of.
-          showCategories={!isMobile}
+          // A phone has no keyboard for the hints to speak of.
           showHints={!isMobile}
         />
       </div>
@@ -730,13 +729,7 @@ export const Monitor = () => {
           {monitorColumn}
         </div>
 
-        <MobileNav
-          isOpen={isEditing}
-          onOpenChange={setIsEditing}
-          isLandscape={isLandscape}
-        >
-          {!isLandscape && picker}
-        </MobileNav>
+        <MobileNav isOpen={isEditing}>{!isLandscape && picker}</MobileNav>
       </div>
     );
 

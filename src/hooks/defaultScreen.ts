@@ -30,6 +30,8 @@ export const MOBILE_GRID_SIZE: GridSize = 1;
 export const MOBILE_SOURCE_COUNT = 3;
 /** A phone on its side has the width for twice as many — the whole default grid. */
 export const MOBILE_LANDSCAPE_SOURCE_COUNT = defaultGrid.length;
+/** Three across, two down — the six landscape tiles as a square-ish block. */
+export const MOBILE_LANDSCAPE_GRID_COLUMNS = 3;
 
 export const mobileDisplayConfig: DisplayConfig = {
   mode: DisplayMode.Grid,

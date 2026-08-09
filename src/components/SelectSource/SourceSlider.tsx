@@ -172,12 +172,7 @@ type Props = {
   /** Signal the edited screen is playing; owned by the grid, not the source. */
   activeSignal?: string;
   onSelectSignal?: (key: string) => void;
-  /**
-   * On a phone the tabs are the app's bottom bar and stay put while the picker
-   * folds away above them, so the picker doesn't carry its own copy — and the
-   * keyboard hints mean nothing to a thumb.
-   */
-  showCategories?: boolean;
+  /** A phone has no keyboard for the hints to speak of. */
   showHints?: boolean;
 };
 
@@ -186,7 +181,6 @@ export function SourceSlider({
   selectedSourceSlug,
   activeSignal,
   onSelectSignal,
-  showCategories = true,
   showHints = true
 }: Props) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
@@ -1050,12 +1044,7 @@ export function SourceSlider({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
-      {showCategories && (
-        <CategoryTabs
-          activeCategory={activeCategory}
-          onSelect={setActiveCategory}
-        />
-      )}
+      <CategoryTabs activeCategory={activeCategory} onSelect={setActiveCategory} />
       {showHints && (
         <div className="text-[9px] leading-none text-gray-400 text-center">
           ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
