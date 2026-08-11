@@ -129,6 +129,49 @@ function usePreloadBudget() {
 }
 
 /**
+ * A channel's mark, its name and what it is showing right now.
+ *
+ * The one way the reel names a channel, so the strips either side of the
+ * picture and the one under it cannot end up describing the same programme
+ * differently — and so they line up, which is the whole reason the strip below
+ * reads as being about the picture above it.
+ */
+function ChannelLabel({
+  source,
+  nowPlaying,
+  /** Mark over name, for the tall narrow strips a horizontal reel has room for. */
+  stacked = false
+}: {
+  source: SourceType;
+  nowPlaying?: string;
+  stacked?: boolean;
+}) {
+  return (
+    <>
+      <div
+        className={`flex items-center justify-center ${
+          stacked ? 'h-16 w-full' : 'h-11 w-11 flex-none'
+        }`}
+      >
+        {/* No fallback: the name is already spelled out below, and a channel
+            without a mark saying its name twice reads as a mistake. */}
+        <SourceImage
+          src={source.logoUrl ?? source.imageUrl}
+          alt={source.name ?? ''}
+          className="max-h-full max-w-full object-contain"
+        />
+      </div>
+      <div className={`min-w-0 ${stacked ? 'w-full' : 'flex-1'}`}>
+        <div className="truncate text-sm font-semibold">{source.name}</div>
+        {nowPlaying && (
+          <div className="truncate text-xs text-gray-400">{nowPlaying}</div>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
  * The channel above or below the one on air: its mark, its name, and what it is
  * showing. Enough to decide whether to keep going without having to go and look.
  */
@@ -167,8 +210,6 @@ function Peek({
       />
     );
 
-  const logoUrl = source.logoUrl ?? source.imageUrl;
-
   return (
     <button
       type="button"
@@ -187,27 +228,11 @@ function Peek({
         aria-hidden
         className="flex-none text-gray-500 transition-colors group-hover:text-white"
       />
-      <div
-        className={`flex items-center justify-center ${
-          isVertical ? 'h-11 w-11 flex-none' : 'h-16 w-full'
-        }`}
-      >
-        {/* No fallback: the name is already spelled out below, and a channel
-            without a mark saying its name twice reads as a mistake. */}
-        <SourceImage
-          src={logoUrl}
-          alt={source.name ?? ''}
-          className="max-h-full max-w-full object-contain"
-        />
-      </div>
-      <div
-        className={`min-w-0 ${isVertical ? 'flex-1' : 'w-full'}`}
-      >
-        <div className="truncate text-sm font-semibold">{source.name}</div>
-        {nowPlaying && (
-          <div className="truncate text-xs text-gray-400">{nowPlaying}</div>
-        )}
-      </div>
+      <ChannelLabel
+        source={source}
+        nowPlaying={nowPlaying}
+        stacked={!isVertical}
+      />
     </button>
   );
 }
@@ -305,8 +330,45 @@ function ZapBanner({
 }
 
 /**
- * Zapping: one channel on air, the one before and the one after it named above
- * and below, and a whole catalogue behind them to run through.
+ * The channel on air, named under the picture: the vertical layout's answer to
+ * the banner above.
+ *
+ * The peeks name the two channels either side of it, which left the one
+ * actually playing as the only thing on screen saying nothing about itself —
+ * and on a phone, where the picker is folded away into a sheet, nothing named
+ * it at all.
+ *
+ * Docked in the flow and staying there, rather than laid over the picture and
+ * fading the way the banner does. A desktop can afford to hide it because a
+ * stir of the mouse brings it back; a phone has no pointer to stir, and the
+ * only gesture left over the picture belongs to the player underneath it.
+ */
+function OnAir({
+  source,
+  nowPlaying
+}: {
+  source?: SourceType;
+  nowPlaying?: string;
+}) {
+  // Holds its height when there is nothing in it, so the picture does not
+  // resize under whoever is watching while a channel works out what it shows.
+  if (!source) return <div className="h-16 flex-none" aria-hidden />;
+
+  return (
+    <div className="flex h-16 flex-none items-center gap-3 overflow-hidden border-t border-gray-800 bg-gray-900/60 px-3">
+      {/* Lines the mark up with the peeks' above and below, which spend their
+          first column on a chevron. */}
+      <div className="w-[18px] flex-none" aria-hidden />
+      <ChannelLabel source={source} nowPlaying={nowPlaying} />
+    </div>
+  );
+}
+
+/**
+ * Zapping: one channel on air with its name and its programme always on show —
+ * under the picture down a phone, in the banner across a desktop — the one
+ * before and the one after it named above and below, and a whole catalogue
+ * behind them to run through.
  *
  * What is being walked is the picker's active tab — the band — so the channels
  * are the ones the user is already browsing, and switching bands is switching
@@ -683,6 +745,7 @@ export function ChannelReel({
             onClick={() => step(-1)}
           />
           {stage}
+          <OnAir source={current} nowPlaying={nowPlayingLabel(current)} />
           <Peek
             source={next}
             towards="next"
