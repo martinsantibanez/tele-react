@@ -63,7 +63,6 @@ export function Screen({
           sourceSlug={node.sourceSlug}
           storedSource={node.source}
           activeSignal={node.activeSignal}
-          muted={node.muted ?? true}
         />
       );
     return (

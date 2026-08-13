@@ -34,12 +34,7 @@ import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeLoginScreen } from '../../hooks/useYoutubeLoginScreen';
 import { MobileNav } from '../../layout/MobileNav';
 import { embeddedSource, SourceType } from '../../sources';
-import {
-  DisplayMode,
-  GridSize,
-  ScreenType,
-  SourceNode
-} from '../../types/Monitor';
+import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
 import {
   getIndexFromKeyEvent,
   getSourceShortcutLabel
@@ -87,7 +82,9 @@ export const Monitor = () => {
     editingSourceIdx,
     setEditingSourceIdx,
     swapSourceIdx,
-    setSwapSourceIdx
+    setSwapSourceIdx,
+    isMuted,
+    toggleMute
   } = useTeleContext();
   const { isMobile, isLandscape, isMobileLandscape } = useViewport();
   const [selectedSources, setSelectedSources] = useSavedGrid();
@@ -109,11 +106,9 @@ export const Monitor = () => {
   const { nodes: youtubeNodes } = useYoutubeGridSources({
     frozen: isYoutubeMode && isFullscreen
   });
-  // Which YouTube channel keeps its audio, and which one is selected (all muted
-  // by default). Both are held by slug rather than by tile number: a channel
-  // going off air moves every tile after it along, and the sound and the
-  // selection belong to the channel, not to the place it happened to sit in.
-  const [youtubeSoloSlug, setYoutubeSoloSlug] = useState<string | undefined>();
+  // Which YouTube channel is selected — held by slug rather than by tile
+  // number: a channel going off air moves every tile after it along, and the
+  // selection belongs to the channel, not to the place it happened to sit in.
   const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<
     string | undefined
   >();
@@ -127,8 +122,6 @@ export const Monitor = () => {
     [youtubeNodes]
   );
 
-  const youtubeSoloIdx = youtubeIdxOf(youtubeSoloSlug);
-
   // Keeps the selection pointed at the channel it was made on as the list
   // moves under it — so G still fullscreens what was picked.
   const youtubeFocusIdx = youtubeIdxOf(youtubeFocusSlug);
@@ -137,18 +130,9 @@ export const Monitor = () => {
     setEditingSourceIdx(youtubeFocusIdx);
   }, [isYoutubeMode, youtubeFocusIdx, setEditingSourceIdx]);
 
-  // In the dynamic YouTube layout the tiles are the live channels, not the
-  // saved grid, and audio-solo is tracked locally instead of per saved node.
-  const youtubeSources = useMemo<SourceNode[]>(
-    () =>
-      youtubeNodes.map((node, idx) => ({
-        ...node,
-        muted: idx !== youtubeSoloIdx
-      })),
-    [youtubeNodes, youtubeSoloIdx]
-  );
-
-  const activeSources = isYoutubeMode ? youtubeSources : selectedSources;
+  // In the dynamic YouTube layout the tiles are the live channels rather than
+  // the saved grid.
+  const activeSources = isYoutubeMode ? youtubeNodes : selectedSources;
 
   // Each node carries its own source, so the screen is complete on its own —
   // it can be promoted, saved or shared without anything travelling beside it.
@@ -207,7 +191,7 @@ export const Monitor = () => {
   );
 
   const visibleScreenCount = isYoutubeMode
-    ? youtubeSources.length
+    ? youtubeNodes.length
     : isZappingMode
       ? 1
       : displayConfig.mode === DisplayMode.Layout
@@ -367,36 +351,6 @@ export const Monitor = () => {
     });
   };
 
-  const handleToggleMute = (idx: number) => {
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      return sources.map((src, index) =>
-        index === idx ? { ...src, muted: !(src.muted ?? true) } : src
-      );
-    });
-  };
-
-  // Solo: only the given screen keeps its audio, everything else is muted.
-  const handleSoloAudio = (idx: number) => {
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      return sources.map((src, index) => ({ ...src, muted: index !== idx }));
-    });
-  };
-
-  const isSelectedMuted = isYoutubeMode
-    ? youtubeSoloIdx !== editingSourceIdx
-    : (selectedSources?.[editingSourceIdx]?.muted ?? true);
-
-  const toggleSelectedMute = () => {
-    if (isYoutubeMode) {
-      const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
-      setYoutubeSoloSlug(current => (current === slug ? undefined : slug));
-      return;
-    }
-    handleToggleMute(editingSourceIdx);
-  };
-
   // Picking a screen to edit points the sidebar at what it is playing: its
   // category's tab, scrolled to the channel.
   const revealScreenSource = (idx: number) =>
@@ -409,22 +363,20 @@ export const Monitor = () => {
 
   /**
    * Picking a screen — by its number key, or by putting a finger on it. The
-   * screen becomes the one being edited, it takes the sound off whichever had
-   * it, and the sidebar follows it to the channel it is playing. While a swap
-   * is marked the sound stays put: that pick is the other half of the trade.
+   * screen becomes the one being edited, which is also what takes the sound
+   * off whichever had it — audio follows the selection, app-wide — and the
+   * sidebar follows it to the channel it is playing.
    */
   const selectScreen = (idx: number) => {
     if (idx < 0 || idx >= visibleScreenCount) return;
-    // The YouTube grid is auto-managed: picking a tile selects it (so G can
-    // fullscreen it) and solos its audio; there is no per-tile source editing.
+    // The YouTube grid is auto-managed: picking a tile selects it, so G can
+    // fullscreen it; there is no per-tile source editing.
     if (isYoutubeMode) {
       setEditingSourceIdx(idx);
       setYoutubeFocusSlug(youtubeNodes[idx]?.sourceSlug);
-      setYoutubeSoloSlug(youtubeNodes[idx]?.sourceSlug);
       return;
     }
     setEditingSourceIdx(idx);
-    if (swapSourceIdx === undefined) handleSoloAudio(idx);
     revealScreenSource(idx);
   };
 
@@ -445,8 +397,8 @@ export const Monitor = () => {
     setSelectedSources(sources => {
       if (!sources) return sources;
       const newSources = [...sources];
-      newSources[left] = { ...sources[right], muted: sources[left].muted };
-      newSources[right] = { ...sources[left], muted: sources[right].muted };
+      newSources[left] = sources[right];
+      newSources[right] = sources[left];
       return newSources;
     });
   };
@@ -532,14 +484,7 @@ export const Monitor = () => {
     },
     [isFullscreen]
   );
-  useHotkeys(
-    'm',
-    () => {
-      if (swapSourceIdx !== undefined) return;
-      toggleSelectedMute();
-    },
-    [editingSourceIdx, swapSourceIdx, isYoutubeMode, youtubeNodes]
-  );
+  useHotkeys('m', () => toggleMute(), [toggleMute]);
   useHotkeys(
     'd',
     () => {
@@ -609,10 +554,7 @@ export const Monitor = () => {
               isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
             }
           />
-          <Shortcut
-            keys="M"
-            label={isSelectedMuted ? 'Activar Audio' : 'Silenciar'}
-          />
+          <Shortcut keys="M" label={isMuted ? 'Activar Audio' : 'Silenciar'} />
           {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
             <Shortcut keys="D" label="Quitar" />
           )}
@@ -627,10 +569,10 @@ export const Monitor = () => {
   const floatingControls = (
     <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
       <FloatingButton
-        onClick={toggleSelectedMute}
-        label={isSelectedMuted ? 'Activar el audio' : 'Silenciar'}
+        onClick={toggleMute}
+        label={isMuted ? 'Activar el audio' : 'Silenciar'}
       >
-        {isSelectedMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </FloatingButton>
       <FloatingButton
         onClick={toggleFullscreen}

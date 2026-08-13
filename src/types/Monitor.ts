@@ -12,7 +12,6 @@ export type SourceNode = {
    */
   source?: SourceType;
   uuid?: string;
-  muted?: boolean;
   activeSignal?: string;
 };
 

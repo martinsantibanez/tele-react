@@ -17,7 +17,6 @@ type Props = {
   /** The node's own copy of the source, for anything outside the built-ins. */
   storedSource?: SourceType;
   activeSignal?: string;
-  muted?: boolean;
   /** Clicking the picture picks the screen, as its number key would. */
   onSelect?: () => void;
   onChangeClick?: () => void;
@@ -38,7 +37,6 @@ export function MonitorSource({
   sourceSlug,
   storedSource,
   activeSignal,
-  muted = true,
   onSelect,
   onChangeClick,
   onRemove,
@@ -48,7 +46,12 @@ export function MonitorSource({
   onZapChange,
   idx
 }: Props) {
-  const { isEditing, swapSourceIdx } = useTeleContext();
+  const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
+    useTeleContext();
+  // Audio is the app's: whichever screen is selected is the one that plays,
+  // and only while the app itself is unmuted. Nothing about it is stored on
+  // the tile.
+  const muted = isMuted || idx !== editingSourceIdx;
   const isMobile = useIsMobile();
   const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
   const resolveSource = useResolveSource();
@@ -66,7 +69,7 @@ export function MonitorSource({
   //       mode: DisplayMode.Grid,
   //       layout: {}
   //     },
-  //     sources: [{ sourceSlug, uuid: uuid(), muted: false }]
+  //     sources: [{ sourceSlug, uuid: uuid() }]
   //   });
   // };
 
@@ -96,7 +99,7 @@ export function MonitorSource({
         >
           {fullscreen && onZapChange ? (
             <ChannelReel
-              node={{ sourceSlug, source: storedSource, activeSignal, muted }}
+              node={{ sourceSlug, source: storedSource, activeSignal }}
               onSelectSource={onZapChange}
               orientation={isMobile ? 'vertical' : 'horizontal'}
               screenIdx={idx}

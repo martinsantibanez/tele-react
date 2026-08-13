@@ -33,7 +33,6 @@ export function GridDisplay({
           sourceSlug={node.sourceSlug}
           storedSource={node.source}
           activeSignal={node.activeSignal}
-          muted={node.muted ?? true}
           key={`${node.uuid}`}
           onSelect={() => onSelect?.(idx)}
           onChangeClick={() => (onEdit ? onEdit(idx) : undefined)}

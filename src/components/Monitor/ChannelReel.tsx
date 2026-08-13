@@ -387,7 +387,7 @@ export function ChannelReel({
   screenIdx = 0,
   fullscreen = false
 }: Props) {
-  const { isEditing } = useTeleContext();
+  const { isEditing, editingSourceIdx, isMuted } = useTeleContext();
   const [storedCategory, setActiveCategory] = useActiveCategory();
   const bands = useAllCategorySources();
   const stocked = useStockedCategories();
@@ -686,7 +686,10 @@ export function ChannelReel({
               // The signal is the screen's choice, and the screen only holds
               // the channel on air; a neighbour plays its own default.
               activeSignal={isOnAir ? node.activeSignal : undefined}
-              muted={!isOnAir || (node.muted ?? true)}
+              // Only the channel on air can be heard, and only when the reel
+              // is the selected screen and the app is not muted — the
+              // neighbours are preloaded, not playing to anyone.
+              muted={!isOnAir || isMuted || screenIdx !== editingSourceIdx}
               fullscreen={isOnAir && fullscreen}
             />
           </div>

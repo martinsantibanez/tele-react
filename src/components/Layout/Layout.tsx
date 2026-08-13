@@ -81,7 +81,6 @@ export function Layout({
               onZapChange={
                 idx === fullscreenIdx ? onFullscreenSourceChange : undefined
               }
-              muted={node.muted ?? true}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />
           </div>
