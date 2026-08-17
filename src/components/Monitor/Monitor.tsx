@@ -34,6 +34,7 @@ import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeLoginScreen } from '../../hooks/useYoutubeLoginScreen';
 import { MobileNav } from '../../layout/MobileNav';
 import { embeddedSource, SourceType } from '../../sources';
+import { PLACEHOLDER_SOURCE_SLUG } from '../../sources/placeholder';
 import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
 import {
   getIndexFromKeyEvent,
@@ -49,6 +50,7 @@ import {
 } from '../SelectSource/sourceCategories';
 import { ControlBar } from './ControlBar';
 import { OnSwitchCb } from './MonitorSource';
+import { fitSourcesToLayout } from './predefinedLayouts';
 import { Screen } from './Screen';
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
@@ -94,21 +96,14 @@ export const Monitor = () => {
   const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenZapping, setFullscreenZapping] = useFullscreenZapping();
-  // Coming back from the YouTube login lands on the live view, as a screen of
-  // its own; the picker is the only place the connect is launched from, so
-  // this is where the return trip ends.
   useYoutubeLoginScreen();
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
-  // Watching one stream fullscreen holds the wall still: the five-minute poll
-  // keeps running, but a channel joining or leaving it doesn't get to reshuffle
-  // what is on screen while someone is looking at it.
+
   const { nodes: youtubeNodes } = useYoutubeGridSources({
     frozen: isYoutubeMode && isFullscreen
   });
-  // Which YouTube channel is selected — held by slug rather than by tile
-  // number: a channel going off air moves every tile after it along, and the
-  // selection belongs to the channel, not to the place it happened to sit in.
+
   const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<
     string | undefined
   >();
@@ -122,20 +117,14 @@ export const Monitor = () => {
     [youtubeNodes]
   );
 
-  // Keeps the selection pointed at the channel it was made on as the list
-  // moves under it — so G still fullscreens what was picked.
   const youtubeFocusIdx = youtubeIdxOf(youtubeFocusSlug);
   useEffect(() => {
     if (!isYoutubeMode || youtubeFocusIdx === undefined) return;
     setEditingSourceIdx(youtubeFocusIdx);
   }, [isYoutubeMode, youtubeFocusIdx, setEditingSourceIdx]);
 
-  // In the dynamic YouTube layout the tiles are the live channels rather than
-  // the saved grid.
   const activeSources = isYoutubeMode ? youtubeNodes : selectedSources;
 
-  // Each node carries its own source, so the screen is complete on its own —
-  // it can be promoted, saved or shared without anything travelling beside it.
   const screen: ScreenType = useMemo(
     () => ({
       config: displayConfig,
@@ -147,31 +136,14 @@ export const Monitor = () => {
   const fullscreenIdx = isFullscreen ? editingSourceIdx : undefined;
 
   const isGrid = displayConfig.mode === DisplayMode.Grid;
-  // The reel is not a picture inside a frame: the strips naming the channel
-  // above and below are part of it, so it takes the whole of the space rather
-  // than a 16:9 box within it.
+
   const isZappingMode = displayConfig.mode === DisplayMode.Zapping;
 
-  /**
-   * How wide the grid is laid out. Its own setting, except on a phone held
-   * sideways: a single column of tiles down a screen 400px tall leaves them
-   * postage stamps, while three across and two down fills the width the phone
-   * has plenty of. Fixed rather than derived from the tile count — a phone's
-   * count is itself fixed (see the enforcement effect below) — so this is
-   * simply the shape that count is arranged in on its side.
-   */
   const gridColumns = useMemo(() => {
     if (isMobileLandscape && isGrid) return MOBILE_LANDSCAPE_GRID_COLUMNS;
     return displayConfig.grid.size;
   }, [isMobileLandscape, isGrid, displayConfig.grid.size]);
 
-  /**
-   * The shape of the monitor. A television is 16:9 and the layouts are drawn to
-   * fill one, so that is what it stays — except for a grid on a phone, which is
-   * measured by its tiles instead: one channel per row down a tall screen wants
-   * a tall monitor, and squeezing three of them into a 16:9 box would leave
-   * three slivers with black on either side.
-   */
   const monitorRatio = useMemo(() => {
     if (!isMobile || !isGrid) return 16 / 9;
     const rows = Math.ceil((activeSources?.length ?? 0) / gridColumns) || 1;
@@ -183,8 +155,6 @@ export const Monitor = () => {
     [editingSourceIdx, selectedSources]
   );
 
-  // The signal lives on the grid node, so it is the screen being edited that
-  // says which one the picker is showing.
   const selectedSignal = useMemo(
     () => selectedSources[editingSourceIdx]?.activeSignal,
     [editingSourceIdx, selectedSources]
@@ -198,31 +168,15 @@ export const Monitor = () => {
         ? displayConfig.layout.length
         : (selectedSources?.length ?? 0);
 
-  // A screen is always selected (the first one to begin with), so when the
-  // tile it pointed at is gone — removed, layout change, fewer live channels —
-  // the selection walks back to the last one that still exists.
   useEffect(() => {
     if (!visibleScreenCount) return;
     setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
   }, [visibleScreenCount, setEditingSourceIdx]);
 
-  // On a phone the picker is a sheet over the bottom bar rather than a column
-  // beside the monitor, and it opening on arrival would leave half a screen of
-  // television. `isEditing` is what the sheet is folded out by, so arriving on
-  // a hand-held folds it away — the bar itself stays.
   useEffect(() => {
     if (isMobile) setIsEditing(false);
   }, [isMobile, setIsEditing]);
 
-  /**
-   * A phone doesn't design its own grid — the panel for that is hidden there
-   * — it always shows a fixed count in a single-column Grid: three screens
-   * upright, six on its side, so there is always exactly enough width for
-   * each tile to be worth watching. Kept up to date continuously rather than
-   * only on arrival, so turning the phone over adds or drops tiles on the
-   * spot. YouTube's wall is left alone: its tiles are the live channels, not
-   * this array.
-   */
   useEffect(() => {
     if (!isMobile || isYoutubeMode) return;
     const target = isLandscape
@@ -256,12 +210,20 @@ export const Monitor = () => {
     setSelectedSources
   ]);
 
-  /**
-   * Full screen and back. Going in on the YouTube wall marks the channel that
-   * is being watched, so that on the way out — when the list is let go and
-   * catches up with the poll — the selection lands back on it wherever it has
-   * since moved to, rather than on whatever now sits in that tile.
-   */
+  useEffect(() => {
+    if (isMobile || displayConfig.mode !== DisplayMode.Layout) return;
+    if (selectedSources.length === displayConfig.layout.length) return;
+    setSelectedSources(sources =>
+      fitSourcesToLayout(sources, displayConfig.layout)
+    );
+  }, [
+    isMobile,
+    displayConfig.mode,
+    displayConfig.layout,
+    selectedSources.length,
+    setSelectedSources
+  ]);
+
   const toggleFullscreen = () => {
     if (isYoutubeMode && !isFullscreen) {
       const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
@@ -300,14 +262,13 @@ export const Monitor = () => {
     setSelectedSources(sources => [
       ...(sources || []),
       {
-        sourceSlug: 'Barras',
+        sourceSlug: PLACEHOLDER_SOURCE_SLUG,
         uuid: uuid()
       }
     ]);
   };
 
-  // The grid always keeps one screen, so there is something to select.
-  const canRemoveScreen = (selectedSources?.length ?? 0) > 1;
+  const canRemoveScreen = isGrid && (selectedSources?.length ?? 0) > 1;
 
   const handleSourceRemove = (idx: number) => {
     if (!canRemoveScreen) return;
@@ -351,8 +312,6 @@ export const Monitor = () => {
     });
   };
 
-  // Picking a screen to edit points the sidebar at what it is playing: its
-  // category's tab, scrolled to the channel.
   const revealScreenSource = (idx: number) =>
     revealSource(selectedSources[idx]?.sourceSlug);
 
@@ -361,16 +320,8 @@ export const Monitor = () => {
     revealScreenSource(newIdx);
   };
 
-  /**
-   * Picking a screen — by its number key, or by putting a finger on it. The
-   * screen becomes the one being edited, which is also what takes the sound
-   * off whichever had it — audio follows the selection, app-wide — and the
-   * sidebar follows it to the channel it is playing.
-   */
   const selectScreen = (idx: number) => {
     if (idx < 0 || idx >= visibleScreenCount) return;
-    // The YouTube grid is auto-managed: picking a tile selects it, so G can
-    // fullscreen it; there is no per-tile source editing.
     if (isYoutubeMode) {
       setEditingSourceIdx(idx);
       setYoutubeFocusSlug(youtubeNodes[idx]?.sourceSlug);
@@ -380,8 +331,6 @@ export const Monitor = () => {
     revealScreenSource(idx);
   };
 
-  // The <iframe> handler below fires from an event listener bound once, so it
-  // reads the current pick through a ref rather than closing over a stale one.
   const selectScreenRef = useRef(selectScreen);
   selectScreenRef.current = selectScreen;
 
@@ -403,22 +352,14 @@ export const Monitor = () => {
     });
   };
 
-  // Keyboard shortcuts listen on `document`, but embedded players (YouTube,
-  // Twitch...) live inside <iframe>s that swallow keystrokes once they grab
-  // focus — on click, and especially when a source fills the screen. Bounce
-  // focus back to the page so the shortcuts keep working.
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
-    // The window `blur` fires *while* the browser is still handing focus to
-    // the iframe, so blurring from inside the handler is undone as soon as it
-    // returns. Waiting a tick lets the transfer finish before we take it back.
+
     const refocus = () => {
       timer = setTimeout(() => {
         const active = document.activeElement;
         if (!(active instanceof HTMLIFrameElement)) return;
-        // A frame only takes the focus when it is clicked, and that click is
-        // the one its screen never sees — so this is also how a tap on an
-        // embedded player reaches the tile it landed on.
+
         const tile = active.closest<HTMLElement>('[data-screen-idx]');
         if (tile) selectScreenRef.current(Number(tile.dataset.screenIdx));
         active.blur();
@@ -509,14 +450,10 @@ export const Monitor = () => {
           selectedSourceSlug={selectedSourceSlug}
           activeSignal={selectedSignal}
           onSelectSignal={handleSignalChange}
-          // A phone has no keyboard for the hints to speak of.
           showHints={!isMobile}
         />
       </div>
 
-      {/* The grid's arrangement is nothing a phone has a say over — it always
-          shows a fixed count, in a fixed shape — so the panel that configures
-          it has no reason to be there. */}
       {activeCategory === 'layouts' && !isMobile && (
         <div className="mt-3 flex-none">
           <ScreenOptions
@@ -582,9 +519,6 @@ export const Monitor = () => {
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
-      {/* The one door in and out of edit mode: the picker (and, on desktop,
-          the strip of saved screens) travel together behind this button, on
-          a phone as much as on a desktop. */}
       <FloatingButton
         onClick={toggleEditting}
         label={isEditing ? 'Salir de edición' : 'Editar canales'}
@@ -594,18 +528,12 @@ export const Monitor = () => {
     </div>
   );
 
-  // What is on air, with the strip of screens under it.
   const monitorColumn = (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      {/* The bar below takes the height it needs, so the screen is measured
-          against what is left rather than against the whole column. */}
       <div
         className="relative flex min-h-0 min-w-0 flex-1 flex-col justify-center"
         style={{ containerType: 'size' }}
       >
-        {/* min-h-0: as a flex item its automatic minimum size is the content's
-            min-content height, which is taller than the 16:9 box and would
-            stretch the screen over the bar below. */}
         <div
           className={
             isZappingMode
@@ -625,11 +553,7 @@ export const Monitor = () => {
             screen={screen}
             onSelect={selectScreen}
             onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-            onRemove={
-              isYoutubeMode || isZappingMode || !canRemoveScreen
-                ? undefined
-                : handleSourceRemove
-            }
+            onRemove={canRemoveScreen ? handleSourceRemove : undefined}
             editingSourceIdx={editingSourceIdx}
             swapSourceIdx={swapSourceIdx}
             fullscreenIdx={fullscreenIdx}
@@ -637,32 +561,23 @@ export const Monitor = () => {
             gridColumns={gridColumns}
             onSourceChange={isZappingMode ? handleSourceChange : undefined}
             onFullscreenSourceChange={
-              fullscreenZapping && !isYoutubeMode ? handleSourceChange : undefined
+              fullscreenZapping && !isYoutubeMode
+                ? handleSourceChange
+                : undefined
             }
           />
         </div>
         {floatingControls}
       </div>
 
-      {/* The strip of saved screens is nothing a phone can act on — see the
-          layouts panel above — so there is nothing here worth folding out.
-          It travels with the picker, behind the same edit-mode button. */}
-      {isEditing && !isMobile && (
-        <ControlBar className="w-full flex-none" />
-      )}
+      {isEditing && !isMobile && <ControlBar className="w-full flex-none" />}
     </div>
   );
 
   if (isMobile)
     return (
-      // `dvh` rather than `vh`: on a phone the address bar is part of the
-      // viewport height right until it slides away, and `vh` would leave the
-      // bottom bar underneath it.
       <div className="flex h-[100dvh] flex-col overflow-hidden">
         <div className="flex min-h-0 min-w-0 flex-1 flex-row">
-          {/* Sideways there is width to spare and no height at all, so the
-              picker stands beside the monitor instead of folding out under it —
-              a sheet would leave a strip of television above it. */}
           {isLandscape && isEditing && (
             <div className="flex h-full w-[300px] max-w-[45%] flex-none flex-col overflow-y-auto border-r border-gray-800 p-2">
               {picker}

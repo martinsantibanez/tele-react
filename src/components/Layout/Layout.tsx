@@ -63,9 +63,7 @@ export function Layout({
       {layout.map((col, idx) => {
         const colClass = col.cols ? colSizeClass[col.cols] : undefined;
         const rowClass = col.rows ? rowSizeClass[col.rows] : undefined;
-        // const rowClass = 'auto-rows-2'
-        const node = sources[idx];
-        if (!node) return null;
+        const node = sources[idx] ?? {};
         return (
           <div className={`${colClass ?? ''} ${rowClass ?? ''}`} key={idx}>
             <MonitorSource
