@@ -30,6 +30,18 @@ const TARGET_HEIGHT = 1080;
  */
 const MAX_UPSCALE = 4;
 
+/**
+ * How far behind the live edge a stream may drift before it is pulled forward.
+ * Loose enough that ordinary buffering doesn't count as being behind.
+ */
+const LIVE_EDGE_TOLERANCE = 15;
+
+/**
+ * Minimum gap between two snaps. A seek that doesn't take — the player was
+ * still loading, the edge moved — must not turn into a stream of them.
+ */
+const SNAP_COOLDOWN = 8000;
+
 /** Tile size measured off the DOM; null until the first measurement lands. */
 type Box = { width: number; height: number };
 
@@ -89,6 +101,18 @@ export function YoutubeSource({
     );
   }, []);
 
+  /**
+   * The player only starts reporting back — where it is, how far the stream
+   * reaches — once it has been asked to. Commands need no such invitation,
+   * which is why nothing before this needed it.
+   */
+  const listen = useCallback(() => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }),
+      '*'
+    );
+  }, []);
+
   // Track the tile, since the same source is a ninth of the wall one moment
   // and the whole screen the next.
   useEffect(() => {
@@ -108,6 +132,77 @@ export function YoutubeSource({
     return () => observer.disconnect();
   }, []);
 
+  /**
+   * Live streams keep a DVR window, and an embed addressed by video id opens
+   * at the *start* of that window rather than at the live edge — a channel
+   * that went live this morning comes up showing this morning. (The
+   * `live_stream?channel=` form doesn't have the problem, but a channel with
+   * two streams on air can't be addressed that way, so every tile is a video
+   * id.) There is no URL parameter for "start at the edge": the only way is to
+   * let the player load and then seek it forward.
+   *
+   * `progressState` is what makes that possible — it carries the seekable
+   * range, so the edge is known rather than guessed. Two guards keep the seek
+   * from landing where it shouldn't:
+   *
+   *  - It waits to see the end of the range move before touching anything. A
+   *    recording's range is fixed; only a live one grows in real time. So a
+   *    video-on-demand tile is never dragged to its own ending.
+   *  - Fullscreen gets the initial correction and nothing more. The player's
+   *    controls are the viewer's there, and someone who has rewound on purpose
+   *    should not be hauled back to the present a moment later.
+   */
+  useEffect(() => {
+    let live = false;
+    let previousEnd: number | null = null;
+    let lastSnap = 0;
+    let snapped = false;
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      if (typeof event.data !== 'string') return;
+      let data: {
+        event?: string;
+        info?: { progressState?: { current?: number; seekableEnd?: number } };
+      };
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      if (data.event !== 'infoDelivery') return;
+      const { current, seekableEnd } = data.info?.progressState ?? {};
+      if (typeof current !== 'number' || typeof seekableEnd !== 'number')
+        return;
+
+      if (previousEnd !== null && seekableEnd > previousEnd + 0.1) live = true;
+      previousEnd = seekableEnd;
+      if (!live) return;
+      if (interactive && snapped) return;
+      if (seekableEnd - current <= LIVE_EDGE_TOLERANCE) return;
+
+      const now = Date.now();
+      if (now - lastSnap < SNAP_COOLDOWN) return;
+      lastSnap = now;
+      snapped = true;
+      // A hair short of the edge: asking for the very last frame lands the
+      // player in the buffering it would have to do to get there anyway.
+      post('seekTo', [seekableEnd - 1, true]);
+      post('playVideo');
+    };
+
+    window.addEventListener('message', onMessage);
+    // The frame having loaded doesn't mean the player inside it is ready, so
+    // the invitation is repeated a few times rather than sent once.
+    const timers = [0, 300, 1000, 2500].map(delay => setTimeout(listen, delay));
+    return () => {
+      window.removeEventListener('message', onMessage);
+      timers.forEach(clearTimeout);
+    };
+    // Keyed on the source: a new stream in this tile is a new player, and
+    // everything learned about the last one is void.
+  }, [src, interactive, listen, post]);
+
   useEffect(() => {
     const func = muted ? 'mute' : 'unMute';
     // The player may not accept commands until it has finished loading, so we
@@ -120,6 +215,7 @@ export function YoutubeSource({
   }, [muted, post]);
 
   const handleLoad = () => {
+    listen();
     post(muted ? 'mute' : 'unMute');
     // Best effort only: current players treat quality as their own call and
     // ignore this. Kept because it costs one message and still lands on the
