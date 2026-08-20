@@ -12,7 +12,7 @@ type Props = {
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
-  /** Hands the fullscreened tile to the zapping reel — see `MonitorSource`. */
+  /** Lets a tile be zapped with once fullscreened — see `MonitorSource`. */
   onFullscreenSourceChange?: (source: SourceType) => void;
 };
 
@@ -76,9 +76,7 @@ export function Layout({
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}
               fullscreen={idx === fullscreenIdx}
-              onZapChange={
-                idx === fullscreenIdx ? onFullscreenSourceChange : undefined
-              }
+              onZapChange={onFullscreenSourceChange}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />
           </div>

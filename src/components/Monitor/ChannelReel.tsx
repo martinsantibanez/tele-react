@@ -13,6 +13,7 @@ import {
   useStockedCategories
 } from '../../hooks/useCategorySources';
 import { useNowPlayingLabel } from '../../hooks/useNowPlayingLabel';
+import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useMediaQuery } from '../../hooks/useViewport';
 import { useZappingBand, useZappingCursor } from '../../hooks/useZappingCursor';
 import { SourceType } from '../../sources';
@@ -68,8 +69,9 @@ type Props = {
   node: SourceNode;
   /**
    * Puts a channel on air. Absent on a screen nobody owns — a shared link, the
-   * promoted screen — where the reel is a picture of one channel rather than
-   * something to zap with.
+   * promoted screen — and on a tile that is not being zapped with, where the
+   * reel is a picture of one channel rather than something to zap with. It is
+   * what makes the reel *active*; see below.
    */
   onSelectSource?: (source: SourceType) => void;
   /** Down the screen on a phone, across it where there is width to spare. */
@@ -387,6 +389,19 @@ export function ChannelReel({
   screenIdx = 0,
   fullscreen = false
 }: Props) {
+  /**
+   * Whether this reel is the one being zapped with.
+   *
+   * A tile on the wall keeps a reel around its picture even when nobody is
+   * zapping it, because the alternative is to grow one the moment it is
+   * fullscreened — and swapping the player for a reel tears the <iframe> out
+   * of the page and builds a new one, which reloads the stream at exactly the
+   * moment the viewer asked to see it bigger. Inert, the reel walks nothing:
+   * no band, no neighbours, no chrome, no keys, and no memory of where a
+   * catalogue was left. It holds the one channel the screen holds, and waits.
+   */
+  const active = !!onSelectSource;
+
   const { isEditing, editingSourceIdx, isMuted } = useTeleContext();
   const [storedCategory, setActiveCategory] = useActiveCategory();
   const bands = useAllCategorySources();
@@ -394,11 +409,22 @@ export function ChannelReel({
   const [cursors, setCursor] = useZappingCursor();
   const [lastBand, setLastBand] = useZappingBand();
   const nowPlayingLabel = useNowPlayingLabel();
-  const preload = usePreloadBudget();
+  // Neighbours are worth pulling only for the reel actually being zapped
+  // with: a wall of inert reels preloading two extra streams apiece would be
+  // a wall pulling three times the video it shows.
+  const budget = usePreloadBudget();
+  const preload = active ? budget : 0;
   // A thumb, rather than a touchscreen that happens to be there: a laptop with
   // one still points at things with a mouse, and keeps its clicks.
   const isTouch = useMediaQuery('(pointer: coarse)');
-  const swipeable = !!onSelectSource && isTouch;
+  const swipeable = active && isTouch;
+
+  const resolveSource = useResolveSource();
+  /** The channel the screen holds, as it stands — the inert reel's whole show. */
+  const ownSource = useMemo(
+    () => resolveSource(node.sourceSlug, node.source),
+    [resolveSource, node.sourceSlug, node.source]
+  );
 
   /**
    * The catalogue being walked. The picker's tab, whenever that tab is a
@@ -417,8 +443,8 @@ export function ChannelReel({
   const sources = useMemo(() => bands[band] ?? [], [bands, band]);
 
   useEffect(() => {
-    if (sources.length) setLastBand(band);
-  }, [band, sources.length, setLastBand]);
+    if (active && sources.length) setLastBand(band);
+  }, [active, band, sources.length, setLastBand]);
 
   const indexBySlug = useMemo(
     () => new Map(sources.map((source, idx) => [source.slug, idx])),
@@ -451,24 +477,27 @@ export function ChannelReel({
     selectRef.current?.(source);
   }, []);
 
-  // Switching bands is what brings this about: the screen is still holding a
-  // channel from the catalogue just left, so the band's remembered one goes on
-  // air. Guarded on the on-air channel being foreign to the band, which stops
-  // being true the moment this has done its job.
+  // Switching bands is what brings this about, and so is a reel waking up on a
+  // tile that holds a channel from another catalogue: either way the screen is
+  // left holding something foreign to the band, so the band's remembered
+  // channel goes on air. Guarded on exactly that, which stops being true the
+  // moment this has done its job.
   useEffect(() => {
-    if (!selectRef.current || onAirIndex >= 0) return;
+    if (!active || onAirIndex >= 0) return;
     const target = sources[Math.max(rememberedIndex, 0)];
-    if (target) selectRef.current(target);
-  }, [onAirIndex, rememberedIndex, sources]);
+    if (target) selectRef.current?.(target);
+  }, [active, onAirIndex, rememberedIndex, sources]);
 
   // Wherever the channel on air came from — a swipe, a key, or the picker
   // pointing the screen at it from outside the reel — that is where this band
   // was left. Recorded here rather than in `select` so the memory cannot drift
   // away from the screen when something else does the pointing.
   useEffect(() => {
-    if (onAirIndex < 0) return;
+    // An inert reel is not walking the band, so it has nothing to say about
+    // where the band was left — and a wall of them would each be saying it.
+    if (!active || onAirIndex < 0) return;
     setCursor(band, sources[onAirIndex].slug);
-  }, [onAirIndex, sources, band, setCursor]);
+  }, [active, onAirIndex, sources, band, setCursor]);
 
   const step = useCallback(
     (delta: number) => {
@@ -636,9 +665,9 @@ export function ChannelReel({
   }, []);
 
   useEffect(() => {
-    if (isVertical) return;
+    if (isVertical || !active) return;
     showBanner();
-  }, [isVertical, index, showBanner]);
+  }, [isVertical, active, index, showBanner]);
 
   useEffect(
     () => () => {
@@ -648,22 +677,49 @@ export function ChannelReel({
   );
 
   const revealBanner = useCallback(() => {
-    if (isVertical) return;
+    if (isVertical || !active) return;
     showBanner();
-  }, [isVertical, showBanner]);
+  }, [isVertical, active, showBanner]);
+
+  /**
+   * What is on the stage and where each one sits, relative to the picture.
+   *
+   * Zapping, that is the window of players around the cursor. Inert, it is the
+   * single channel the screen holds — whatever catalogue it came from, or
+   * none: a tile showing a custom source, or one from a band nobody is
+   * standing in, must still show itself rather than whatever the reel would
+   * have walked to.
+   *
+   * Keyed by the source's own slug in both cases, which is what carries the
+   * player across the moment the reel wakes up: same key, same <iframe>, no
+   * reload.
+   */
+  const stageEntries = useMemo(() => {
+    if (!active)
+      return ownSource
+        ? [{ slug: ownSource.slug, source: ownSource, offset: 0, isOnAir: true }]
+        : [];
+    return mounted.flatMap(slug => {
+      const at = indexBySlug.get(slug);
+      if (at === undefined) return [];
+      return [
+        {
+          slug,
+          source: sources[at],
+          // Parked well clear of the stage when it is neither on air nor next
+          // in line: still running, still buffered, simply not in the way.
+          offset: Math.max(-PARKED, Math.min(PARKED, at - index)),
+          isOnAir: at === index
+        }
+      ];
+    });
+  }, [active, ownSource, mounted, indexBySlug, sources, index]);
 
   // ── Drawing ───────────────────────────────────────────────────────────────
 
   const stage = (
     <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-black">
-      {mounted.map(slug => {
-        const at = indexBySlug.get(slug);
-        if (at === undefined) return null;
-        const source = sources[at];
-        const isOnAir = at === index;
-        // Parked well clear of the stage when it is neither on air nor next in
-        // line: still running, still buffered, simply not in the way.
-        const offset = Math.max(-PARKED, Math.min(PARKED, at - index));
+      {stageEntries.map(({ slug, source, offset, isOnAir }) => {
         const shift = `${offset * 100}%`;
         return (
           <div
@@ -721,7 +777,9 @@ export function ChannelReel({
     </div>
   );
 
-  if (!sources.length)
+  // Only while it is being walked: an inert reel with nothing in the band is
+  // still showing its own channel perfectly well.
+  if (active && !sources.length)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-6 text-center text-gray-400">
         <span>No hay canales en {categoryLabels[band]}</span>
@@ -738,44 +796,59 @@ export function ChannelReel({
       }`}
       onPointerMove={isVertical ? undefined : revealBanner}
     >
+      {/* Everything around the picture belongs to the reel being zapped with.
+          Inert, the stage is the whole of it — and the slots stay where they
+          are rather than disappearing, so waking up adds strips around the
+          picture instead of rebuilding the picture itself. */}
       {isVertical ? (
         <>
-          <Peek
-            source={previous}
-            towards="previous"
-            orientation={orientation}
-            nowPlaying={nowPlayingLabel(previous)}
-            onClick={() => step(-1)}
-          />
+          {active && (
+            <Peek
+              source={previous}
+              towards="previous"
+              orientation={orientation}
+              nowPlaying={nowPlayingLabel(previous)}
+              onClick={() => step(-1)}
+            />
+          )}
           {stage}
-          <OnAir source={current} nowPlaying={nowPlayingLabel(current)} />
-          <Peek
-            source={next}
-            towards="next"
-            orientation={orientation}
-            nowPlaying={nowPlayingLabel(next)}
-            onClick={() => step(1)}
-          />
+          {active && (
+            <OnAir source={current} nowPlaying={nowPlayingLabel(current)} />
+          )}
+          {active && (
+            <Peek
+              source={next}
+              towards="next"
+              orientation={orientation}
+              nowPlaying={nowPlayingLabel(next)}
+              onClick={() => step(1)}
+            />
+          )}
         </>
       ) : (
         <>
           {stage}
-          <ZapBanner
-            current={current}
-            previous={previous}
-            next={next}
-            nowPlaying={nowPlayingLabel(current)}
-            visible={bannerVisible}
-            onPrev={() => step(-1)}
-            onNext={() => step(1)}
-          />
+          {active && (
+            <ZapBanner
+              current={current}
+              previous={previous}
+              next={next}
+              nowPlaying={nowPlayingLabel(current)}
+              visible={bannerVisible}
+              onPrev={() => step(-1)}
+              onNext={() => step(1)}
+            />
+          )}
         </>
       )}
       {/* The band and the place in it, said out loud for anyone who cannot see
           the banner or the strips above and below. */}
-      <span className="sr-only" aria-live="polite">
-        {categoryLabels[band]}: {current?.name} ({index + 1} de {sources.length})
-      </span>
+      {active && (
+        <span className="sr-only" aria-live="polite">
+          {categoryLabels[band]}: {current?.name} ({index + 1} de{' '}
+          {sources.length})
+        </span>
+      )}
     </div>
   );
 }

@@ -25,9 +25,11 @@ type Props = {
   isMarkedForSwap?: boolean;
   fullscreen?: boolean;
   /**
-   * Hands this tile to the zapping reel while it is fullscreen, so a channel
-   * can be surfed without leaving fullscreen. Only ever set for the one tile
-   * that is currently fullscreened — see the Monitor.
+   * Puts a channel on this tile, for the zapping reel to surf with while the
+   * tile is fullscreen. Set on every tile whenever the feature is on, not only
+   * on the fullscreened one: the reel is what the tile draws its picture with
+   * from then on, and it only starts *zapping* once the tile fills the screen.
+   * See the Monitor.
    */
   onZapChange?: (source: SourceType) => void;
   idx: number;
@@ -97,13 +99,19 @@ export function MonitorSource({
           className={`w-full h-full ${onSelect ? 'cursor-pointer' : ''}`}
           onPointerDownCapture={onSelect}
         >
-          {fullscreen && onZapChange ? (
+          {/* With zapping on, the reel draws the picture whether or not
+              anyone is zapping with it. Growing one only on the way into
+              fullscreen would swap the player out for a reel — a new
+              <iframe>, and the stream reloading at the very moment the viewer
+              asked to see it bigger. Mounted all along, fullscreen only wakes
+              it up. */}
+          {onZapChange ? (
             <ChannelReel
               node={{ sourceSlug, source: storedSource, activeSignal }}
-              onSelectSource={onZapChange}
+              onSelectSource={fullscreen ? onZapChange : undefined}
               orientation={isMobile ? 'vertical' : 'horizontal'}
               screenIdx={idx}
-              fullscreen
+              fullscreen={fullscreen}
             />
           ) : (
             !!source && (
