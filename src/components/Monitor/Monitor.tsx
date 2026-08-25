@@ -4,6 +4,7 @@ import {
   Maximize2,
   Minimize2,
   Pencil,
+  Plus,
   Volume2,
   VolumeX,
   X
@@ -505,6 +506,11 @@ export const Monitor = () => {
 
   const floatingControls = (
     <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
+      {isGrid && !isMobile && !isFullscreen && (
+        <FloatingButton onClick={handleSourceAdd} label="Agregar pantalla">
+          <Plus size={20} />
+        </FloatingButton>
+      )}
       <FloatingButton
         onClick={toggleMute}
         label={isMuted ? 'Activar el audio' : 'Silenciar'}
