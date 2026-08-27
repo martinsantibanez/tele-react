@@ -95,8 +95,13 @@ export function MonitorSource({
             and lets the press carry on, so a player's controls still answer to
             it; the frames that keep their clicks to themselves are caught by
             the focus they steal instead (see the Monitor). */}
+        {/* `isolate`, so the tile's own marks stay on top of it. The reel
+            layers the channel on air over its parked neighbours, and neither
+            it nor its stage is positioned with a z-index of its own — without
+            a stacking context here that ordering escapes into the tile's, and
+            the picture paints over the overlays below. */}
         <div
-          className={`w-full h-full ${onSelect ? 'cursor-pointer' : ''}`}
+          className={`isolate w-full h-full ${onSelect ? 'cursor-pointer' : ''}`}
           onPointerDownCapture={onSelect}
         >
           {/* With zapping on, the reel draws the picture whether or not
