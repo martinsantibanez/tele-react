@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import {
+  tvRetiredPresetNames,
   tvZappingPresetScreens,
   zappingPresetScreens
 } from '../components/GridDisplay/zappingPresetScreens';
@@ -22,6 +23,13 @@ import { useZappingLoginToken } from './useZappingConfig';
  * rewritten.
  */
 const PRESET_SCREENS_VERSION = 1;
+
+/**
+ * The TV's own count, so a change to its set replays the seeding on the boxes
+ * alone instead of over every desktop and phone that was set up as well. 2
+ * takes `Vista general` off the TVs that were seeded with it.
+ */
+const TV_PRESET_SCREENS_VERSION = 2;
 
 const SEEDED_VERSION_KEY = '_zapping_preset_screens_';
 
@@ -68,8 +76,10 @@ export function useZappingPresetScreens() {
 
   useEffect(() => {
     if (!loginToken) return;
-    if (seededVersion >= PRESET_SCREENS_VERSION) return;
-    setSeededVersion(PRESET_SCREENS_VERSION);
+    const isTv = isTvDevice();
+    const version = isTv ? TV_PRESET_SCREENS_VERSION : PRESET_SCREENS_VERSION;
+    if (seededVersion >= version) return;
+    setSeededVersion(version);
 
     const bySlug = new Map(sourcesRef.current.map(src => [src.slug, src]));
     // Seeding from the bundled snapshot is safe: the node only carries a copy,
@@ -85,9 +95,15 @@ export function useZappingPresetScreens() {
       }
     });
 
-    const presets = isTvDevice() ? tvZappingPresetScreens : zappingPresetScreens;
+    const presets = isTv ? tvZappingPresetScreens : zappingPresetScreens;
     const before = savedScreensRef.current;
-    const kept = before.filter(entry => !isStarterScreen(entry.screen));
+    // A preset the TV has retired goes the way of the starters: the box was
+    // only ever holding it because the seeding put it there.
+    const kept = before.filter(
+      entry =>
+        !isStarterScreen(entry.screen) &&
+        !(isTv && tvRetiredPresetNames.includes(entry.name))
+    );
     const isNew = !before.some(entry => entry.name === presets[0].name);
 
     const next = [...kept];

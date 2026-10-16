@@ -76,6 +76,7 @@ export function Layout({
               isBeingEdited={idx === editingSourceIdx}
               isMarkedForSwap={idx === swapSourceIdx}
               fullscreen={idx === fullscreenIdx}
+              covered={fullscreenIdx !== undefined && idx !== fullscreenIdx}
               onZapChange={onFullscreenSourceChange}
               onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />

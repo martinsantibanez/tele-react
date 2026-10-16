@@ -179,8 +179,21 @@ export const zappingPresetScreens: SavedScreen[] = [
 ];
 
 /**
+ * Presets a TV no longer gets, by name. `Vista general` is sixteen 720p streams
+ * at once, and a box that already drops frames decoding two has no hope with
+ * sixteen — a wall that stutters in every tile is no overview of anything.
+ *
+ * Named here rather than just left out of the set below because the seeding
+ * upserts by name and never deletes: a box that was set up before would keep
+ * the screen forever. The seeding takes these off it (see
+ * `useZappingPresetScreens`).
+ */
+export const tvRetiredPresetNames = ['Vista general'];
+
+/**
  * The TV's set: two news channels side by side first, since a TV box plays one
- * or two streams smoothly, then the rest as everywhere else.
+ * or two streams smoothly, then the rest as everywhere else, short of the
+ * retired ones above.
  */
 export const tvZappingPresetScreens: SavedScreen[] = [
   {
@@ -205,5 +218,7 @@ export const tvZappingPresetScreens: SavedScreen[] = [
       ]
     }
   },
-  ...zappingPresetScreens
+  ...zappingPresetScreens.filter(
+    preset => !tvRetiredPresetNames.includes(preset.name)
+  )
 ];

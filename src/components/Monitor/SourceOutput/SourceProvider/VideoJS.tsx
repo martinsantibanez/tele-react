@@ -7,16 +7,28 @@ import 'video.js/dist/video-js.css';
 type Props = {
   src: string;
   muted?: boolean;
+  /**
+   * Holds the player still: no decoding, no keeping it running. Lifting it
+   * picks the stream back up at the live edge rather than where it stopped.
+   */
+  paused?: boolean;
 };
 let hlsQualitySelectorRegistered = false;
 
 const STALL_TIMEOUT_MS = 12000;
 const WATCHDOG_INTERVAL_MS = 3000;
 
-const VideoPlayer = ({ src, muted = true }: Props) => {
+const VideoPlayer = ({ src, muted = true, paused = false }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<any>(undefined);
   const currentSrcRef = useRef<string>(src);
+  // Read by the handlers below, which are set up once with the player: held,
+  // everything that keeps the stream running has to stand down, or the first
+  // pause would be undone by the very `pause` event it fires.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+  // Undoes the hold, once the player is there to undo it on.
+  const resumeRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,7 +49,8 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
     const videoJsOptions: videojs.PlayerOptions = {
       preload: 'auto',
-      autoplay: 'any',
+      // Held from the start, it waits for the hold to lift before playing.
+      autoplay: paused ? false : 'any',
       techOrder: ['html5'],
       controls: true,
       muted,
@@ -70,7 +83,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
 
     // Keep the stream running: resume on any pause, and reload it if it stalls.
     const resume = () => {
-      if (p.isDisposed() || !p.paused()) return;
+      if (p.isDisposed() || !p.paused() || pausedRef.current) return;
       const liveTracker = p.liveTracker;
       if (liveTracker?.isLive() && liveTracker.atLiveEdge?.() === false) {
         liveTracker.seekToLiveEdge();
@@ -80,7 +93,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     };
 
     const reload = () => {
-      if (p.isDisposed()) return;
+      if (p.isDisposed() || pausedRef.current) return;
       p.src([
         { src: currentSrcRef.current, type: 'application/vnd.apple.mpegurl' }
       ]);
@@ -88,6 +101,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
       resume();
     };
 
+    resumeRef.current = resume;
     p.on('pause', resume);
     p.on('ended', reload);
     p.on('error', reload);
@@ -95,7 +109,7 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
     let lastTime = 0;
     let lastProgressAt = Date.now();
     const watchdog = window.setInterval(() => {
-      if (p.isDisposed()) return;
+      if (p.isDisposed() || pausedRef.current) return;
       const time = p.currentTime();
       if (time !== lastTime) {
         lastTime = time;
@@ -143,10 +157,20 @@ const VideoPlayer = ({ src, muted = true }: Props) => {
   }, [muted]);
 
   useEffect(() => {
+    const player = playerRef.current;
+    if (!player || player.isDisposed()) return;
+    // Resuming goes through the same path a stray pause does, which is what
+    // takes it back to the live edge: a live stream picked up where it was
+    // left would be showing the news from however long ago it was covered.
+    if (paused) player.pause();
+    else resumeRef.current();
+  }, [paused]);
+
+  useEffect(() => {
     if (muted) return;
     const unlock = () => {
       const player = playerRef.current;
-      if (!player || player.isDisposed()) return;
+      if (!player || player.isDisposed() || pausedRef.current) return;
       player.muted(false);
       const playPromise = player.play();
       if (playPromise?.catch) playPromise.catch(() => {});

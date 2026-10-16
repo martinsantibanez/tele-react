@@ -33,6 +33,12 @@ type Props = {
    * where there is nothing left to pick and their own controls are useful.
    */
   fullscreen?: boolean;
+  /**
+   * Holds the picture still without tearing the player down, for a tile
+   * nobody can see. Only the video.js players answer to it: they are the ones
+   * decoding in this page, while an embed decodes inside its own frame.
+   */
+  paused?: boolean;
 };
 
 /** The one input the screen asked for, mirror included. */
@@ -40,18 +46,20 @@ function SignalOutput({
   signal,
   source,
   muted,
-  fullscreen
+  fullscreen,
+  paused
 }: {
   signal: Signal;
   source: SourceType;
   muted: boolean;
   fullscreen: boolean;
+  paused: boolean;
 }) {
   const { type, input } = signal;
   if (type === 'iframe' && input.iframeSrc) {
     return <IframeOutput src={input.iframeSrc} />;
   } else if (type === 'm3u8' && input.m3u8Url && typeof window !== 'undefined') {
-    return <VideoPlayer src={input.m3u8Url} muted={muted} />;
+    return <VideoPlayer src={input.m3u8Url} muted={muted} paused={paused} />;
   } else if (type === 'youtube' && input.youtubeVideoId) {
     return (
       <YoutubeSource
@@ -89,7 +97,8 @@ export function SourceOutput({
   source,
   activeSignal,
   muted = true,
-  fullscreen = false
+  fullscreen = false,
+  paused = false
 }: Props) {
   // A key that no longer resolves — a mirror the feed dropped — falls through
   // to the default chain rather than leaving the tile blank.
@@ -101,6 +110,7 @@ export function SourceOutput({
         source={source}
         muted={muted}
         fullscreen={fullscreen}
+        paused={paused}
       />
     );
   }
@@ -119,7 +129,7 @@ export function SourceOutput({
     const Component = source.component;
     return <Component />;
   } else if (source.m3u8Url && typeof window !== 'undefined') {
-    return <VideoPlayer src={source.m3u8Url} muted={muted} />;
+    return <VideoPlayer src={source.m3u8Url} muted={muted} paused={paused} />;
   } else if (source.youtubeVideoId) {
     return (
       <YoutubeSource
@@ -133,7 +143,13 @@ export function SourceOutput({
   } else if (source.twitchAccount) {
     return <TwitchSource channel={source.twitchAccount} muted={muted} />;
   } else if (source.zappingChannel) {
-    return <ZappingSource channelId={source.zappingChannel} muted={muted} />;
+    return (
+      <ZappingSource
+        channelId={source.zappingChannel}
+        muted={muted}
+        paused={paused}
+      />
+    );
   } else if (source.spotifyUri) {
     return (
       <SpotifySource

@@ -25,6 +25,8 @@ type Props = {
   isBeingEdited?: boolean;
   isMarkedForSwap?: boolean;
   fullscreen?: boolean;
+  /** Whether another tile is filling the screen, with this one behind it. */
+  covered?: boolean;
   /**
    * Puts a channel on this tile, for the zapping reel to surf with while the
    * tile is fullscreen. Set on every tile whenever the feature is on, not only
@@ -46,6 +48,7 @@ export function MonitorSource({
   isBeingEdited,
   isMarkedForSwap,
   fullscreen,
+  covered,
   onZapChange,
   idx
 }: Props) {
@@ -58,6 +61,14 @@ export function MonitorSource({
   const isMobile = useIsMobile();
   // Seen from across the room, a 2px border is not there at all.
   const isTv = useIsTv();
+  // Behind a fullscreened tile, on a TV, the picture holds still. Nobody can
+  // see it, and a box with a couple of hardware decoders cannot spare one for
+  // a stream nobody sees — it is the one on air that goes without. Paused
+  // rather than unmounted, so leaving fullscreen finds the player already
+  // there and only has to catch up with the live edge, not load from nothing.
+  // Elsewhere there is decoding to spare, and a tile that keeps running is
+  // one that is already current the moment it is back in view.
+  const paused = isTv && !!covered;
   // Out of the picker the selected tile is the one that sounds, and its border
   // says so; muted, nothing would mark which tile the arrows are on.
   const showFocus =
@@ -127,6 +138,7 @@ export function MonitorSource({
               orientation={isMobile ? 'vertical' : 'horizontal'}
               screenIdx={idx}
               fullscreen={fullscreen}
+              paused={paused}
             />
           ) : (
             !!source && (
@@ -135,6 +147,7 @@ export function MonitorSource({
                 activeSignal={activeSignal}
                 muted={muted}
                 fullscreen={fullscreen}
+                paused={paused}
               />
             )
           )}

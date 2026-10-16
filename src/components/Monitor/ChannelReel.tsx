@@ -13,6 +13,7 @@ import {
   useStockedCategories
 } from '../../hooks/useCategorySources';
 import { useNowPlayingLabel } from '../../hooks/useNowPlayingLabel';
+import { useIsTv } from '../../hooks/useIsTv';
 import { useKeyNames } from '../../hooks/useRemoteKeys';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useMediaQuery } from '../../hooks/useViewport';
@@ -32,6 +33,17 @@ const PRELOAD = 1;
  * ceiling is low.
  */
 const MAX_MOUNTED = 6;
+
+/**
+ * The TV's ceiling: the one on air and nothing else. A TV box has a couple of
+ * hardware decoders and two gigabytes to share with the whole system, and a
+ * player parked off-screen is not idle there — it keeps decoding, and it keeps
+ * a decoder the channel on air then has to go without (measured on a DECO
+ * ENTEL box: the parked one had decoded thousands of frames, the one on air
+ * none). Zapping waits for every channel to load on arrival instead, which is
+ * the price of the one that is showing actually playing.
+ */
+const TV_MAX_MOUNTED = 1;
 
 /** How far a player nobody is near gets parked, in stage-lengths. */
 const PARKED = 2;
@@ -86,6 +98,9 @@ type Props = {
   /** Whether the picture is the one filling the screen right now — same as a
    * fullscreened tile gets outside the reel. */
   fullscreen?: boolean;
+  /** Holds the picture still, for a tile hidden behind another (see the
+   * MonitorSource). */
+  paused?: boolean;
 };
 
 /**
@@ -95,6 +110,9 @@ type Props = {
  */
 function usePreloadBudget() {
   const [budget, setBudget] = useState(PRELOAD);
+  // On a TV the neighbours are not a head start but a second and third stream
+  // fighting the one on air for the box's decoders (see `TV_MAX_MOUNTED`).
+  const isTv = useIsTv();
 
   useEffect(() => {
     const connection = (
@@ -128,7 +146,7 @@ function usePreloadBudget() {
     };
   }, []);
 
-  return budget;
+  return isTv ? 0 : budget;
 }
 
 /**
@@ -388,7 +406,8 @@ export function ChannelReel({
   onSelectSource,
   orientation = 'vertical',
   screenIdx = 0,
-  fullscreen = false
+  fullscreen = false,
+  paused = false
 }: Props) {
   /**
    * Whether this reel is the one being zapped with.
@@ -415,6 +434,7 @@ export function ChannelReel({
   // a wall pulling three times the video it shows.
   const budget = usePreloadBudget();
   const preload = active ? budget : 0;
+  const maxMounted = useIsTv() ? TV_MAX_MOUNTED : MAX_MOUNTED;
   // A thumb, rather than a touchscreen that happens to be there: a laptop with
   // one still points at things with a mouse, and keeps its clicks.
   const isTouch = useMediaQuery('(pointer: coarse)');
@@ -548,7 +568,7 @@ export function ChannelReel({
       const live = current.filter(slug => indexBySlug.has(slug));
       const missing = windowSlugs.filter(slug => !live.includes(slug));
       const merged = missing.length ? [...live, ...missing] : live;
-      const excess = merged.length - MAX_MOUNTED;
+      const excess = merged.length - maxMounted;
       if (excess <= 0)
         return merged.length === current.length &&
           merged.every((slug, i) => slug === current[i])
@@ -559,7 +579,7 @@ export function ChannelReel({
       const evicted = new Set(spare.slice(0, excess));
       return merged.filter(slug => !evicted.has(slug));
     });
-  }, [windowSlugs, indexBySlug]);
+  }, [windowSlugs, indexBySlug, maxMounted]);
 
   // ── Swiping ───────────────────────────────────────────────────────────────
   // Along the reel walks the channels and drags the picture with the thumb;
@@ -764,6 +784,7 @@ export function ChannelReel({
               // neighbours are preloaded, not playing to anyone.
               muted={!isOnAir || isMuted || screenIdx !== editingSourceIdx}
               fullscreen={isOnAir && fullscreen}
+              paused={paused}
             />
           </div>
         );
