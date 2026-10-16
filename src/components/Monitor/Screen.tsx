@@ -95,7 +95,7 @@ export function Screen({
     const rows = Math.ceil(count / cols);
     return (
       <div
-        className="grid h-full w-full"
+        className="relative grid h-full w-full"
         style={{
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`
@@ -119,7 +119,7 @@ export function Screen({
     const rows = Math.ceil(shown.length / cols) || 1;
     return (
       <div
-        className="grid h-full w-full"
+        className="relative grid h-full w-full"
         style={{
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`

@@ -3,6 +3,11 @@ import qualitySelector from 'videojs-hls-quality-selector';
 import { useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import {
+  reportDecodeTrouble,
+  useDecodeSlot
+} from '../../../../hooks/useDecodeSlot';
+import { isTvDevice } from '../../../../hooks/useIsTv';
 
 type Props = {
   src: string;
@@ -18,7 +23,103 @@ let hlsQualitySelectorRegistered = false;
 const STALL_TIMEOUT_MS = 12000;
 const WATCHDOG_INTERVAL_MS = 3000;
 
-const VideoPlayer = ({ src, muted = true, paused = false }: Props) => {
+/** How often a TV player checks it is keeping up, and over what window. */
+const HEALTH_INTERVAL_MS = 5000;
+const HEALTH_WINDOW_MS = 10000;
+/** A player starting up drops frames on any TV; its first while is not judged. */
+const WARMUP_MS = 20000;
+/** This much buffered with no picture means no decoder, not no data. */
+const STARVED_BUFFER_S = 3;
+const STARVED_AFTER_MS = 15000;
+/** Share of frames dropped over the window that counts as not keeping up. */
+const SLOW_DROP_RATIO = 0.15;
+
+const bufferedAhead = (video: HTMLVideoElement) => {
+  const { buffered } = video;
+  return buffered.length
+    ? buffered.end(buffered.length - 1) - video.currentTime
+    : 0;
+};
+
+// The quality object's fields are getters on its prototype: spread, it is empty.
+const frameCount = (video: HTMLVideoElement, at: number) => {
+  const quality = video.getVideoPlaybackQuality();
+  return {
+    at,
+    total: quality.totalVideoFrames,
+    dropped: quality.droppedVideoFrames
+  };
+};
+
+/**
+ * Watches a TV player for the two ways a TV runs out of decoding (see
+ * `useDecodeSlot`) and reports them. Returns the cleanup.
+ */
+const watchDecodeHealth = (
+  video: HTMLVideoElement,
+  slotId: string,
+  isHeld: () => boolean
+) => {
+  const startedAt = Date.now();
+  let starvedSince: number | undefined;
+  let windowStart = frameCount(video, Date.now());
+  const timer = window.setInterval(() => {
+    if (isHeld() || video.paused) {
+      starvedSince = undefined;
+      windowStart = frameCount(video, Date.now());
+      return;
+    }
+    const now = Date.now();
+    if (
+      video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA &&
+      bufferedAhead(video) > STARVED_BUFFER_S
+    ) {
+      starvedSince ??= now;
+      if (now - starvedSince > STARVED_AFTER_MS) {
+        starvedSince = undefined;
+        reportDecodeTrouble(slotId, 'starved');
+      }
+    } else {
+      starvedSince = undefined;
+    }
+    if (now - startedAt < WARMUP_MS) {
+      windowStart = frameCount(video, now);
+      return;
+    }
+    if (now - windowStart.at < HEALTH_WINDOW_MS) return;
+    const counted = frameCount(video, now);
+    const total = counted.total - windowStart.total;
+    const dropped = counted.dropped - windowStart.dropped;
+    windowStart = counted;
+    if (total > 0 && dropped / total > SLOW_DROP_RATIO) {
+      reportDecodeTrouble(slotId, 'slow');
+    }
+  }, HEALTH_INTERVAL_MS);
+  return () => window.clearInterval(timer);
+};
+
+/**
+ * A video.js player for an HLS stream. On a TV it only plays while it holds
+ * one of the TV's decoding slots; without one it stands parked, and takes the
+ * picture up again when it is selected or a slot frees.
+ */
+const VideoPlayer = (props: Props) => {
+  const { id, live } = useDecodeSlot(!props.paused);
+  return live ? <LivePlayer {...props} slotId={id} /> : <ParkedPlayer />;
+};
+
+/**
+ * In place of a player the TV has no decoder for. Blank: the tile around it
+ * says which channel is waiting (see `MonitorSource`).
+ */
+const ParkedPlayer = () => <div className="h-full w-full bg-black" />;
+
+const LivePlayer = ({
+  src,
+  muted = true,
+  paused = false,
+  slotId
+}: Props & { slotId: string }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<any>(undefined);
   const currentSrcRef = useRef<string>(src);
@@ -132,7 +233,14 @@ const VideoPlayer = ({ src, muted = true, paused = false }: Props) => {
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
 
+    const video = p.el()?.querySelector('video');
+    const stopHealth =
+      isTvDevice() && video
+        ? watchDecodeHealth(video, slotId, () => pausedRef.current)
+        : () => {};
+
     return () => {
+      stopHealth();
       window.clearInterval(watchdog);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (playerRef.current && !playerRef.current.isDisposed()) {

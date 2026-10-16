@@ -2,10 +2,12 @@
 import { Replace } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
+import { DecodeSlotContext, useParkedScreens } from '../../hooks/useDecodeSlot';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useIsTv } from '../../hooks/useIsTv';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
+import { SourceImage } from '../SourceImage';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
 import { ChannelReel } from './ChannelReel';
 import { SourceLogo } from './SourceLogo';
@@ -87,6 +89,15 @@ export function MonitorSource({
     [resolveSource, sourceSlug, storedSource]
   );
 
+  // On a TV the selected tile is first in line for a decoder, so picking a
+  // parked tile is how it comes back to life.
+  const decodeSlot = useMemo(
+    () => ({ screen: idx, preferred: !!isBeingEdited }),
+    [idx, isBeingEdited]
+  );
+
+  const parked = useParkedScreens().has(idx) && !fullscreen;
+
   const handleChangeClick = () => {
     if (onChangeClick) onChangeClick();
   };
@@ -133,35 +144,52 @@ export function MonitorSource({
               <iframe>, and the stream reloading at the very moment the viewer
               asked to see it bigger. Mounted all along, fullscreen only wakes
               it up. */}
-          {onZapChange ? (
-            <ChannelReel
-              node={{ sourceSlug, source: storedSource, activeSignal }}
-              onSelectSource={fullscreen ? onZapChange : undefined}
-              // On the wall the selected tile still answers a remote's
-              // channel keys once the picker is away: nothing on screen
-              // says what else they could mean.
-              onChannelKey={
-                !fullscreen && !covered && !isEditing && isBeingEdited
-                  ? onZapChange
-                  : undefined
-              }
-              orientation={isMobile ? 'vertical' : 'horizontal'}
-              screenIdx={idx}
-              fullscreen={fullscreen}
-              paused={paused}
-            />
-          ) : (
-            !!source && (
-              <SourceOutput
-                source={source}
-                activeSignal={activeSignal}
-                muted={muted}
+          <DecodeSlotContext.Provider value={decodeSlot}>
+            {onZapChange ? (
+              <ChannelReel
+                node={{ sourceSlug, source: storedSource, activeSignal }}
+                onSelectSource={fullscreen ? onZapChange : undefined}
+                // On the wall the selected tile still answers a remote's
+                // channel keys once the picker is away: nothing on screen
+                // says what else they could mean.
+                onChannelKey={
+                  !fullscreen && !covered && !isEditing && isBeingEdited
+                    ? onZapChange
+                    : undefined
+                }
+                orientation={isMobile ? 'vertical' : 'horizontal'}
+                screenIdx={idx}
                 fullscreen={fullscreen}
                 paused={paused}
               />
-            )
-          )}
+            ) : (
+              !!source && (
+                <SourceOutput
+                  source={source}
+                  activeSignal={activeSignal}
+                  muted={muted}
+                  fullscreen={fullscreen}
+                  paused={paused}
+                />
+              )
+            )}
+          </DecodeSlotContext.Provider>
         </div>
+        {/* A parked tile has no picture, so it says which channel it is
+            instead — small, down in the strip, out of the way of the ones
+            playing. */}
+        {parked && !!source && (
+          <div className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center gap-1 bg-neutral-900 p-2">
+            <SourceImage
+              src={source.logoUrl ?? source.imageUrl}
+              className="max-h-[60%] max-w-[80%] object-contain opacity-80"
+              fallback={source.titleIcons}
+            />
+            <span className="max-w-full truncate text-xs text-white/60">
+              {source.name}
+            </span>
+          </div>
+        )}
         {isMarkedForSwap && (
           <div className="pointer-events-none absolute inset-0 z-[3] bg-slate-500/40" />
         )}

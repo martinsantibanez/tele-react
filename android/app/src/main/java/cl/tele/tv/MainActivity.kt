@@ -2,6 +2,10 @@ package cl.tele.tv
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaFormat
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
@@ -42,7 +46,8 @@ class MainActivity : Activity() {
             settings.domStorageEnabled = true
             // Every tile autoplays; nobody is going to press play on six of them.
             settings.mediaPlaybackRequiresUserGesture = false
-            settings.userAgentString = "${settings.userAgentString} $USER_AGENT_MARK"
+            settings.userAgentString =
+                "${settings.userAgentString} $USER_AGENT_MARK${decodersMark()}"
             webViewClient = WebViewClient()
             webChromeClient = ChromeClient()
             isFocusable = true
@@ -138,6 +143,35 @@ class MainActivity : Activity() {
         root.removeAllViews()
         webView.destroy()
         super.onDestroy()
+    }
+
+    /**
+     * How many H.264 streams the TV says its hardware can decode at once, as
+     * ` (decoders=N)`. Only a ceiling: some TVs claim far more than they keep
+     * up with, and the page learns the real number by watching playback. A
+     * software decoder does not count; the WebView never falls back to one.
+     */
+    private fun decodersMark(): String {
+        val instances = try {
+            MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+                .filter { !it.isEncoder && isHardware(it) }
+                .filter { info -> info.supportedTypes.any { it.equals(MediaFormat.MIMETYPE_VIDEO_AVC, true) } }
+                .maxOfOrNull {
+                    it.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).maxSupportedInstances
+                }
+        } catch (e: RuntimeException) {
+            null
+        }
+        return if (instances == null || instances <= 0) "" else " (decoders=$instances)"
+    }
+
+    private fun isHardware(info: MediaCodecInfo): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return info.isHardwareAccelerated && !info.isAlias
+        }
+        val name = info.name.lowercase()
+        return !name.startsWith("omx.google.") && !name.startsWith("c2.android.") &&
+            !name.endsWith(".secure")
     }
 
     private companion object {

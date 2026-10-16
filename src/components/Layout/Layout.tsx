@@ -1,6 +1,8 @@
+import { useParkedScreens } from '../../hooks/useDecodeSlot';
 import { SourceType } from '../../sources';
 import { LayoutType, SourceNode } from '../../types/Monitor';
 import { MonitorSource } from '../Monitor/MonitorSource';
+import { parkedWallRects, rectStyle } from '../Monitor/parkedWall';
 
 type Props = {
   layout: LayoutType;
@@ -56,14 +58,25 @@ export function Layout({
   fullscreenIdx,
   onFullscreenSourceChange
 }: Props) {
+  // See `GridDisplay`: parked tiles move to a strip, the rest share the wall.
+  const parked = useParkedScreens();
+  const rects = parkedWallRects(
+    layout.map((_, idx) => idx),
+    parked
+  );
   return (
-    <div className="grid h-full w-full grid-cols-12 grid-rows-9">
+    <div className="relative grid h-full w-full grid-cols-12 grid-rows-9">
       {layout.map((col, idx) => {
+        const rect = rects?.get(idx);
         const colClass = col.cols ? colSizeClass[col.cols] : undefined;
         const rowClass = col.rows ? rowSizeClass[col.rows] : undefined;
         const node = sources[idx] ?? {};
         return (
-          <div className={`${colClass ?? ''} ${rowClass ?? ''}`} key={idx}>
+          <div
+            className={rect ? '' : `${colClass ?? ''} ${rowClass ?? ''}`}
+            style={rect ? rectStyle(rect) : undefined}
+            key={idx}
+          >
             <MonitorSource
               idx={idx}
               sourceSlug={node.sourceSlug}
