@@ -80,22 +80,6 @@ const vistaGeneral = (): SourceNode[] => [
   {
     sourceSlug: 'custom_zapping_163',
     uuid: '487a7eac-7286-4ee8-a07d-9328f5f40bce'
-  },
-  {
-    sourceSlug: 'custom_zapping_74',
-    uuid: '97435fc0-d545-4ad7-a6d1-3d0ee1bf4d3d'
-  },
-  {
-    sourceSlug: 'custom_zapping_193',
-    uuid: 'ed2daa3c-5385-4c88-b7b4-ab11cb6cb287'
-  },
-  {
-    sourceSlug: 'custom_zapping_130',
-    uuid: '6a8a66b7-32ed-46e3-b70c-a9cacdd59b93'
-  },
-  {
-    sourceSlug: 'custom_zapping_129',
-    uuid: '452edac6-fea0-41d2-8f4a-b8808912f4f2'
   }
 ];
 
@@ -160,7 +144,7 @@ export const zappingPresetScreens: SavedScreen[] = [
       config: {
         mode: DisplayMode.Grid,
         layout: initialLayout,
-        grid: { size: 2 }
+        grid: { size: 2, count: 4 }
       },
       sources: canalesNacionales()
     }
@@ -171,7 +155,7 @@ export const zappingPresetScreens: SavedScreen[] = [
       config: {
         mode: DisplayMode.Grid,
         layout: initialLayout,
-        grid: { size: 4 }
+        grid: { size: 4, count: 12 }
       },
       sources: vistaGeneral()
     }
@@ -179,9 +163,9 @@ export const zappingPresetScreens: SavedScreen[] = [
 ];
 
 /**
- * Presets a TV no longer gets, by name. `Vista general` is sixteen 720p streams
+ * Presets a TV no longer gets, by name. `Vista general` is twelve 720p streams
  * at once, and a box that already drops frames decoding two has no hope with
- * sixteen — a wall that stutters in every tile is no overview of anything.
+ * twelve — a wall that stutters in every tile is no overview of anything.
  *
  * Named here rather than just left out of the set below because the seeding
  * upserts by name and never deletes: a box that was set up before would keep

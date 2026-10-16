@@ -5,7 +5,7 @@ export type SourceNode = {
   /**
    * The source itself, for everything outside the built-in table: the TV feed,
    * Zapping, YouTube lives, Twitch. Kept on the node so a screen carries its
-   * channels wherever it goes — saved, shared, promoted. It is a snapshot, not
+   * channels wherever it goes. It is a snapshot, not
    * the last word: the live catalogues still win by slug when they hold the
    * same channel, so a stale stream url re-points itself. See
    * `useResolveSource`.
@@ -44,13 +44,25 @@ export enum DisplayMode {
   // and below. What is being walked is a whole catalogue — the picker's active
   // tab — rather than the screen's own sources, of which it keeps exactly one:
   // whatever is playing. See `ChannelReel`.
-  Zapping = 'Zapping'
+  Zapping = 'Zapping',
+  // Zapping's "Más vistos" ranking as a wall, like the YouTube display: the
+  // tiles are derived from the ranking, not from the saved grid, and the
+  // screen's own channels are left alone underneath it.
+  ZappingTop = 'ZappingTop'
 }
 
 export type GridSize = 1 | 2 | 3 | 4;
 
 export type GridType = {
+  /** Screens per row. */
   size: GridSize;
+  /**
+   * Screens shown, which fills the rows exactly. The screen can hold more
+   * channels than this: the ones past it are kept, out of sight, so going back
+   * to a bigger grid brings them back. A phone leaves it out and shows every
+   * channel it holds — it sets the count through the channels themselves.
+   */
+  count?: number;
 };
 
 export type DisplayConfig = {

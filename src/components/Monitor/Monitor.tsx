@@ -1,10 +1,8 @@
 'use client';
-import axios from 'axios';
 import {
   Maximize2,
   Minimize2,
   Pencil,
-  Plus,
   Volume2,
   VolumeX,
   X
@@ -20,15 +18,12 @@ import {
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTeleContext } from '../../context/TeleContext';
 import {
-  DEFAULT_GRID_SIZE,
   MOBILE_GRID_SIZE,
   MOBILE_LANDSCAPE_GRID_COLUMNS,
   MOBILE_LANDSCAPE_SOURCE_COUNT,
   MOBILE_SOURCE_COUNT
 } from '../../hooks/defaultScreen';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
-import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
-import { useFullscreenZapping } from '../../hooks/useFullscreenZapping';
 import { useIsTv } from '../../hooks/useIsTv';
 import {
   neighbourScreen,
@@ -43,25 +38,21 @@ import {
 import { useViewport } from '../../hooks/useViewport';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeLoginScreen } from '../../hooks/useYoutubeLoginScreen';
+import { useZappingTopGridSources } from '../../hooks/useZappingTopGrid';
 import { MobileNav } from '../../layout/MobileNav';
 import { embeddedSource, SourceType } from '../../sources';
-import { PLACEHOLDER_SOURCE_SLUG } from '../../sources/placeholder';
-import { DisplayMode, GridSize, ScreenType } from '../../types/Monitor';
+import { DisplayMode, ScreenType } from '../../types/Monitor';
 import {
   getIndexFromKeyEvent,
   getSourceShortcutLabel
 } from '../../utils/sourceShortcut';
 import { uuid } from '../../utils/uuid';
 import { defaultGrid } from '../GridDisplay/initialGrid';
-import { ScreenOptions } from '../ScreenOptions/ScreenOptions';
 import { SourceSlider } from '../SelectSource/SourceSlider';
-import {
-  useActiveCategory,
-  useRevealSource
-} from '../SelectSource/sourceCategories';
+import { useRevealSource } from '../SelectSource/sourceCategories';
 import { ControlBar } from './ControlBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
-import { fitSourcesToLayout } from './predefinedLayouts';
+import { fillSlots, slotCount } from './predefinedLayouts';
 import { Screen } from './Screen';
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
@@ -103,42 +94,49 @@ export const Monitor = () => {
   const isTv = useIsTv();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const [, setFeaturedMonitor] = useFeaturedScreen();
-  const [activeCategory] = useActiveCategory();
   const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenZapping, setFullscreenZapping] = useFullscreenZapping();
   const [savedScreens] = useSavedScreens();
   const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
   const screenAreaRef = useRef<HTMLDivElement>(null);
   useYoutubeLoginScreen();
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
+  const isZappingTopMode = displayConfig.mode === DisplayMode.ZappingTop;
+  // The live walls: their tiles come from a feed (the live subscriptions, the
+  // most watched ranking), not from the screen's channels, which they leave
+  // alone underneath.
+  const isLiveMode = isYoutubeMode || isZappingTopMode;
 
   const { nodes: youtubeNodes } = useYoutubeGridSources({
     frozen: isYoutubeMode && isFullscreen
   });
+  const zappingTopNodes = useZappingTopGridSources({
+    count: displayConfig.grid.count ?? 0,
+    frozen: isZappingTopMode && isFullscreen
+  });
+  const liveNodes = isYoutubeMode ? youtubeNodes : zappingTopNodes;
 
-  const [youtubeFocusSlug, setYoutubeFocusSlug] = useState<
-    string | undefined
-  >();
+  // A live tile is followed by its channel, not its place: the feed can move
+  // it while it is selected.
+  const [liveFocusSlug, setLiveFocusSlug] = useState<string | undefined>();
 
-  const youtubeIdxOf = useCallback(
+  const liveIdxOf = useCallback(
     (slug?: string) => {
       if (!slug) return undefined;
-      const idx = youtubeNodes.findIndex(node => node.sourceSlug === slug);
+      const idx = liveNodes.findIndex(node => node.sourceSlug === slug);
       return idx < 0 ? undefined : idx;
     },
-    [youtubeNodes]
+    [liveNodes]
   );
 
-  const youtubeFocusIdx = youtubeIdxOf(youtubeFocusSlug);
+  const liveFocusIdx = liveIdxOf(liveFocusSlug);
   useEffect(() => {
-    if (!isYoutubeMode || youtubeFocusIdx === undefined) return;
-    setEditingSourceIdx(youtubeFocusIdx);
-  }, [isYoutubeMode, youtubeFocusIdx, setEditingSourceIdx]);
+    if (!isLiveMode || liveFocusIdx === undefined) return;
+    setEditingSourceIdx(liveFocusIdx);
+  }, [isLiveMode, liveFocusIdx, setEditingSourceIdx]);
 
-  const activeSources = isYoutubeMode ? youtubeNodes : selectedSources;
+  const activeSources = isLiveMode ? liveNodes : selectedSources;
 
   const screen: ScreenType = useMemo(
     () => ({
@@ -175,13 +173,7 @@ export const Monitor = () => {
     [editingSourceIdx, selectedSources]
   );
 
-  const visibleScreenCount = isYoutubeMode
-    ? youtubeNodes.length
-    : isZappingMode
-      ? 1
-      : displayConfig.mode === DisplayMode.Layout
-        ? displayConfig.layout.length
-        : (selectedSources?.length ?? 0);
+  const visibleScreenCount = slotCount(displayConfig, activeSources);
 
   useEffect(() => {
     if (!visibleScreenCount) return;
@@ -195,51 +187,48 @@ export const Monitor = () => {
   }, [isMobile, isTv, setIsEditing]);
 
   useEffect(() => {
-    if (!isMobile || isYoutubeMode) return;
+    if (!isMobile || isLiveMode) return;
     const target = isLandscape
       ? MOBILE_LANDSCAPE_SOURCE_COUNT
       : MOBILE_SOURCE_COUNT;
     if (
       displayConfig.mode !== DisplayMode.Grid ||
-      displayConfig.grid.size !== MOBILE_GRID_SIZE
+      displayConfig.grid.size !== MOBILE_GRID_SIZE ||
+      displayConfig.grid.count !== target
     ) {
       setDisplayConfig(cfg => ({
         ...cfg,
         mode: DisplayMode.Grid,
-        grid: { size: MOBILE_GRID_SIZE }
+        grid: { size: MOBILE_GRID_SIZE, count: target }
       }));
     }
-    if (selectedSources.length !== target) {
-      setSelectedSources(sources =>
-        sources.length > target
-          ? sources.slice(0, target)
-          : [...sources, ...defaultGrid.slice(sources.length, target)]
-      );
+    if (selectedSources.length < target) {
+      setSelectedSources(sources => [
+        ...sources,
+        ...defaultGrid.slice(sources.length, target)
+      ]);
     }
   }, [
     isMobile,
     isLandscape,
-    isYoutubeMode,
+    isLiveMode,
     displayConfig.mode,
     displayConfig.grid.size,
+    displayConfig.grid.count,
     selectedSources.length,
     setDisplayConfig,
     setSelectedSources
   ]);
 
+  // Every slot of the arrangement gets a channel to show, even an empty one.
+  // Channels past the last slot stay where they are, out of sight.
+  const slotsToFill = isLiveMode
+    ? 0
+    : slotCount(displayConfig, selectedSources);
   useEffect(() => {
-    if (isMobile || displayConfig.mode !== DisplayMode.Layout) return;
-    if (selectedSources.length === displayConfig.layout.length) return;
-    setSelectedSources(sources =>
-      fitSourcesToLayout(sources, displayConfig.layout)
-    );
-  }, [
-    isMobile,
-    displayConfig.mode,
-    displayConfig.layout,
-    selectedSources.length,
-    setSelectedSources
-  ]);
+    if (isMobile || selectedSources.length >= slotsToFill) return;
+    setSelectedSources(sources => fillSlots(sources, slotsToFill));
+  }, [isMobile, slotsToFill, selectedSources.length, setSelectedSources]);
 
   // The picker, the grid and fullscreen are three levels, one inside the next:
   // OK goes a level in and Back comes a level out. Going fullscreen closes the
@@ -247,11 +236,11 @@ export const Monitor = () => {
   // without leaving it; OK or Back then put the picture back on its own.
   // A phone has no room beside the picture, and a YouTube tile is not one the
   // picker points, so there the picker still leaves fullscreen.
-  const pickerBesideFullscreen = !isMobile && !isYoutubeMode;
+  const pickerBesideFullscreen = !isMobile && !isLiveMode;
   const toggleFullscreen = () => {
-    if (isYoutubeMode && !isFullscreen) {
-      const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
-      if (slug) setYoutubeFocusSlug(slug);
+    if (isLiveMode && !isFullscreen) {
+      const slug = liveNodes[editingSourceIdx]?.sourceSlug;
+      if (slug) setLiveFocusSlug(slug);
     }
     if (!isFullscreen) setIsEditing(false);
     setIsFullscreen(current => !current);
@@ -260,54 +249,6 @@ export const Monitor = () => {
   const togglePicker = () => {
     if (!isEditing && !pickerBesideFullscreen) setIsFullscreen(false);
     toggleEditting();
-  };
-
-  const handlePromote = () => {
-    setFeaturedMonitor(screen);
-  };
-
-  const handleModeChange = (mode: DisplayMode) => {
-    if (mode === DisplayMode.Grid) {
-      setDisplayConfig(cfg => ({
-        ...cfg,
-        mode,
-        grid: { size: cfg.grid?.size || DEFAULT_GRID_SIZE }
-      }));
-    } else {
-      setDisplayConfig(cfg => ({
-        ...cfg,
-        mode
-      }));
-    }
-  };
-  const handleSizeChange = (newSize: GridSize) => {
-    if (displayConfig.mode !== DisplayMode.Grid) return;
-    setDisplayConfig(config => ({
-      ...config,
-      grid: { size: newSize }
-    }));
-  };
-
-  const handleSourceAdd = () => {
-    setSelectedSources(sources => [
-      ...(sources || []),
-      {
-        sourceSlug: PLACEHOLDER_SOURCE_SLUG,
-        uuid: uuid()
-      }
-    ]);
-  };
-
-  const canRemoveScreen = isGrid && (selectedSources?.length ?? 0) > 1;
-
-  const handleSourceRemove = (idx: number) => {
-    if (!canRemoveScreen) return;
-    setSwapSourceIdx(undefined);
-    setIsFullscreen(false);
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      return sources.filter((src, index) => index !== idx);
-    });
   };
 
   const handleSourceChange = (source: SourceType) => {
@@ -352,9 +293,9 @@ export const Monitor = () => {
 
   const selectScreen = (idx: number) => {
     if (idx < 0 || idx >= visibleScreenCount) return;
-    if (isYoutubeMode) {
+    if (isLiveMode) {
       setEditingSourceIdx(idx);
-      setYoutubeFocusSlug(youtubeNodes[idx]?.sourceSlug);
+      setLiveFocusSlug(liveNodes[idx]?.sourceSlug);
       return;
     }
     setEditingSourceIdx(idx);
@@ -363,14 +304,6 @@ export const Monitor = () => {
 
   const selectScreenRef = useRef(selectScreen);
   selectScreenRef.current = selectScreen;
-
-  const handleShare = async () => {
-    const response = await axios.post('/api/share', screen);
-    prompt(
-      `Enlace para compartir. Valido por 24 horas.`,
-      `${window.location.origin}/shared/${response.data.uuid}`
-    );
-  };
 
   const handleSwitch: OnSwitchCb = (left: number, right: number) => {
     setSelectedSources(sources => {
@@ -402,7 +335,7 @@ export const Monitor = () => {
     };
   }, []);
 
-  const canSwap = !isYoutubeMode && !isFullscreen;
+  const canSwap = !isLiveMode && !isFullscreen;
 
   /** Marks the selected screen, or swaps it with the one already marked. */
   const swapStep = () => {
@@ -446,16 +379,16 @@ export const Monitor = () => {
     [
       visibleScreenCount,
       swapSourceIdx,
-      isYoutubeMode,
-      youtubeNodes,
+      isLiveMode,
+      liveNodes,
       selectedSources,
       revealSource
     ]
   );
   useHotkeys('g', () => toggleFullscreen(), [
-    isYoutubeMode,
+    isLiveMode,
     isFullscreen,
-    youtubeNodes,
+    liveNodes,
     editingSourceIdx
   ]);
   useHotkeys(
@@ -520,39 +453,26 @@ export const Monitor = () => {
     );
     if (target !== activeScreenIndex) setActiveScreenIndex(target);
   };
-  // A remote's channel keys switch saved screens from the grid. Fullscreen
-  // they zap instead (see `ChannelReel`), and so they do on the zapping
-  // display, which is one channel on air. PageUp and PageDown are the
-  // keyboard's pair, and always mean the saved screens. CH+ moves on to the
-  // next screen along the strip, the way it moves a set-top box up a channel.
+  // A remote's channel keys switch saved screens from the grid, but only with
+  // the picker open, where the strip they walk is on show. With it away they
+  // zap the selected tile instead, and so they do fullscreen (see
+  // `ChannelReel`) and on the zapping display, which is one channel on air.
+  // PageUp and PageDown are the keyboard's pair, and always mean the saved
+  // screens. CH+ moves on to the next screen along the strip, the way it moves
+  // a set-top box up a channel.
   useKeyNames(
     {
       PageUp: () => stepSavedScreen(-1),
       PageDown: () => stepSavedScreen(1),
-      ...(hasGridLevel && {
-        ChannelUp: () => stepSavedScreen(1),
-        ChannelDown: () => stepSavedScreen(-1)
-      })
+      ...(hasGridLevel &&
+        isEditing && {
+          ChannelUp: () => stepSavedScreen(1),
+          ChannelDown: () => stepSavedScreen(-1)
+        })
     },
     !isFullscreen
   );
   useHotkeys('m', () => toggleMute(), [toggleMute]);
-  useHotkeys(
-    'd',
-    () => {
-      if (isYoutubeMode || swapSourceIdx !== undefined) return;
-      handleSourceRemove(editingSourceIdx);
-    },
-    [editingSourceIdx, swapSourceIdx, canRemoveScreen, isYoutubeMode]
-  );
-  useHotkeys(
-    'a',
-    () => {
-      if (displayConfig.mode !== DisplayMode.Grid) return;
-      handleSourceAdd();
-    },
-    [displayConfig.mode]
-  );
   const picker = (
     <>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -564,26 +484,6 @@ export const Monitor = () => {
           showHints={!isMobile}
         />
       </div>
-
-      {activeCategory === 'layouts' && !isMobile && (
-        <div className="mt-3 flex-none">
-          <ScreenOptions
-            onSizeChange={handleSizeChange}
-            onSourceAdd={
-              displayConfig.mode === DisplayMode.Grid
-                ? handleSourceAdd
-                : undefined
-            }
-            onModeChange={handleModeChange}
-            onPromote={handlePromote}
-            onShare={handleShare}
-            mode={displayConfig.mode}
-            size={displayConfig.grid.size}
-            fullscreenZapping={fullscreenZapping}
-            onFullscreenZappingChange={setFullscreenZapping}
-          />
-        </div>
-      )}
 
       {!isMobile && (
         <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
@@ -629,12 +529,6 @@ export const Monitor = () => {
                 keys="M"
                 label={isMuted ? 'Activar Audio' : 'Silenciar'}
               />
-              {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
-                <Shortcut keys="D" label="Quitar" />
-              )}
-              {displayConfig.mode === DisplayMode.Grid && (
-                <Shortcut keys="A" label="Agregar" />
-              )}
             </>
           )}
         </div>
@@ -644,11 +538,6 @@ export const Monitor = () => {
 
   const floatingControls = (
     <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
-      {isGrid && !isMobile && !isFullscreen && (
-        <FloatingButton onClick={handleSourceAdd} label="Agregar pantalla">
-          <Plus size={20} />
-        </FloatingButton>
-      )}
       <FloatingButton
         onClick={toggleMute}
         label={isMuted ? 'Activar el audio' : 'Silenciar'}
@@ -697,18 +586,15 @@ export const Monitor = () => {
           <Screen
             screen={screen}
             onSelect={selectScreen}
-            onEdit={isYoutubeMode ? undefined : handleSourceEdit}
-            onRemove={canRemoveScreen ? handleSourceRemove : undefined}
+            onEdit={isLiveMode ? undefined : handleSourceEdit}
             editingSourceIdx={editingSourceIdx}
             swapSourceIdx={swapSourceIdx}
             fullscreenIdx={fullscreenIdx}
-            onSwitch={isYoutubeMode ? undefined : handleSwitch}
+            onSwitch={isLiveMode ? undefined : handleSwitch}
             gridColumns={gridColumns}
             onSourceChange={isZappingMode ? handleSourceChange : undefined}
             onFullscreenSourceChange={
-              fullscreenZapping && !isYoutubeMode
-                ? handleSourceChange
-                : undefined
+              isLiveMode ? undefined : handleSourceChange
             }
           />
         </div>

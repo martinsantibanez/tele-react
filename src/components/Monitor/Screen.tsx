@@ -5,6 +5,7 @@ import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { ChannelReel } from './ChannelReel';
 import { MonitorSource, OnSwitchCb } from './MonitorSource';
+import { visibleSources } from './predefinedLayouts';
 import { DisplayMode, ScreenType } from '../../types/Monitor';
 
 type Props = {
@@ -12,7 +13,6 @@ type Props = {
   /** Picking a screen by clicking it, the way its number key would. */
   onSelect?: (idx: number) => void;
   onEdit?: (idx: number) => void;
-  onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
@@ -27,7 +27,7 @@ type Props = {
    * Puts a channel on the screen being edited. Only the zapping reel asks for
    * it — every other mode is pointed at its channels from the picker — and
    * without it the reel is a picture of one channel rather than something to
-   * zap with, which is what a shared or promoted screen should be.
+   * zap with.
    */
   onSourceChange?: (source: SourceType) => void;
   /**
@@ -42,7 +42,6 @@ export function Screen({
   screen,
   onSelect,
   onEdit,
-  onRemove,
   editingSourceIdx,
   swapSourceIdx,
   fullscreenIdx,
@@ -76,12 +75,17 @@ export function Screen({
       />
     );
   }
-  if (config.mode === DisplayMode.Youtube) {
+  if (
+    config.mode === DisplayMode.Youtube ||
+    config.mode === DisplayMode.ZappingTop
+  ) {
     const count = sources?.length ?? 0;
     if (!count)
       return (
         <div className="flex h-full w-full items-center justify-center p-6 text-center text-gray-400">
-          Ningún canal de YouTube suscrito está en vivo
+          {config.mode === DisplayMode.Youtube
+            ? 'Ningún canal de YouTube suscrito está en vivo'
+            : 'Cargando lo más visto en Zapping…'}
         </div>
       );
     // Square-ish tiling that grows with the number of live channels: as many
@@ -101,7 +105,6 @@ export function Screen({
           sources={sources}
           onSelect={onSelect}
           onEdit={onEdit}
-          onRemove={onRemove}
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
@@ -112,7 +115,8 @@ export function Screen({
   }
   if (config.mode === DisplayMode.Grid) {
     const cols = gridColumns || config.grid.size;
-    const rows = Math.ceil((sources?.length ?? 0) / cols) || 1;
+    const shown = visibleSources(config, sources ?? []);
+    const rows = Math.ceil(shown.length / cols) || 1;
     return (
       <div
         className="grid h-full w-full"
@@ -122,10 +126,9 @@ export function Screen({
         }}
       >
         <GridDisplay
-          sources={sources}
+          sources={shown}
           onSelect={onSelect}
           onEdit={onEdit}
-          onRemove={onRemove}
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
@@ -143,7 +146,6 @@ export function Screen({
         editingSourceIdx={editingSourceIdx}
         swapSourceIdx={swapSourceIdx}
         fullscreenIdx={fullscreenIdx}
-        onRemove={onRemove}
         onFullscreenSourceChange={onFullscreenSourceChange}
       />
     );

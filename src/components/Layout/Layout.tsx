@@ -8,7 +8,6 @@ type Props = {
   /** Picking a screen by clicking it, the way its number key would. */
   onSelect?: (idx: number) => void;
   onEdit?: (idx: number) => void;
-  onRemove?: (idx: number) => void;
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
@@ -51,7 +50,6 @@ export function Layout({
   layout,
   onSelect,
   onEdit,
-  onRemove,
   sources,
   editingSourceIdx,
   swapSourceIdx,
@@ -78,7 +76,6 @@ export function Layout({
               fullscreen={idx === fullscreenIdx}
               covered={fullscreenIdx !== undefined && idx !== fullscreenIdx}
               onZapChange={onFullscreenSourceChange}
-              onRemove={() => (onRemove ? onRemove(idx) : undefined)}
             />
           </div>
         );

@@ -1,5 +1,5 @@
 'use client';
-import { Replace, X } from 'lucide-react';
+import { Replace } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
@@ -21,7 +21,6 @@ type Props = {
   /** Clicking the picture picks the screen, as its number key would. */
   onSelect?: () => void;
   onChangeClick?: () => void;
-  onRemove?: () => void;
   isBeingEdited?: boolean;
   isMarkedForSwap?: boolean;
   fullscreen?: boolean;
@@ -47,7 +46,6 @@ export function MonitorSource({
   activeSignal,
   onSelect,
   onChangeClick,
-  onRemove,
   isBeingEdited,
   isMarkedForSwap,
   fullscreen,
@@ -88,19 +86,6 @@ export function MonitorSource({
     () => resolveSource(sourceSlug, storedSource),
     [resolveSource, sourceSlug, storedSource]
   );
-
-  // const handlePromote = () => {
-  //   setFeaturedScreen({
-  //     config: {
-  //       grid: {
-  //         size: 12
-  //       },
-  //       mode: DisplayMode.Grid,
-  //       layout: {}
-  //     },
-  //     sources: [{ sourceSlug, uuid: uuid() }]
-  //   });
-  // };
 
   const handleChangeClick = () => {
     if (onChangeClick) onChangeClick();
@@ -152,6 +137,14 @@ export function MonitorSource({
             <ChannelReel
               node={{ sourceSlug, source: storedSource, activeSignal }}
               onSelectSource={fullscreen ? onZapChange : undefined}
+              // On the wall the selected tile still answers a remote's
+              // channel keys once the picker is away: nothing on screen
+              // says what else they could mean.
+              onChannelKey={
+                !fullscreen && !covered && !isEditing && isBeingEdited
+                  ? onZapChange
+                  : undefined
+              }
               orientation={isMobile ? 'vertical' : 'horizontal'}
               screenIdx={idx}
               fullscreen={fullscreen}
@@ -211,55 +204,29 @@ export function MonitorSource({
         )}
         {showTileChrome && (
           <div className="absolute top-[1%] right-1 z-[2] flex justify-end">
-            {isEditing &&
-              (isMobile ? (
-                // Two words of Spanish do not fit across a tile a third of a
-                // phone wide, and the badge to their left already selects.
-                onRemove && (
+            {/* A phone has no room across a tile a third of its width, and
+                the badge to the left already selects. */}
+            {isEditing && !isMobile && (
+              // One pill, sized and coloured like the number badge across
+              // the tile from it, so the two overlays read as a pair rather
+              // than as chrome dropped on top of the picture.
+              <div className="flex h-5 items-center overflow-hidden rounded bg-black/70 text-white backdrop-blur-sm">
+                {onChangeClick && (
                   <button
                     type="button"
-                    onClick={onRemove}
-                    aria-label="Quitar pantalla"
-                    title="Quitar"
-                    className="rounded-full bg-black/60 p-1.5 text-white"
+                    onClick={handleChangeClick}
+                    className={`flex h-full items-center gap-1 px-2 text-[11px] font-medium transition-colors ${
+                      isBeingEdited
+                        ? 'bg-white text-black'
+                        : 'hover:bg-white/20'
+                    }`}
                   >
-                    <X size={16} />
+                    <Replace size={12} />
+                    Cambiar
                   </button>
-                )
-              ) : (
-                // One pill, sized and coloured like the number badge across
-                // the tile from it, so the two overlays read as a pair rather
-                // than as chrome dropped on top of the picture.
-                <div className="flex h-5 items-center overflow-hidden rounded bg-black/70 text-white backdrop-blur-sm">
-                  {onChangeClick && (
-                    <button
-                      type="button"
-                      onClick={handleChangeClick}
-                      className={`flex h-full items-center gap-1 px-2 text-[11px] font-medium transition-colors ${
-                        isBeingEdited
-                          ? 'bg-white text-black'
-                          : 'hover:bg-white/20'
-                      }`}
-                    >
-                      <Replace size={12} />
-                      Cambiar
-                    </button>
-                  )}
-                  {onChangeClick && onRemove && (
-                    <span className="h-2.5 w-px bg-white/25" />
-                  )}
-                  {onRemove && (
-                    <button
-                      type="button"
-                      onClick={onRemove}
-                      className="flex h-full items-center gap-1 px-2 text-[11px] font-medium transition-colors hover:bg-red-600"
-                    >
-                      <X size={12} />
-                      Quitar
-                    </button>
-                  )}
-                </div>
-              ))}
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { defaultDisplayConfig } from '../../hooks/defaultScreen';
-import { DisplayConfig, DisplayMode } from '../../types/Monitor';
+import { DisplayConfig, DisplayMode, GridSize } from '../../types/Monitor';
 import {
   initialLayout,
   twoBigLayout,
@@ -9,71 +9,51 @@ import {
 export type PossibleLayout = {
   name: string;
   config: DisplayConfig;
-  imgName: string;
 };
 
+/**
+ * A grid that fills its rows exactly. Only counts that tile the 16:9 monitor
+ * without leaving a gap or squashing the pictures are offered.
+ */
+const grid = (size: GridSize, count: number): DisplayConfig => ({
+  mode: DisplayMode.Grid,
+  layout: initialLayout,
+  grid: { size, count }
+});
+
+/**
+ * Every arrangement there is, by number of screens. Each one has a fixed
+ * count: a smaller one hides the channels past its end rather than dropping
+ * them (see `fillSlots`).
+ */
 export const possibleLayouts: PossibleLayout[] = [
-  {
-    name: 'Vista general',
-    config: defaultDisplayConfig,
-    imgName: 'layout1.png'
-  },
-  {
-    name: '2 grandes',
-    config: {
-      mode: DisplayMode.Layout,
-      layout: twoBigLayout,
-      grid: { size: 1 }
-    },
-    imgName: 'layout4.png'
-  },
+  { name: 'Una pantalla', config: grid(1, 1) },
   {
     // Two pictures are what a TV box can play smoothly at once.
-    name: '2 pantallas',
+    name: 'Lado a lado',
     config: {
       mode: DisplayMode.Layout,
       layout: twoSideBySideLayout,
       grid: { size: 1 }
-    },
-    imgName: 'layout7.png'
+    }
   },
+  { name: '2 × 2', config: grid(2, 4) },
   {
-    name: 'Grid 2',
+    name: 'Dos destacadas',
     config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 2 }
-    },
-    imgName: 'layout3.png'
-  },
-  {
-    name: 'Grid 3',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 3 }
-    },
-    imgName: 'layout2.png'
-  },
-  {
-    name: 'Grid 4',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
-      grid: { size: 4 }
-    },
-    imgName: 'layout5.png'
-  },
-   {
-    name: 'Grid 1',
-    config: {
-      layout: initialLayout,
-      mode: DisplayMode.Grid,
+      mode: DisplayMode.Layout,
+      layout: twoBigLayout,
       grid: { size: 1 }
-    },
-    imgName: 'layout6.png'
-  }
+    }
+  },
+  { name: 'Una destacada', config: defaultDisplayConfig },
+  { name: '3 × 3', config: grid(3, 9) },
+  { name: '4 × 3', config: grid(4, 12) }
 ];
+
+/** How many screens an arrangement shows. */
+export const layoutScreenCount = ({ mode, layout, grid }: DisplayConfig) =>
+  mode === DisplayMode.Layout ? layout.length : (grid.count ?? 0);
 
 /**
  * The dynamic YouTube layout closes the YouTube category rather than sitting in
@@ -87,10 +67,23 @@ export const youtubeLayoutConfig: DisplayConfig = {
   layout: initialLayout
 };
 
+/**
+ * Zapping's most watched channels, as many as fill the wall: nine on a
+ * computer, four on a TV box, which struggles past that.
+ */
+export const ZAPPING_TOP_NAME = 'Lo más visto';
+export const zappingTopConfig = (isTv: boolean): DisplayConfig => ({
+  mode: DisplayMode.ZappingTop,
+  layout: initialLayout,
+  grid: isTv ? { size: 2, count: 4 } : { size: 3, count: 9 }
+});
+
 export const findLayoutIndex = (config: DisplayConfig) =>
-  possibleLayouts.findIndex(
-    layout =>
-      layout.config.mode === config.mode &&
-      layout.config.grid.size === config.grid.size &&
-      JSON.stringify(layout.config.layout) === JSON.stringify(config.layout)
+  possibleLayouts.findIndex(layout =>
+    layout.config.mode !== config.mode
+      ? false
+      : config.mode === DisplayMode.Grid
+        ? layout.config.grid.size === config.grid.size &&
+          layout.config.grid.count === config.grid.count
+        : JSON.stringify(layout.config.layout) === JSON.stringify(config.layout)
   );

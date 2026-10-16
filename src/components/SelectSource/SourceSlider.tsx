@@ -44,23 +44,12 @@ import { useIsTv } from '../../hooks/useIsTv';
 import { useShowTvCatalog } from '../../hooks/useSetupWizard';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
-import {
-  findLayoutIndex,
-  possibleLayouts,
-  PossibleLayout,
-  YOUTUBE_LAYOUT_NAME,
-  youtubeLayoutConfig
-} from './layoutOptions';
+import { YOUTUBE_LAYOUT_NAME, youtubeLayoutConfig } from './layoutOptions';
 import { DisplayMode } from '../../types/Monitor';
-import Image from 'next/image';
-import {
-  COMPACT_ITEM_HEIGHT,
-  RowSlider,
-  sliderRow
-} from '../RowSlider/RowSlider';
 import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
 import { CategoryTabs } from './CategoryTabs';
+import { LayoutsPanel } from './LayoutsPanel';
 import { SavedScreensList } from './SavedScreensList';
 import {
   normalizeSearch,
@@ -393,9 +382,6 @@ export function SourceSlider({
     searchQuery
   ]);
 
-  const selectedLayoutIndex = findLayoutIndex(displayConfig);
-
-  // The slider navigates either sources or layouts, depending on the category.
   // Looked up rather than counted: a search can filter the selection out of
   // the list, and then no row is the selected one.
   const selectedSlug = youtubeLiveSelected
@@ -411,24 +397,12 @@ export function SourceSlider({
     caretIndex !== null &&
     !!selectedSlug &&
     activeCategorySources[caretIndex]?.slug === selectedSlug;
-  const selectedIndex = isLayouts
-    ? selectedLayoutIndex
-    : caretOnSelection
-      ? caretIndex
-      : activeCategorySources.findIndex(src => src.slug === selectedSlug);
-  const itemCount = isLayouts
-    ? possibleLayouts.length
-    : activeCategorySources.length;
-
-  const selectLayout = (index: number) => {
-    setDisplayConfig(possibleLayouts[index].config);
-  };
+  const selectedIndex = caretOnSelection
+    ? caretIndex
+    : activeCategorySources.findIndex(src => src.slug === selectedSlug);
+  const itemCount = activeCategorySources.length;
 
   const updateSelectedChannel = (index: number) => {
-    if (isLayouts) {
-      selectLayout(index);
-      return;
-    }
     setCaretIndex(index);
     const source = activeCategorySources[index];
     if (!source) return;
@@ -513,7 +487,7 @@ export function SourceSlider({
   useHotkeys('left', () => prevCategory(), { preventDefault: true });
   useHotkeys('right', () => nextCategory(), { preventDefault: true });
 
-  // Layouts are driven by the RowSlider, which owns its own arrow handling.
+  // The panels (layouts, screens) own their own arrow handling.
   // Walking the results is what follows typing, so up/down keep working from
   // inside the search box.
   useHotkeys('up', () => (isPanel ? undefined : prev()), {
@@ -598,7 +572,7 @@ export function SourceSlider({
   useHotkeys(
     'tab',
     e => {
-      // In layouts Tab switches rows inside the RowSlider; screens have none.
+      // The panels have no signals to cycle.
       if (isPanel) return;
       const config = activeConfigRef.current;
       // Inside the config controls Tab keeps its native meaning.
@@ -625,37 +599,6 @@ export function SourceSlider({
       onSelectSignal
     ]
   );
-
-  const layoutRows = [
-    sliderRow<PossibleLayout>({
-      key: 'layouts',
-      items: possibleLayouts,
-      selectedIndex: selectedLayoutIndex,
-      onSelect: index => selectLayout(index),
-      getItemKey: layout => layout.imgName,
-      itemHeight: COMPACT_ITEM_HEIGHT,
-      renderItem: (layout, { isSelected }) => (
-        <div
-          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <Image
-              alt={layout.name}
-              src={`/img/layout/${layout.imgName}`}
-              width={112}
-              height={63}
-              className={
-                isSelected ? 'ring-2 ring-white rounded-sm' : undefined
-              }
-            />
-            <div className="max-w-full truncate text-xs font-semibold">
-              {layout.name}
-            </div>
-          </div>
-        </div>
-      )
-    })
-  ];
 
   // Twitch sends the token back in the fragment of the page that started the
   // flow, which is whichever page is hosting the picker. The list it unlocks is
@@ -1055,13 +998,6 @@ export function SourceSlider({
     </div>
   );
 
-  const layoutsContent = (
-    // The sidebar rows scroll, so they need the leftover height.
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-2">
-      <RowSlider rows={layoutRows} />
-    </div>
-  );
-
   return (
     <div className="flex h-full w-full flex-col gap-2">
       <CategoryTabs
@@ -1072,13 +1008,13 @@ export function SourceSlider({
       {showHints && (
         <div className="text-[9px] leading-none text-gray-400 text-center">
           ← → categorías · ↑ ↓{' '}
-          {isScreens ? 'pantallas' : isLayouts ? 'layouts' : 'canales'}
+          {isScreens ? 'pantallas' : isLayouts ? 'distribuciones' : 'canales'}
         </div>
       )}
       {isScreens ? (
         <SavedScreensList />
       ) : isLayouts ? (
-        layoutsContent
+        <LayoutsPanel />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           {/* A remote has no letters to type with; the box would only be

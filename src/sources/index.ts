@@ -195,7 +195,7 @@ export function serializableSource(source: SourceType): SourceType {
  * What a grid node should store alongside its slug. Built-ins get nothing: the
  * static table above is their truth, and they are the ones carrying the React
  * bits that cannot be stored. Everything else — the TV feed, Zapping, YouTube
- * lives, Twitch — rides along on the node, so a saved, shared or promoted
+ * lives, Twitch — rides along on the node, so a saved
  * screen carries its channels with it instead of leaning on a registry.
  */
 export function embeddedSource(source: SourceType): SourceType | undefined {

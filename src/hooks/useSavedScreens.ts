@@ -2,9 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useRef } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import { ScreenType } from '../types/Monitor';
 import {
-  defaultDisplayConfig,
   defaultSavedScreens,
-  defaultScreen,
   mobileSavedScreens,
   tvSavedScreens
 } from './defaultScreen';
@@ -16,45 +14,32 @@ export type SavedScreen = {
   screen: ScreenType;
 };
 
-const SAVED_SCREENS_KEY = '_saved_screens_';
-const ACTIVE_SCREEN_KEY = '_active_screen_';
+// Versioned: screens from before the arrangements had a fixed number of
+// screens each are dropped rather than carried over, and everyone starts again
+// from the defaults. Bump both together to do it again.
+const SAVED_SCREENS_KEY = '_saved_screens_v2_';
+const ACTIVE_SCREEN_KEY = '_active_screen_v2_';
+const RETIRED_KEYS = [
+  '_saved_screens_',
+  '_active_screen_',
+  '_tele_grid_',
+  '_tele_display_config_v2_',
+  '_tele_featured_monitor_',
+  '_fullscreen_zapping_',
+  '_zapping_preset_screens_'
+];
 
-// The screen on air used to live on its own, beside the saved list; it is now
-// simply the active entry of that list.
-const LEGACY_GRID_KEY = '_tele_grid_';
-const LEGACY_CONFIG_KEY = '_tele_display_config_v2_';
-
-/**
- * Folds a pre-tabs setup into the list, as the screen the user is left on, so
- * upgrading doesn't drop whatever they had on air. Runs once at import time,
- * before any hook reads the storage, and clears the old keys so it can't run
- * twice.
- */
-function migrateLegacyScreen() {
+/** Clears what older versions left in storage. Runs once, at import time. */
+function dropRetiredKeys() {
   if (typeof window === 'undefined') return;
-  const storedSources = window.localStorage.getItem(LEGACY_GRID_KEY);
-  const storedConfig = window.localStorage.getItem(LEGACY_CONFIG_KEY);
-  if (!storedSources && !storedConfig) return;
-  window.localStorage.removeItem(LEGACY_GRID_KEY);
-  window.localStorage.removeItem(LEGACY_CONFIG_KEY);
   try {
-    const storedScreens = window.localStorage.getItem(SAVED_SCREENS_KEY);
-    const saved: SavedScreen[] = storedScreens ? JSON.parse(storedScreens) : [];
-    const screen: ScreenType = {
-      config: storedConfig ? JSON.parse(storedConfig) : defaultDisplayConfig,
-      sources: storedSources ? JSON.parse(storedSources) : defaultScreen.sources
-    };
-    window.localStorage.setItem(
-      SAVED_SCREENS_KEY,
-      JSON.stringify([{ name: 'Pantalla actual', screen }, ...saved])
-    );
-    window.localStorage.setItem(ACTIVE_SCREEN_KEY, '0');
+    RETIRED_KEYS.forEach(key => window.localStorage.removeItem(key));
   } catch {
-    // A setup we can't read isn't worth keeping the user out of the app for.
+    // Storage can be off altogether; then there is nothing to clear either.
   }
 }
 
-migrateLegacyScreen();
+dropRetiredKeys();
 
 /**
  * Gives a phone (or a TV) the screens meant for it the first time the app is

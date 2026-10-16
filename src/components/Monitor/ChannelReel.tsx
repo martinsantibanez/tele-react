@@ -1,5 +1,10 @@
 'use client';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
@@ -77,13 +82,15 @@ const CONTROLS_GUTTER = 'max(15%, 48px)';
  */
 const BANNER_HIDE_MS = 3000;
 
+/** How long the banner takes to fade out, as its `duration-300` says. */
+const BANNER_FADE_MS = 300;
+
 type Props = {
   /** The channel on air, as the screen stores it. */
   node: SourceNode;
   /**
-   * Puts a channel on air. Absent on a screen nobody owns — a shared link, the
-   * promoted screen — and on a tile that is not being zapped with, where the
-   * reel is a picture of one channel rather than something to zap with. It is
+   * Puts a channel on air. Absent on a tile that is not being zapped with,
+   * where the reel is a picture of one channel rather than something to zap with. It is
    * what makes the reel *active*; see below.
    */
   onSelectSource?: (source: SourceType) => void;
@@ -101,6 +108,13 @@ type Props = {
   /** Holds the picture still, for a tile hidden behind another (see the
    * MonitorSource). */
   paused?: boolean;
+  /**
+   * Puts a channel on air from a remote's channel keys alone, on a reel that
+   * is otherwise inert: the selected tile on the wall. A press wakes the reel
+   * for as long as its banner is up, the arrows staying the wall's to walk the
+   * tiles with, and it goes back to sleep with the banner.
+   */
+  onChannelKey?: (source: SourceType) => void;
 };
 
 /**
@@ -224,9 +238,7 @@ function Peek({
   if (!source)
     return (
       <div
-        className={
-          isVertical ? 'h-16 flex-none' : 'w-52 flex-none xl:w-64'
-        }
+        className={isVertical ? 'h-16 flex-none' : 'w-52 flex-none xl:w-64'}
         aria-hidden
       />
     );
@@ -320,9 +332,7 @@ function ZapBanner({
             />
           </div>
           <div className="min-w-0 leading-tight">
-            <div className="truncate text-sm font-semibold">
-              {current.name}
-            </div>
+            <div className="truncate text-sm font-semibold">{current.name}</div>
             {nowPlaying && (
               <div className="truncate text-[11px] text-gray-300">
                 {nowPlaying}
@@ -363,7 +373,8 @@ function ZapColumn({
   nowPlayingLabel,
   visible,
   onPrev,
-  onNext
+  onNext,
+  showAll = true
 }: {
   current?: SourceType;
   previous?: SourceType;
@@ -372,6 +383,8 @@ function ZapColumn({
   visible: boolean;
   onPrev: () => void;
   onNext: () => void;
+  /** Whether right opens the picker on the whole list from here. */
+  showAll?: boolean;
 }) {
   if (!current) return null;
 
@@ -449,10 +462,12 @@ function ZapColumn({
 
         {neighbour(next, 'next')}
 
-        <div className="flex items-center justify-end gap-1 px-3 pt-1 text-[11px] text-gray-400">
-          Todos los canales
-          <ChevronRight size={14} aria-hidden />
-        </div>
+        {showAll && (
+          <div className="flex items-center justify-end gap-1 px-3 pt-1 text-[11px] text-gray-400">
+            Todos los canales
+            <ChevronRight size={14} aria-hidden />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -505,8 +520,7 @@ function OnAir({
  * coming back to one lands on what was playing there rather than at the top.
  *
  * The screen itself keeps a single source, whatever is on air. That is what
- * makes the mode fit the rest of the app: a zapping screen saves, shares, gets
- * promoted and draws its thumbnail like any other, because it *is* one — the
+ * makes the mode fit the rest of the app: a zapping screen saves and draws its thumbnail like any other, because it *is* one — the
  * reel only decides what sits in its one slot.
  */
 export function ChannelReel({
@@ -515,8 +529,13 @@ export function ChannelReel({
   orientation = 'vertical',
   screenIdx = 0,
   fullscreen = false,
-  paused = false
+  paused = false,
+  onChannelKey
 }: Props) {
+  /** Woken by a channel key, see `onChannelKey`. */
+  const [woken, setWoken] = useState(false);
+  const canWake = !!onChannelKey && orientation === 'horizontal';
+  if (woken && !canWake) setWoken(false);
   /**
    * Whether this reel is the one being zapped with.
    *
@@ -528,7 +547,7 @@ export function ChannelReel({
    * no band, no neighbours, no chrome, no keys, and no memory of where a
    * catalogue was left. It holds the one channel the screen holds, and waits.
    */
-  const active = !!onSelectSource;
+  const active = !!onSelectSource || woken;
 
   const { isEditing, editingSourceIdx, isMuted } = useTeleContext();
   const [storedCategory, setActiveCategory] = useActiveCategory();
@@ -546,7 +565,7 @@ export function ChannelReel({
   // A thumb, rather than a touchscreen that happens to be there: a laptop with
   // one still points at things with a mouse, and keeps its clicks.
   const isTouch = useMediaQuery('(pointer: coarse)');
-  const swipeable = active && isTouch;
+  const swipeable = !!onSelectSource && isTouch;
 
   const resolveSource = useResolveSource();
   /** The channel the screen holds, as it stands — the inert reel's whole show. */
@@ -557,11 +576,10 @@ export function ChannelReel({
 
   /**
    * The catalogue being walked. The picker's tab, whenever that tab is a
-   * catalogue — but Layouts is not one, and it is where the reel is switched on
-   * from, so arriving would always mean arriving at nothing. Standing there the
-   * reel keeps playing the band it was last in and lets the sidebar get on with
-   * showing layouts; it is not pushed back onto a catalogue, or the Layouts tab
-   * could never be opened again to switch the reel back off.
+   * catalogue — but Layouts and Screens are not, and arriving at one would
+   * mean arriving at nothing. Standing there the reel keeps playing the band
+   * it was last in and lets the sidebar get on with its panel; it is not
+   * pushed back onto a catalogue, or those tabs could never be opened.
    */
   // `stocked` rather than the bands themselves: it also leaves out the tabs a
   // TV has no button for.
@@ -601,7 +619,7 @@ export function ChannelReel({
   // putting on air, and not by the callback being rebuilt on every render of
   // the Monitor above it.
   const selectRef = useRef(onSelectSource);
-  selectRef.current = onSelectSource;
+  selectRef.current = onSelectSource ?? onChannelKey;
 
   const select = useCallback((source?: SourceType) => {
     if (!source) return;
@@ -648,8 +666,7 @@ export function ChannelReel({
       // Standing on an empty band, the nearest stocked one in that direction is
       // where the press should land.
       const from = at === -1 ? (delta > 0 ? -1 : stocked.length) : at;
-      const target =
-        stocked[(from + delta + stocked.length) % stocked.length];
+      const target = stocked[(from + delta + stocked.length) % stocked.length];
       if (target) setActiveCategory(target);
     },
     [stocked, band, setActiveCategory]
@@ -798,10 +815,22 @@ export function ChannelReel({
     { ...options, enabled: keysLive && !fullscreen },
     [stepBand]
   );
-  // A remote's channel keys, in the same direction as the arrows.
+  // A remote's channel keys, in the same direction as the arrows. On a tile
+  // that is not being zapped with they wake it first: a tile holding a channel
+  // from another catalogue then lands on the band's own, as it would arriving
+  // fullscreen, and the press after that is the one that steps.
+  const channelKey = (delta: number) => {
+    if (!active) {
+      if (!sources.length) return;
+      setWoken(true);
+      if (onAirIndex < 0) return;
+    }
+    step(delta);
+    if (woken) showBanner();
+  };
   useKeyNames(
-    { ChannelUp: () => step(-1), ChannelDown: () => step(1) },
-    keysLive
+    { ChannelUp: () => channelKey(-1), ChannelDown: () => channelKey(1) },
+    keysLive || (canWake && !isEditing)
   );
 
   // ── Banner (horizontal layout only) ─────────────────────────────────────
@@ -832,6 +861,13 @@ export function ChannelReel({
     []
   );
 
+  // A reel woken by a channel key sleeps again once its banner has faded out.
+  useEffect(() => {
+    if (!woken || bannerVisible) return;
+    const timer = setTimeout(() => setWoken(false), BANNER_FADE_MS);
+    return () => clearTimeout(timer);
+  }, [woken, bannerVisible]);
+
   const revealBanner = useCallback(() => {
     if (isVertical || !active) return;
     showBanner();
@@ -853,7 +889,14 @@ export function ChannelReel({
   const stageEntries = useMemo(() => {
     if (!active)
       return ownSource
-        ? [{ slug: ownSource.slug, source: ownSource, offset: 0, isOnAir: true }]
+        ? [
+            {
+              slug: ownSource.slug,
+              source: ownSource,
+              offset: 0,
+              isOnAir: true
+            }
+          ]
         : [];
     return mounted.flatMap(slug => {
       const at = indexBySlug.get(slug);
@@ -985,7 +1028,9 @@ export function ChannelReel({
       ) : (
         <>
           {stage}
-          {active && fullscreen && (
+          {/* A tile woken by a channel key gets the fullscreen column too:
+              the pill is a mouse's, and the channel keys walk up and down. */}
+          {active && (fullscreen || woken) && (
             <ZapColumn
               current={current}
               previous={previous}
@@ -995,9 +1040,11 @@ export function ChannelReel({
               visible={bannerVisible && !isEditing}
               onPrev={() => step(-1)}
               onNext={() => step(1)}
+              // On the wall right is the next tile over.
+              showAll={fullscreen}
             />
           )}
-          {active && !fullscreen && (
+          {active && !fullscreen && !woken && (
             <ZapBanner
               current={current}
               previous={previous}

@@ -1,7 +1,6 @@
 'use client';
 import { useCustomTwitchAccounts } from './useCustomTwitchAccounts';
 import { useFavourites } from './useFavourites';
-import { useFeaturedScreen } from './useFeaturedScreen';
 import { useActiveScreenIndex, useSavedScreens } from './useSavedScreens';
 import { useSavedSelectedItem } from './useSavedSelectedItem';
 import {
@@ -14,7 +13,6 @@ import { useZappingPresetsVersion } from './useZappingPresetScreens';
 export const useCleanLocalStorage = () => {
   const [, , savedScreensStorage] = useSavedScreens();
   const [, , activeScreenStorage] = useActiveScreenIndex();
-  const [, , featuredScreenStorage] = useFeaturedScreen();
   const [, , selectedItemStorage] = useSavedSelectedItem();
   const { favouritesMeta } = useFavourites();
   const [, , twitchAccountsMeta] = useCustomTwitchAccounts();
@@ -27,7 +25,6 @@ export const useCleanLocalStorage = () => {
     savedScreensStorage.removeItem();
     activeScreenStorage.removeItem();
     selectedItemStorage.removeItem();
-    featuredScreenStorage.removeItem();
     favouritesMeta.removeItem();
     twitchAccountsMeta.removeItem();
     zappingTokenMeta.removeItem();

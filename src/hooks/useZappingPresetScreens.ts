@@ -31,7 +31,9 @@ const PRESET_SCREENS_VERSION = 1;
  */
 const TV_PRESET_SCREENS_VERSION = 2;
 
-const SEEDED_VERSION_KEY = '_zapping_preset_screens_';
+// Versioned with the saved screens (see `useSavedScreens`): a reset list has
+// to be seeded again.
+const SEEDED_VERSION_KEY = '_zapping_preset_screens_v2_';
 
 /**
  * Which version of the presets this browser has been set up with. Zero until it

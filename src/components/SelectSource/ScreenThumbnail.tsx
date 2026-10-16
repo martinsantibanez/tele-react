@@ -1,9 +1,10 @@
 'use client';
-import { YoutubeIcon } from 'lucide-react';
+import { Flame, YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
+import { visibleSources } from '../Monitor/predefinedLayouts';
 import { SourceImage } from '../SourceImage';
 
 type Props = {
@@ -42,13 +43,18 @@ export function ScreenThumbnail({
         <div className="flex h-full w-full items-center justify-center bg-gray-900">
           <YoutubeIcon size={40} className="text-red-500" />
         </div>
+      ) : config.mode === DisplayMode.ZappingTop ? (
+        // Same for the ranking: what it will hold is whatever ranks then.
+        <div className="flex h-full w-full items-center justify-center bg-gray-900">
+          <Flame size={36} className="text-orange-400" />
+        </div>
       ) : config.mode === DisplayMode.Zapping ? (
         // One channel with a sliver of the band above and below it: the shape
         // of the reel, and the channel it was left on.
         <ZappingPreview node={sources[0]} resolve={resolve} />
       ) : config.mode === DisplayMode.Grid ? (
         <GridPreview
-          sources={sources}
+          sources={visibleSources(config, sources)}
           size={config.grid.size}
           resolve={resolve}
         />

@@ -83,7 +83,7 @@ export const tvSavedScreens: SavedScreen[] = [
       config: {
         mode: DisplayMode.Grid,
         layout: initialLayout,
-        grid: { size: 2 }
+        grid: { size: 2, count: 4 }
       },
       sources: defaultGrid.slice(0, 4)
     }
@@ -102,6 +102,7 @@ const screenShape = ({ config, sources }: ScreenType) =>
   JSON.stringify({
     mode: config.mode,
     grid: config.grid.size,
+    count: config.grid.count,
     layout: config.mode === DisplayMode.Layout ? config.layout : undefined,
     sources: sources.map(node => [node.sourceSlug, node.activeSignal])
   });

@@ -23,7 +23,7 @@ export const categoryLabels: Record<SelectorCategories, string> = {
   favourites: 'Favoritos',
   pruebas: 'Pruebas',
   screens: 'Pantallas',
-  layouts: 'Layouts'
+  layouts: 'Distribución'
 };
 
 /**
