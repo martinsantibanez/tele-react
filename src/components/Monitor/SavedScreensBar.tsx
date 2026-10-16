@@ -195,7 +195,7 @@ export function SavedScreensBar() {
                   />
                   {canDelete && (
                     <button
-                      title="Eliminar"
+                      title={isMobile ? 'Eliminar' : 'Eliminar (⇧D)'}
                       onClick={event => {
                         event.stopPropagation();
                         startDelete(index);
@@ -204,6 +204,13 @@ export function SavedScreensBar() {
                     >
                       <X size={12} className="text-white" />
                     </button>
+                  )}
+                  {/* ⇧D drops the screen on air, so its key rides on that
+                      tile's X. */}
+                  {canDelete && isActive && !isMobile && (
+                    <span className="pointer-events-none absolute -top-1 right-3.5 rounded bg-black/70 px-0.5 text-[9px] leading-none text-gray-300">
+                      ⇧D
+                    </span>
                   )}
                 </div>
                 {saved.name && (
@@ -234,11 +241,14 @@ export function SavedScreensBar() {
             type="button"
             onClick={newSavedScreen}
             aria-label="Nueva pantalla"
-            title="Nueva pantalla"
-            className="mt-1 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
+            title={isMobile ? 'Nueva pantalla' : 'Nueva pantalla (S)'}
+            className="mt-1 flex shrink-0 flex-col items-center justify-center gap-1 rounded-sm bg-black text-gray-500 hover:text-gray-300"
             style={{ width: thumbWidth, height: thumbHeight }}
           >
             <Plus size={isMobile ? 18 : 22} />
+            {!isMobile && (
+              <span className="text-[10px] leading-none font-bold">S</span>
+            )}
           </button>
         )}
       </div>
@@ -313,23 +323,13 @@ export function SavedScreensBar() {
     </div>
   );
 
-  const hint = (
-    <div className="text-center text-[9px] leading-none text-gray-400">
-      Z ◀ X ▶ cambiar · S nueva pantalla · R renombrar
-      {canDelete && <> · ⇧D eliminar</>}
-    </div>
-  );
-
   return (
     <div className="flex h-full min-h-0 w-full flex-col justify-center gap-1 px-3 py-2">
       {strip}
-      {/* The hint is a list of keys, which a phone doesn't have; its prompts
-          still come up, since they are how the strip is answered. */}
-      {isNaming
-        ? namePrompt
-        : isConfirmingDelete
-          ? deletePrompt
-          : !isMobile && !isTv && hint}
+      {/* Each key is written on what it works (Z and X under the
+          neighbours, S on the new-screen tile, ⇧D by the X); R and the rest
+          are in the F1 help. */}
+      {isNaming ? namePrompt : isConfirmingDelete && deletePrompt}
     </div>
   );
 }

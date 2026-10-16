@@ -159,6 +159,13 @@ const signalIcons: Record<SignalType, typeof Tv> = {
   spotify: Music
 };
 
+/** A key written beside the control it works, too faint to compete with it. */
+const ArrowHint = ({ children }: { children: string }) => (
+  <span aria-hidden className="shrink-0 text-[10px] leading-none text-gray-500">
+    {children}
+  </span>
+);
+
 type Props = {
   selectedSourceSlug: string | undefined;
   onSelect: (source: SourceType) => void;
@@ -613,17 +620,21 @@ export function SourceSlider({
   const youtubeConfigPanel = (
     <div
       ref={youtubeConfigRef}
-      className="flex flex-col items-center gap-2 p-3 shrink-0"
+      className={
+        youtubeConnected
+          ? 'flex w-full shrink-0 items-center justify-end gap-1 px-1 pt-1'
+          : 'flex shrink-0 flex-col items-center gap-2 p-3'
+      }
     >
       {!youtubeConnected && (
         <span className="text-center text-gray-400">
           Conecta tu cuenta para ver tus canales en vivo
         </span>
       )}
-      <YoutubeConfig />
-      {youtubeConnected && (
+      {youtubeConnected && showHints && (
         <span className="text-[9px] leading-none text-gray-400">TAB</span>
       )}
+      <YoutubeConfig />
     </div>
   );
 
@@ -867,19 +878,25 @@ export function SourceSlider({
   const configPanels = (
     <>
       {isZapping && (
+        // Once connected the account is rarely touched again, so it shrinks to
+        // a gear tucked under the list.
         <div
           ref={zappingConfigRef}
-          className="flex flex-col items-center gap-2 p-3 shrink-0"
+          className={
+            zappingToken
+              ? 'flex w-full shrink-0 items-center justify-end gap-1 px-1 pt-1'
+              : 'flex shrink-0 flex-col items-center gap-2 p-3'
+          }
         >
           {!zappingToken && (
             <span className="text-center text-gray-400">
               Conecta tu cuenta para ver los canales
             </span>
           )}
-          <ZappingConfig />
-          {!!zappingToken && (
+          {!!zappingToken && showHints && (
             <span className="text-[9px] leading-none text-gray-400">TAB</span>
           )}
+          <ZappingConfig />
         </div>
       )}
       {isYoutube && youtubeConfigPanel}
@@ -1000,17 +1017,18 @@ export function SourceSlider({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
-      <CategoryTabs
-        activeCategory={activeCategory}
-        onSelect={setActiveCategory}
-        categories={categoryOrder}
-      />
-      {showHints && (
-        <div className="text-[9px] leading-none text-gray-400 text-center">
-          ← → categorías · ↑ ↓{' '}
-          {isScreens ? 'pantallas' : isLayouts ? 'distribuciones' : 'canales'}
-        </div>
-      )}
+      {/* Left and right step through the tabs, so the arrows sit at either
+          end of them; up and down are what any list answers to. */}
+      <div className="flex items-center gap-1">
+        {showHints && <ArrowHint>←</ArrowHint>}
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+          categories={categoryOrder}
+          className="min-w-0 flex-1"
+        />
+        {showHints && <ArrowHint>→</ArrowHint>}
+      </div>
       {isScreens ? (
         <SavedScreensList />
       ) : isLayouts ? (

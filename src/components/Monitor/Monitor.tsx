@@ -54,6 +54,7 @@ import { ControlBar } from './ControlBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
 import { fillSlots, slotCount } from './predefinedLayouts';
 import { Screen } from './Screen';
+import { ShortcutsHelp } from './ShortcutsHelp';
 
 const Shortcut = ({ keys, label }: { keys: string; label: string }) => (
   <div className="leading-tight">
@@ -473,6 +474,13 @@ export const Monitor = () => {
     !isFullscreen
   );
   useHotkeys('m', () => toggleMute(), [toggleMute]);
+  // Unfolds every shortcut under the picker. Browsers open their own help on
+  // F1, so it is taken from them.
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  useHotkeys('f1', () => setIsHelpOpen(open => !open), {
+    enabled: !isTv && !isMobile,
+    preventDefault: true
+  });
   const picker = (
     <>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -485,11 +493,36 @@ export const Monitor = () => {
         />
       </div>
 
-      {!isMobile && (
+      {/* The full list folds away behind F1; only what the current state
+          changes is always written out: a swap halfway done. */}
+      {!isMobile && !isTv && (
+        <div className="mt-2 flex flex-none flex-col gap-1 text-xs text-gray-300">
+          {swapSourceIdx !== undefined && (
+            <>
+              <Shortcut
+                keys="Enter"
+                label={`Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`}
+              />
+              <Shortcut keys="Esc" label="Cancelar intercambio" />
+            </>
+          )}
+          {isHelpOpen && <ShortcutsHelp />}
+          <button
+            type="button"
+            onClick={() => setIsHelpOpen(open => !open)}
+            aria-expanded={isHelpOpen}
+            className="self-start text-[10px] leading-none text-gray-400 hover:text-white"
+          >
+            <span className="font-bold">F1</span>{' '}
+            {isHelpOpen ? 'ocultar atajos' : 'atajos de teclado'}
+          </button>
+        </div>
+      )}
+      {/* A remote has no F1, and only these few keys. */}
+      {isTv && (
         <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
-          {!isTv && <Shortcut keys="E" label="Toggle Edit Mode" />}
           <Shortcut
-            keys={isTv ? 'OK' : 'Enter'}
+            keys="OK"
             label={
               swapSourceIdx === undefined
                 ? 'Ver pantallas'
@@ -497,13 +530,10 @@ export const Monitor = () => {
             }
           />
           {canSwap && swapSourceIdx === undefined && (
-            <Shortcut
-              keys={isTv ? 'Mantener OK' : 'Mantener Enter'}
-              label="Marcar para Intercambiar"
-            />
+            <Shortcut keys="Mantener OK" label="Marcar para Intercambiar" />
           )}
           <Shortcut
-            keys={isTv ? 'Atrás' : 'Esc'}
+            keys="Atrás"
             label={
               swapSourceIdx === undefined
                 ? 'Cerrar selector'
@@ -511,25 +541,7 @@ export const Monitor = () => {
             }
           />
           {savedScreens.length > 1 && (
-            <Shortcut
-              keys={isTv ? 'CH− / CH+' : 'RePág / AvPág'}
-              label="Cambiar pantalla guardada"
-            />
-          )}
-          {/* The rest are letter keys, which a remote does not have. */}
-          {!isTv && (
-            <>
-              <Shortcut
-                keys="G"
-                label={
-                  isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
-                }
-              />
-              <Shortcut
-                keys="M"
-                label={isMuted ? 'Activar Audio' : 'Silenciar'}
-              />
-            </>
+            <Shortcut keys="CH− / CH+" label="Cambiar pantalla guardada" />
           )}
         </div>
       )}
@@ -540,21 +552,23 @@ export const Monitor = () => {
     <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
       <FloatingButton
         onClick={toggleMute}
-        label={isMuted ? 'Activar el audio' : 'Silenciar'}
+        label={isMuted ? 'Activar el audio (M)' : 'Silenciar (M)'}
       >
         {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </FloatingButton>
       <FloatingButton
         onClick={toggleFullscreen}
         label={
-          isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'
+          isFullscreen
+            ? 'Salir de pantalla completa (G)'
+            : 'Pantalla completa (G)'
         }
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
       <FloatingButton
         onClick={togglePicker}
-        label={isEditing ? 'Salir de edición' : 'Editar canales'}
+        label={isEditing ? 'Salir de edición (E)' : 'Editar canales (E)'}
       >
         {isEditing ? <X size={20} /> : <Pencil size={20} />}
       </FloatingButton>
