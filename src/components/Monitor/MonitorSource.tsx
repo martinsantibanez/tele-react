@@ -165,8 +165,9 @@ export function MonitorSource({
         {isMarkedForSwap && (
           <div className="pointer-events-none absolute inset-0 z-[3] bg-slate-500/40" />
         )}
-        {/* Drawn as an overlay: the player covers any border on the wrapper. */}
-        {!muted && (
+        {/* Drawn as an overlay: the player covers any border on the wrapper.
+            Fullscreen there is only the one picture, so nothing to tell apart. */}
+        {!muted && !fullscreen && (
           <div
             className="pointer-events-none absolute inset-0 z-[1] box-border"
             style={{
