@@ -8,6 +8,7 @@ import {
 import { SourceType } from '../sources';
 import { pruebasSources } from '../sources/pruebas';
 import { useFavourites } from './useFavourites';
+import { useShowTvCatalog } from './useSetupWizard';
 import { useSourceCatalog } from './useSourceCatalog';
 import { useSpotifyTabSections } from './useSpotifyLibrary';
 import { useTwitchFollowedSources } from './useTwitchFollowedSources';
@@ -64,6 +65,7 @@ export function useAllCategorySources(): CategorySources {
   const spotifySections = useSpotifyTabSections();
   const { sources: twitchSources } = useTwitchFollowedSources();
   const { favourites } = useFavourites();
+  const showTv = useShowTvCatalog();
 
   const tv = useMemo(
     () =>
@@ -100,7 +102,7 @@ export function useAllCategorySources(): CategorySources {
 
   return useMemo(
     () => ({
-      tv,
+      tv: showTv ? tv : [],
       zapping,
       youtube: youtubeConnected ? youtubeSources : [],
       spotify,
@@ -112,6 +114,7 @@ export function useAllCategorySources(): CategorySources {
     }),
     [
       tv,
+      showTv,
       zapping,
       youtubeConnected,
       youtubeSources,

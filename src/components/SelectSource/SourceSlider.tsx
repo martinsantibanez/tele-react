@@ -40,6 +40,7 @@ import {
 } from '../../hooks/useSpotifyLibrary';
 import { SpotifyConfig } from './SpotifySelector/SpotifyConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import { useShowTvCatalog } from '../../hooks/useSetupWizard';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
 import {
@@ -185,12 +186,17 @@ export function SourceSlider({
 }: Props) {
   const [storedCategory, setActiveCategory] = useActiveCategory();
   const isMobile = useIsMobile();
-  const categoryOrder = useMemo(() => visibleCategoryOrder(isMobile), [isMobile]);
+  const showTv = useShowTvCatalog();
+  const categoryOrder = useMemo(
+    () => visibleCategoryOrder(isMobile, showTv),
+    [isMobile, showTv]
+  );
   // A stored category can stop existing — `pruebas` outside dev, `layouts` on
-  // a phone — and the picker would then show an empty list no button points at.
+  // a phone, `tv` once connected — and the picker would then show an empty
+  // list no button points at.
   const activeCategory = categoryOrder.includes(storedCategory)
     ? storedCategory
-    : 'tv';
+    : categoryOrder[0];
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
@@ -1044,7 +1050,11 @@ export function SourceSlider({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
-      <CategoryTabs activeCategory={activeCategory} onSelect={setActiveCategory} />
+      <CategoryTabs
+        activeCategory={activeCategory}
+        onSelect={setActiveCategory}
+        categories={categoryOrder}
+      />
       {showHints && (
         <div className="text-[9px] leading-none text-gray-400 text-center">
           ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}

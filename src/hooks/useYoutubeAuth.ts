@@ -26,8 +26,17 @@ type StoredToken = {
 
 export type YoutubeAuthStatus = 'unknown' | 'connected' | 'disconnected';
 
+type TokenResult = {
+  accessToken?: string;
+  /** Unset when the backend couldn't be reached: nothing was learnt. */
+  status?: YoutubeAuthStatus;
+};
+
 // Shared across all hook instances so they don't each hit /token on mount.
-let inFlight: Promise<string | undefined> | undefined;
+// It resolves to the outcome rather than setting anyone's state itself, so
+// every instance that awaited it learns the status, not just the one that
+// started it.
+let inFlight: Promise<TokenResult> | undefined;
 
 export function useYoutubeAccessToken() {
   return useLocalStorageState<StoredToken | undefined>('youtubeToken', {
@@ -63,8 +72,7 @@ export function useYoutubeAuth() {
             const res = await fetch('/api/youtube/token');
             if (res.status === 401) {
               setToken(undefined);
-              setStatus('disconnected');
-              return undefined;
+              return { status: 'disconnected' };
             }
             if (!res.ok) throw new Error(`token endpoint ${res.status}`);
             const json = await res.json();
@@ -73,15 +81,16 @@ export function useYoutubeAuth() {
               expiresAt: Date.now() + (json.expiresIn ?? 3600) * 1000
             };
             setToken(stored);
-            setStatus('connected');
-            return stored.accessToken;
+            return { accessToken: stored.accessToken, status: 'connected' };
           } catch (err) {
             console.error('[youtube] token fetch failed', err);
-            return undefined;
+            return {};
           }
         })();
       try {
-        return await inFlight;
+        const result = await inFlight;
+        if (result.status) setStatus(result.status);
+        return result.accessToken;
       } finally {
         inFlight = undefined;
       }
