@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
-import { zappingPresetScreens } from '../components/GridDisplay/zappingPresetScreens';
+import {
+  tvZappingPresetScreens,
+  zappingPresetScreens
+} from '../components/GridDisplay/zappingPresetScreens';
 import { embeddedSource } from '../sources';
+import { isStarterScreen } from './defaultScreen';
+import { isTvDevice } from './useIsTv';
 import {
   SavedScreen,
   useActiveScreenIndex,
@@ -33,6 +38,10 @@ export function useZappingPresetsVersion() {
  * presets once an account is configured, so a pairing lands on channels instead
  * of leaving the user on the default empty grid.
  *
+ * The starter screens go at the same time, as long as they are untouched: they
+ * are the open-web channels Zapping replaces, and only ever there as a stand-in
+ * until something better was set up. A screen the user changed stays.
+ *
  * They arrive as screens of their own, upserted by name — whatever the user was
  * working on is never written over, and re-running this (a version bump, a
  * second pairing) refreshes the presets rather than piling up copies of them.
@@ -41,7 +50,10 @@ export function useZappingPresetsVersion() {
  */
 export function useZappingPresetScreens() {
   const [savedScreens, setSavedScreens] = useSavedScreens();
-  const [, setActiveIndex] = useActiveScreenIndex();
+  const activeIndexState = useActiveScreenIndex();
+  const [, setActiveIndex] = activeIndexState;
+  const activeIndexRef = useRef(activeIndexState);
+  activeIndexRef.current = activeIndexState;
   const [seededVersion, setSeededVersion] = useZappingPresetsVersion();
   const [loginToken] = useZappingLoginToken();
   const zappingSources = useZappingSources();
@@ -73,26 +85,30 @@ export function useZappingPresetScreens() {
       }
     });
 
-    // Where the first preset ends up: the one it already occupies, or the end
-    // of the list, since it is the first of them to be appended.
+    const presets = isTvDevice() ? tvZappingPresetScreens : zappingPresetScreens;
     const before = savedScreensRef.current;
-    const firstIndex = before.findIndex(
-      entry => entry.name === zappingPresetScreens[0].name
+    const kept = before.filter(entry => !isStarterScreen(entry.screen));
+    const isNew = !before.some(entry => entry.name === presets[0].name);
+
+    const next = [...kept];
+    for (const preset of presets) {
+      const index = next.findIndex(entry => entry.name === preset.name);
+      if (index === -1) next.push(resolve(preset));
+      else next[index] = resolve(preset);
+    }
+    setSavedScreens(next);
+
+    // New presets are where the user should land. Refreshing a set they already
+    // have shouldn't pull them off the screen they are on — unless that screen
+    // was a starter, and is gone.
+    const [activeIndex] = activeIndexRef.current;
+    const onAir = before[activeIndex];
+    const onAirIndex = onAir ? next.indexOf(onAir) : -1;
+    setActiveIndex(
+      isNew || onAirIndex === -1
+        ? next.findIndex(entry => entry.name === presets[0].name)
+        : onAirIndex
     );
-
-    setSavedScreens(saved => {
-      const next = [...saved];
-      for (const preset of zappingPresetScreens) {
-        const index = next.findIndex(entry => entry.name === preset.name);
-        if (index === -1) next.push(resolve(preset));
-        else next[index] = resolve(preset);
-      }
-      return next;
-    });
-
-    // Only worth switching to when the presets are new: refreshing a set the
-    // user already has shouldn't pull them off the screen they are on.
-    if (firstIndex === -1) setActiveIndex(before.length);
   }, [
     loginToken,
     seededVersion,

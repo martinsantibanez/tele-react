@@ -1,6 +1,9 @@
 import type { SavedScreen } from '../../hooks/useSavedScreens';
 import { DisplayMode, SourceNode } from '../../types/Monitor';
-import { initialLayout } from '../Monitor/predefinedLayouts';
+import {
+  initialLayout,
+  twoSideBySideLayout
+} from '../Monitor/predefinedLayouts';
 
 /**
  * The four broadcast channels, as fresh nodes on every call: `Nacionales` and
@@ -173,4 +176,34 @@ export const zappingPresetScreens: SavedScreen[] = [
       sources: vistaGeneral()
     }
   }
+];
+
+/**
+ * The TV's set: two news channels side by side first, since a TV box plays one
+ * or two streams smoothly, then the rest as everywhere else.
+ */
+export const tvZappingPresetScreens: SavedScreen[] = [
+  {
+    name: 'Dos pantallas',
+    screen: {
+      config: {
+        mode: DisplayMode.Layout,
+        layout: twoSideBySideLayout,
+        grid: { size: 1 }
+      },
+      sources: [
+        {
+          // 24 Horas
+          sourceSlug: 'custom_zapping_52',
+          uuid: 'b6a4f0c2-0a7e-4d0f-9a43-6f3c1e2d8a51'
+        },
+        {
+          // CNN Chile
+          sourceSlug: 'custom_zapping_142',
+          uuid: 'c9e2d7b1-5f38-4b6a-8e14-2a7d9c0f3b62'
+        }
+      ]
+    }
+  },
+  ...zappingPresetScreens
 ];

@@ -109,7 +109,8 @@ export function useAllCategorySources(): CategorySources {
       twitch: twitchSources,
       favourites: favouriteSources,
       pruebas: pruebasList,
-      // Not a catalogue at all — it is where the arrangement is picked.
+      // Not catalogues at all — where the screen and its arrangement are picked.
+      screens: [],
       layouts: []
     }),
     [

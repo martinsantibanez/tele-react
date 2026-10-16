@@ -129,3 +129,11 @@
     cursor: pointer;
   }
 }
+
+/* On the TV the focus is the only pointer there is, and it is looked at from
+   across the room: every focused control gets a ring that can't be missed,
+   whatever quieter one it draws for itself. Set by `TvMarker`. */
+html[data-tv] :focus-visible {
+  outline: 3px solid white !important;
+  outline-offset: 2px;
+}

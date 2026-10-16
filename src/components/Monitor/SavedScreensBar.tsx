@@ -5,15 +5,12 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import {
-  useActiveScreen,
   useActiveScreenIndex,
+  useNewSavedScreen,
   useSavedScreens
 } from '../../hooks/useSavedScreens';
+import { useIsTv } from '../../hooks/useIsTv';
 import { useIsMobile } from '../../hooks/useViewport';
-import {
-  findLayoutIndex,
-  possibleLayouts
-} from '../SelectSource/layoutOptions';
 import { ScreenThumbnail } from '../SelectSource/ScreenThumbnail';
 
 const THUMB_WIDTH = 96;
@@ -23,17 +20,20 @@ const THUMB_HEIGHT = 54;
 const MOBILE_THUMB_WIDTH = 72;
 const MOBILE_THUMB_HEIGHT = 40;
 
-// Both prompts ask for a name; what differs is where the answer lands.
-type NamePrompt = { mode: 'add' | 'rename'; value: string };
+/** What a screen is called where it needs a name and was never given one. */
+export const screenLabel = (name: string, index: number) =>
+  name || `Pantalla ${index + 1}`;
 
 export function SavedScreensBar() {
   const isMobile = useIsMobile();
+  const isTv = useIsTv();
   const thumbWidth = isMobile ? MOBILE_THUMB_WIDTH : THUMB_WIDTH;
   const thumbHeight = isMobile ? MOBILE_THUMB_HEIGHT : THUMB_HEIGHT;
   const [savedScreens, setSavedScreens] = useSavedScreens();
   const [activeIndex, setActiveIndex] = useActiveScreenIndex();
-  const [activeScreen] = useActiveScreen();
-  const [pendingName, setPendingName] = useState<NamePrompt | null>(null);
+  const newSavedScreen = useNewSavedScreen();
+  // Only renaming asks for a name: new screens start without one.
+  const [pendingName, setPendingName] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const isNaming = pendingName !== null;
@@ -53,35 +53,19 @@ export function SavedScreensBar() {
     });
   }, [activeIndex]);
 
-  const suggestedName = () => {
-    const layout = possibleLayouts[findLayoutIndex(activeScreen.config)];
-    return `${layout?.name ?? 'Pantalla'} ${savedScreens.length + 1}`;
-  };
-
-  const startAdd = () => setPendingName({ mode: 'add', value: '' });
-
   const startRename = () =>
-    setPendingName({
-      mode: 'rename',
-      value: savedScreens[activeIndex]?.name ?? ''
-    });
+    setPendingName(savedScreens[activeIndex]?.name ?? '');
 
   const confirmName = () => {
-    if (!pendingName) return;
-    const typed = pendingName.value.trim();
-    if (pendingName.mode === 'add') {
-      const name = typed || suggestedName();
-      setSavedScreens(saved => [...saved, { name, screen: activeScreen }]);
-      setActiveIndex(savedScreens.length);
-    } else if (typed) {
-      // An empty box on a rename means the user cleared it and gave up, not
-      // that the screen should lose its name.
-      setSavedScreens(saved =>
-        saved.map((entry, index) =>
-          index === activeIndex ? { ...entry, name: typed } : entry
-        )
-      );
-    }
+    if (pendingName === null) return;
+    // An empty box clears the name, which leaves the thumbnail to speak for
+    // the screen like any new one.
+    const typed = pendingName.trim();
+    setSavedScreens(saved =>
+      saved.map((entry, index) =>
+        index === activeIndex ? { ...entry, name: typed } : entry
+      )
+    );
     setPendingName(null);
   };
 
@@ -131,9 +115,9 @@ export function SavedScreensBar() {
   );
   useHotkeys(
     's',
-    () => (isPrompting ? undefined : startAdd()),
+    () => (isPrompting ? undefined : newSavedScreen()),
     { preventDefault: true },
-    [isPrompting]
+    [isPrompting, newSavedScreen]
   );
   useHotkeys(
     'r',
@@ -164,7 +148,7 @@ export function SavedScreensBar() {
     <div className="w-full min-w-0 overflow-x-auto">
       {/* `w-max` + `mx-auto` centres the screens while they fit and still
           scrolls from the first one once they don't. */}
-      <div className="mx-auto flex w-max items-end gap-2">
+      <div className="mx-auto flex w-max items-start gap-2">
         {savedScreens.map((saved, index) => {
           const isActive = index === activeIndex;
           return (
@@ -174,7 +158,7 @@ export function SavedScreensBar() {
               onClick={() => select(index)}
               aria-current={isActive}
               // The name under the thumbnail is truncated to the tile's width.
-              title={saved.name}
+              title={screenLabel(saved.name, index)}
               className={`shrink-0 cursor-pointer rounded-sm p-1 ${
                 isActive ? 'bg-gray-800' : ''
               }`}
@@ -200,22 +184,24 @@ export function SavedScreensBar() {
                     </button>
                   )}
                 </div>
-                <div
-                  className="max-w-full truncate text-[10px] font-semibold"
-                  style={{ width: thumbWidth }}
-                >
-                  {saved.name}
-                </div>
+                {saved.name && (
+                  <div
+                    className="max-w-full truncate text-[10px] font-semibold"
+                    style={{ width: thumbWidth }}
+                  >
+                    {saved.name}
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
         <button
           type="button"
-          onClick={startAdd}
+          onClick={newSavedScreen}
           aria-label="Nueva pantalla"
           title="Nueva pantalla"
-          className="mb-4 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
+          className="mt-1 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
           style={{ width: thumbWidth, height: thumbHeight }}
         >
           <Plus size={isMobile ? 18 : 22} />
@@ -223,8 +209,6 @@ export function SavedScreensBar() {
       </div>
     </div>
   );
-
-  const isRenaming = pendingName?.mode === 'rename';
 
   const namePrompt = (
     <form
@@ -237,12 +221,8 @@ export function SavedScreensBar() {
       <Input
         autoFocus
         onFocus={event => event.target.select()}
-        value={pendingName?.value ?? ''}
-        onChange={event =>
-          setPendingName(current =>
-            current ? { ...current, value: event.target.value } : current
-          )
-        }
+        value={pendingName ?? ''}
+        onChange={event => setPendingName(event.target.value)}
         onKeyDown={event => {
           if (event.key !== 'Escape') return;
           event.preventDefault();
@@ -252,7 +232,7 @@ export function SavedScreensBar() {
         className="h-7 max-w-xs"
       />
       <Button type="submit" variant="default" className="h-7">
-        {isRenaming ? 'Renombrar' : 'Crear'}
+        Renombrar
       </Button>
       <Button
         type="button"
@@ -274,7 +254,10 @@ export function SavedScreensBar() {
     <div className="flex items-center justify-center gap-2">
       <span className="text-sm">
         ¿Eliminar{' '}
-        <span className="font-semibold">{screenPendingDelete.name}</span>?
+        <span className="font-semibold">
+          {screenLabel(screenPendingDelete.name, pendingDelete ?? 0)}
+        </span>
+        ?
       </span>
       <Button
         type="button"
@@ -311,7 +294,7 @@ export function SavedScreensBar() {
         ? namePrompt
         : isConfirmingDelete
           ? deletePrompt
-          : !isMobile && hint}
+          : !isMobile && !isTv && hint}
     </div>
   );
 }

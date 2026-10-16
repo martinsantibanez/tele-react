@@ -1,6 +1,6 @@
 'use client';
 
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 import { TeleProvider } from '../context/TeleContext';
 import dynamic from 'next/dynamic';
 import {
@@ -8,6 +8,8 @@ import {
   useZappingSession
 } from '../hooks/useZappingConfig';
 import { useFavourites } from '../hooks/useFavourites';
+import { useIsTv } from '../hooks/useIsTv';
+import { fillRemoteKeyCodes } from '../hooks/useRemoteKeys';
 import { SourceCatalogProvider } from '../hooks/useSourceCatalog';
 import { SpotifyPlayerProvider } from '../hooks/useSpotifyPlayer';
 import { useZappingPresetScreens } from '../hooks/useZappingPresetScreens';
@@ -38,6 +40,18 @@ const StorageMigration = () => {
   return null;
 };
 
+// Marks the page as running on the TV, for the styles that only apply there,
+// and makes the remote's keys look like a keyboard's to the hotkeys.
+const TvMarker = () => {
+  const isTv = useIsTv();
+  useEffect(() => {
+    if (!isTv) return;
+    document.documentElement.dataset.tv = '';
+    return fillRemoteKeyCodes();
+  }, [isTv]);
+  return null;
+};
+
 export const ClientProviders = ({
   children
 }: PropsWithChildren<Record<string, unknown>>) => {
@@ -51,6 +65,7 @@ export const ClientProviders = ({
       <SourceCatalogProvider>
         <ZappingSessionManager />
         <StorageMigration />
+        <TvMarker />
         {/* App-wide on purpose: the Spotify device and the session it plays are
             one per browser, not one per tile, so the thing that owns them has
             to sit above every tile that might want it. It stays dormant — no

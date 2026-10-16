@@ -3,6 +3,7 @@ import { Replace, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
+import { useIsTv } from '../../hooks/useIsTv';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { getSourceShortcutLabel } from '../../utils/sourceShortcut';
@@ -55,6 +56,8 @@ export function MonitorSource({
   // the tile.
   const muted = isMuted || idx !== editingSourceIdx;
   const isMobile = useIsMobile();
+  // Seen from across the room, a 2px border is not there at all.
+  const isTv = useIsTv();
   // Out of the picker the selected tile is the one that sounds, and its border
   // says so; muted, nothing would mark which tile the arrows are on.
   const showFocus =
@@ -91,7 +94,11 @@ export function MonitorSource({
     >
       <div
         className={`w-full h-full relative box-border ${
-          showFocus ? 'border-2 border-slate-400' : ''
+          showFocus
+            ? isTv
+              ? 'border-4 border-white'
+              : 'border-2 border-slate-400'
+            : ''
         }`}
       >
         {/* The picture is the screen's own handle. It picks on the way down

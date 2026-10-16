@@ -42,15 +42,26 @@ export function useOkKey({
     // button (or happened before the screen mounted) is left alone.
     let pressing = false;
 
+    const fireLongPress = () => {
+      clearTimeout(timer);
+      timer = undefined;
+      longPressRef.current?.();
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' || ownsEnter(event.target)) return;
       event.preventDefault();
-      if (event.repeat || pressing) return;
+      if (pressing) {
+        // A key only starts repeating once it has been held for the system's
+        // long-press time, so the first repeat is a long press already. The
+        // TV's WebView does not flag its repeats, which is why this does not
+        // wait for `event.repeat`.
+        if (timer) fireLongPress();
+        return;
+      }
+      if (event.repeat) return;
       pressing = true;
-      timer = setTimeout(() => {
-        timer = undefined;
-        longPressRef.current?.();
-      }, LONG_PRESS_MS);
+      timer = setTimeout(fireLongPress, LONG_PRESS_MS);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -159,4 +170,54 @@ export function neighbourScreen(
   });
 
   return best?.idx;
+}
+
+/** The keys a remote sends whose `code` is spelled the same as their `key`. */
+const REMOTE_CODES = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Enter',
+  'Escape',
+  'PageUp',
+  'PageDown'
+]);
+
+/**
+ * The TV's WebView hands the page its remote keys with an empty `code`, and
+ * `useHotkeys` matches on the code: without this none of the arrows would
+ * reach the app. Each such event is sent on again as a copy with the code
+ * filled in. If the app takes the copy, the original is cancelled with it —
+ * which also keeps the WebView from moving the focus on its own; if nothing
+ * does, the original goes on, so a plain form still answers the D-pad.
+ *
+ * Returns the function that takes it off again.
+ */
+export function fillRemoteKeyCodes() {
+  const relay = (event: KeyboardEvent) => {
+    if (event.code || !REMOTE_CODES.has(event.key)) return;
+    const copy = new KeyboardEvent(event.type, {
+      key: event.key,
+      code: event.key,
+      keyCode: event.keyCode,
+      which: event.which,
+      repeat: event.repeat,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey,
+      bubbles: true,
+      cancelable: true
+    } as KeyboardEventInit);
+    event.stopImmediatePropagation();
+    const target = event.target instanceof EventTarget ? event.target : window;
+    if (!target.dispatchEvent(copy)) event.preventDefault();
+  };
+  window.addEventListener('keydown', relay, true);
+  window.addEventListener('keyup', relay, true);
+  return () => {
+    window.removeEventListener('keydown', relay, true);
+    window.removeEventListener('keyup', relay, true);
+  };
 }

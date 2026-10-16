@@ -40,11 +40,7 @@ import {
 } from '../../hooks/useSpotifyLibrary';
 import { SpotifyConfig } from './SpotifySelector/SpotifyConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
-import {
-  SavedScreen,
-  useActiveScreenIndex,
-  useSavedScreens
-} from '../../hooks/useSavedScreens';
+import { useIsTv } from '../../hooks/useIsTv';
 import { useShowTvCatalog } from '../../hooks/useSetupWizard';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
@@ -65,13 +61,14 @@ import {
 import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
 import { CategoryTabs } from './CategoryTabs';
-import { ScreenThumbnail } from './ScreenThumbnail';
+import { SavedScreensList } from './SavedScreensList';
 import {
   normalizeSearch,
   showPruebas,
   sourceMatches,
   useActiveCategory,
   useOpenCountries,
+  isPanelCategory,
   visibleCategoryOrder
 } from './sourceCategories';
 import { TvCountryGroup } from './tvChannels';
@@ -206,9 +203,11 @@ export function SourceSlider({
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const [savedScreens] = useSavedScreens();
-  const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
+  const isTvDevice = useIsTv();
   const isLayouts = activeCategory === 'layouts';
+  const isScreens = activeCategory === 'screens';
+  // The tabs that are not a list of channels own their own arrows.
+  const isPanel = isLayouts || isScreens;
   const isTv = activeCategory === 'tv';
   const isZapping = activeCategory === 'zapping';
   const isYoutube = activeCategory === 'youtube';
@@ -365,7 +364,7 @@ export function SourceSlider({
         return favourites.map(fav => catalogueBySlug.get(fav.slug) ?? fav);
       } else if (activeCategory === 'pruebas') {
         return pruebasList;
-      } else if (activeCategory === 'layouts') {
+      } else if (isPanelCategory(activeCategory)) {
         return [];
       }
       // Already filtered, and ordered as the sections lay them out.
@@ -517,11 +516,11 @@ export function SourceSlider({
   // Layouts are driven by the RowSlider, which owns its own arrow handling.
   // Walking the results is what follows typing, so up/down keep working from
   // inside the search box.
-  useHotkeys('up', () => (isLayouts ? undefined : prev()), {
+  useHotkeys('up', () => (isPanel ? undefined : prev()), {
     preventDefault: true,
     enableOnFormTags: ['input']
   });
-  useHotkeys('down', () => (isLayouts ? undefined : next()), {
+  useHotkeys('down', () => (isPanel ? undefined : next()), {
     preventDefault: true,
     enableOnFormTags: ['input']
   });
@@ -530,7 +529,11 @@ export function SourceSlider({
     () => searchRef.current?.focus(),
     // Matched on the character rather than the physical key, so it is the
     // slash the keyboard actually writes.
-    { preventDefault: true, useKey: true, enabled: !isLayouts }
+    {
+      preventDefault: true,
+      useKey: true,
+      enabled: !isPanel && !isTvDevice
+    }
   );
   useHotkeys(
     'f',
@@ -555,14 +558,14 @@ export function SourceSlider({
 
   const selectedItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (isLayouts) return;
+    if (isPanel) return;
     // Arrowing through the results from the search box must not pull the focus
     // out of it, or the next keystroke would be a hotkey instead of a letter.
     if (document.activeElement === searchRef.current) return;
     // In the sidebar the VirtualList keeps the selected row mounted and in
     // view, so focusing it never needs to scroll.
     selectedItemRef.current?.focus({ preventScroll: true });
-  }, [selectedSourceSlug, activeCategory, isLayouts, youtubeLiveSelected]);
+  }, [selectedSourceSlug, activeCategory, isPanel, youtubeLiveSelected]);
 
   const focusActiveConfig = () => {
     const config = activeConfigRef.current;
@@ -594,8 +597,8 @@ export function SourceSlider({
   useHotkeys(
     'tab',
     e => {
-      // In layouts Tab switches rows inside the RowSlider.
-      if (isLayouts) return;
+      // In layouts Tab switches rows inside the RowSlider; screens have none.
+      if (isPanel) return;
       const config = activeConfigRef.current;
       // Inside the config controls Tab keeps its native meaning.
       if (
@@ -613,7 +616,7 @@ export function SourceSlider({
     },
     { preventDefault: false },
     [
-      isLayouts,
+      isPanel,
       isConfigCategory,
       isYoutube,
       selectedSource,
@@ -622,35 +625,7 @@ export function SourceSlider({
     ]
   );
 
-  // Saved screens first: switching between them is what this tab is for most
-  // of the time, and the row Tab starts on. Naming and deleting them stays in
-  // the strip under the monitor.
   const layoutRows = [
-    sliderRow<SavedScreen>({
-      key: 'saved',
-      items: savedScreens,
-      selectedIndex: activeScreenIndex,
-      onSelect: index => setActiveScreenIndex(index),
-      getItemKey: (saved, index) => `${saved.name}-${index}`,
-      itemHeight: COMPACT_ITEM_HEIGHT,
-      renderItem: (saved, { isSelected }) => (
-        <div
-          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <ScreenThumbnail
-              screen={saved.screen}
-              width={112}
-              height={63}
-              className={isSelected ? 'ring-2 ring-white' : undefined}
-            />
-            <div className="max-w-full truncate text-xs font-semibold">
-              {saved.name}
-            </div>
-          </div>
-        </div>
-      )
-    }),
     sliderRow<PossibleLayout>({
       key: 'layouts',
       items: possibleLayouts,
@@ -1093,14 +1068,19 @@ export function SourceSlider({
       />
       {showHints && (
         <div className="text-[9px] leading-none text-gray-400 text-center">
-          ← → categorías · ↑ ↓ {isLayouts ? 'pantallas' : 'canales'}
+          ← → categorías · ↑ ↓{' '}
+          {isScreens ? 'pantallas' : isLayouts ? 'layouts' : 'canales'}
         </div>
       )}
-      {isLayouts ? (
+      {isScreens ? (
+        <SavedScreensList />
+      ) : isLayouts ? (
         layoutsContent
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2">
-          {searchBar}
+          {/* A remote has no letters to type with; the box would only be
+              somewhere for the focus to get stuck. */}
+          {!isTvDevice && searchBar}
           <div className="flex min-h-0 flex-1 flex-col">{sourcesContent}</div>
         </div>
       )}

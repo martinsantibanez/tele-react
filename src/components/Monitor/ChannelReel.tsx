@@ -648,10 +648,17 @@ export function ChannelReel({
   useHotkeys('down', () => step(1), options, [step]);
   // Not while fullscreen, though: there the catalogue switching under the
   // picture reads as the channel changing for no reason. The zapping display
-  // keeps them, its tabs are drawn beside the picture.
-  const bandOptions = { ...options, enabled: keysLive && !fullscreen };
-  useHotkeys('left', () => stepBand(-1), bandOptions, [stepBand]);
-  useHotkeys('right', () => stepBand(1), bandOptions, [stepBand]);
+  // keeps them, its tabs are drawn beside the picture. Fullscreen still takes
+  // the keys, only to do nothing with them: on the TV a key nobody takes moves
+  // the focus onto whatever button is nearest, and OK would then press it.
+  useHotkeys('left', () => !fullscreen && stepBand(-1), options, [
+    stepBand,
+    fullscreen
+  ]);
+  useHotkeys('right', () => !fullscreen && stepBand(1), options, [
+    stepBand,
+    fullscreen
+  ]);
   // A remote's channel keys, in the same direction as the arrows.
   useKeyNames(
     { ChannelUp: () => step(-1), ChannelDown: () => step(1) },

@@ -5,8 +5,10 @@ import {
   defaultDisplayConfig,
   defaultSavedScreens,
   defaultScreen,
-  mobileSavedScreens
+  mobileSavedScreens,
+  tvSavedScreens
 } from './defaultScreen';
+import { isTvDevice } from './useIsTv';
 import { isMobileViewport } from './useViewport';
 
 export type SavedScreen = {
@@ -55,7 +57,8 @@ function migrateLegacyScreen() {
 migrateLegacyScreen();
 
 /**
- * Gives a phone the screen meant for it the first time the app is opened there.
+ * Gives a phone (or a TV) the screens meant for it the first time the app is
+ * opened there.
  * Written straight to storage, at import time like the migration above, because
  * `useLocalStorageState` keeps whatever default it is handed on its first
  * render *and* stores it there and then: by the time an effect could report the
@@ -64,22 +67,24 @@ migrateLegacyScreen();
  * Only the very first visit is seeded — afterwards the screens are the user's,
  * whatever they are being looked at on.
  */
-function seedMobileScreen() {
+function seedDeviceScreens() {
   if (typeof window === 'undefined') return;
-  if (!isMobileViewport()) return;
+  const seed = isTvDevice()
+    ? tvSavedScreens
+    : isMobileViewport()
+      ? mobileSavedScreens
+      : undefined;
+  if (!seed) return;
   try {
     if (window.localStorage.getItem(SAVED_SCREENS_KEY)) return;
-    window.localStorage.setItem(
-      SAVED_SCREENS_KEY,
-      JSON.stringify(mobileSavedScreens)
-    );
+    window.localStorage.setItem(SAVED_SCREENS_KEY, JSON.stringify(seed));
   } catch {
     // Storage can be off altogether (private mode, blocked cookies); the app
     // still runs, just on the desktop default.
   }
 }
 
-seedMobileScreen();
+seedDeviceScreens();
 
 /**
  * The screens the user works on — tabs rather than snapshots: every change
@@ -178,5 +183,21 @@ export function useAddSavedScreen() {
       setActiveIndex(countRef.current);
     },
     [setSavedScreens, setActiveIndex]
+  );
+}
+
+/**
+ * Starts a new screen as a copy of the one on air, unnamed — its thumbnail is
+ * what tells it apart — and leaves the user working on it.
+ */
+export function useNewSavedScreen() {
+  const addSavedScreen = useAddSavedScreen();
+  const [activeScreen] = useActiveScreen();
+  const activeScreenRef = useRef(activeScreen);
+  activeScreenRef.current = activeScreen;
+
+  return useCallback(
+    () => addSavedScreen('', activeScreenRef.current),
+    [addSavedScreen]
   );
 }

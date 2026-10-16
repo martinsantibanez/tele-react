@@ -17,6 +17,7 @@ export type SelectorCategories =
   | 'spotify'
   | 'favourites'
   | 'pruebas'
+  | 'screens'
   | 'layouts';
 
 export const categoryOrder: SelectorCategories[] = [
@@ -25,10 +26,16 @@ export const categoryOrder: SelectorCategories[] = [
   'youtube',
   'favourites',
   'twitch',
-  'spotify',
+  // Spotify is left out for now, to keep the tabs down to the ones in use;
+  // its catalogue and its screens still work, there is just no tab for it.
   ...(showPruebas ? (['pruebas'] as SelectorCategories[]) : []),
+  'screens',
   'layouts'
 ];
+
+/** The tabs that are not a catalogue of channels. */
+export const isPanelCategory = (category: SelectorCategories) =>
+  category === 'screens' || category === 'layouts';
 
 export const useActiveCategory = () => {
   return useLocalStorageState<SelectorCategories>('_active_category_', {
@@ -40,8 +47,10 @@ export const useActiveCategory = () => {
  * The tabs worth showing. Layouts is where the grid's arrangement gets
  * picked, which is nothing a phone has any say over — it always shows a
  * fixed count in a fixed shape — so the tab is dropped there rather than
- * opening on a panel with nothing a phone can use in it. The TV tab goes
- * once Zapping or YouTube is connected (see `useShowTvCatalog`).
+ * opening on a panel with nothing a phone can use in it. Screens go with it:
+ * the phone fits whichever one is opened to its own shape, so switching
+ * through them there would rewrite every one. The TV tab goes once Zapping or
+ * YouTube is connected (see `useShowTvCatalog`).
  */
 export const visibleCategoryOrder = (
   isMobile: boolean,
@@ -49,7 +58,8 @@ export const visibleCategoryOrder = (
 ): SelectorCategories[] =>
   categoryOrder.filter(
     category =>
-      !(isMobile && category === 'layouts') && (showTv || category !== 'tv')
+      !(isMobile && isPanelCategory(category)) &&
+      (showTv || category !== 'tv')
   );
 
 /**
@@ -120,8 +130,10 @@ export function useRevealSource() {
       const category = slug ? categoryOfSlug(slug) : undefined;
       if (!category) {
         // A built-in (or an empty screen) is under no tab; the most the picker
-        // can do is get off the layouts tab and show the channels.
-        setActiveCategory(current => (current === 'layouts' ? 'tv' : current));
+        // can do is get off the panels and show the channels.
+        setActiveCategory(current =>
+          isPanelCategory(current) ? 'tv' : current
+        );
         return;
       }
 

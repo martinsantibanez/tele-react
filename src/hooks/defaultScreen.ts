@@ -1,5 +1,8 @@
 import { defaultGrid } from '../components/GridDisplay/initialGrid';
-import { initialLayout } from '../components/Monitor/predefinedLayouts';
+import {
+  initialLayout,
+  twoSideBySideLayout
+} from '../components/Monitor/predefinedLayouts';
 import {
   DisplayConfig,
   DisplayMode,
@@ -55,3 +58,60 @@ export const defaultSavedScreens: SavedScreen[] = [
 export const mobileSavedScreens: SavedScreen[] = [
   { name: 'Pantalla 1', screen: mobileScreen }
 ];
+
+/**
+ * What a TV starts on. A TV box plays one or two streams smoothly, so the
+ * first screen is two channels side by side; four in a grid is the next one,
+ * a Channel Up away, for a box that copes. Unnamed, like any new screen: the
+ * thumbnails tell them apart.
+ */
+export const tvSavedScreens: SavedScreen[] = [
+  {
+    name: '',
+    screen: {
+      config: {
+        mode: DisplayMode.Layout,
+        layout: twoSideBySideLayout,
+        grid: { size: 1 }
+      },
+      sources: defaultGrid.slice(0, 2)
+    }
+  },
+  {
+    name: '',
+    screen: {
+      config: {
+        mode: DisplayMode.Grid,
+        layout: initialLayout,
+        grid: { size: 2 }
+      },
+      sources: defaultGrid.slice(0, 4)
+    }
+  }
+];
+
+/** Every screen the app starts a device on, before the user touches any. */
+const starterScreens: ScreenType[] = [
+  ...defaultSavedScreens,
+  ...mobileSavedScreens,
+  ...tvSavedScreens
+].map(saved => saved.screen);
+
+/** What makes two screens the same to look at: arrangement and channels. */
+const screenShape = ({ config, sources }: ScreenType) =>
+  JSON.stringify({
+    mode: config.mode,
+    grid: config.grid.size,
+    layout: config.mode === DisplayMode.Layout ? config.layout : undefined,
+    sources: sources.map(node => [node.sourceSlug, node.activeSignal])
+  });
+
+const starterShapes = new Set(starterScreens.map(screenShape));
+
+/**
+ * Whether a screen is still one the app started the user on, untouched. Such a
+ * screen is the app's placeholder rather than the user's, and can be swapped
+ * for better ones (see `useZappingPresetScreens`) without losing anything.
+ */
+export const isStarterScreen = (screen: ScreenType) =>
+  starterShapes.has(screenShape(screen));

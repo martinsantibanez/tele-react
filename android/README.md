@@ -40,8 +40,12 @@ adb shell am start -n cl.tele.tv/.MainActivity
   shouldn't assume a fixed size. TVs report `pointer: none`, so they never
   match the mobile query's coarse-pointer branch.
 - All remote keys arrive as normal key events, including `ChannelUp/Down`
-  and `MediaPlayPause`.
-- Focus can land in the search input, where the hotkeys stop working.
+  and `MediaPlayPause`, but with an empty `code`. `useHotkeys` matches on the
+  code, so on the TV the page fills it in (`fillRemoteKeyCodes`). A key the
+  page doesn't take moves the WebView's own focus to the nearest button, and
+  OK then presses it.
+- Holding OK repeats its keydown without setting `repeat`.
+- The search box is hidden on the TV, so focus can't get stuck in it.
 - Only one or two video streams play smoothly at a time.
 - Broken upstream streams (e.g. CNN Chile at the time of testing) are
   retried over and over, which is costly on TV hardware.

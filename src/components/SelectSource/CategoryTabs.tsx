@@ -3,6 +3,7 @@ import {
   FlaskConical,
   Heart,
   LayoutGrid,
+  MonitorPlay,
   Music,
   TwitchIcon,
   Tv,
@@ -21,6 +22,7 @@ export const categoryLabels: Record<SelectorCategories, string> = {
   spotify: 'Spotify',
   favourites: 'Favoritos',
   pruebas: 'Pruebas',
+  screens: 'Pantallas',
   layouts: 'Layouts'
 };
 
@@ -39,6 +41,7 @@ export const categoryIcons: Record<
   spotify: Music,
   favourites: Heart,
   pruebas: FlaskConical,
+  screens: MonitorPlay,
   layouts: LayoutGrid
 };
 

@@ -29,6 +29,7 @@ import {
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useFullscreenZapping } from '../../hooks/useFullscreenZapping';
+import { useIsTv } from '../../hooks/useIsTv';
 import {
   neighbourScreen,
   useKeyNames,
@@ -99,6 +100,7 @@ export const Monitor = () => {
     toggleMute
   } = useTeleContext();
   const { isMobile, isLandscape, isMobileLandscape } = useViewport();
+  const isTv = useIsTv();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const [, setFeaturedMonitor] = useFeaturedScreen();
@@ -186,9 +188,11 @@ export const Monitor = () => {
     setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
   }, [visibleScreenCount, setEditingSourceIdx]);
 
+  // A phone and a TV both open on the picture: the picker would take most of
+  // the one, and on the other OK is how it is reached anyway.
   useEffect(() => {
-    if (isMobile) setIsEditing(false);
-  }, [isMobile, setIsEditing]);
+    if (isMobile || isTv) setIsEditing(false);
+  }, [isMobile, isTv, setIsEditing]);
 
   useEffect(() => {
     if (!isMobile || isYoutubeMode) return;
@@ -566,9 +570,9 @@ export const Monitor = () => {
 
       {!isMobile && (
         <div className="mt-3 flex flex-none flex-col gap-1 text-xs text-gray-300">
-          <Shortcut keys="E" label="Toggle Edit Mode" />
+          {!isTv && <Shortcut keys="E" label="Toggle Edit Mode" />}
           <Shortcut
-            keys="Enter"
+            keys={isTv ? 'OK' : 'Enter'}
             label={
               swapSourceIdx === undefined
                 ? 'Ver pantallas'
@@ -576,31 +580,45 @@ export const Monitor = () => {
             }
           />
           {canSwap && swapSourceIdx === undefined && (
-            <Shortcut keys="Mantener Enter" label="Marcar para Intercambiar" />
+            <Shortcut
+              keys={isTv ? 'Mantener OK' : 'Mantener Enter'}
+              label="Marcar para Intercambiar"
+            />
           )}
           <Shortcut
-            keys="Esc"
+            keys={isTv ? 'Atrás' : 'Esc'}
             label={
               swapSourceIdx === undefined
                 ? 'Cerrar selector'
                 : 'Cancelar intercambio'
             }
           />
-          <Shortcut
-            keys="G"
-            label={
-              isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
-            }
-          />
-          <Shortcut keys="M" label={isMuted ? 'Activar Audio' : 'Silenciar'} />
           {savedScreens.length > 1 && (
-            <Shortcut keys="RePág / AvPág" label="Cambiar pantalla guardada" />
+            <Shortcut
+              keys={isTv ? 'CH+ / CH−' : 'RePág / AvPág'}
+              label="Cambiar pantalla guardada"
+            />
           )}
-          {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
-            <Shortcut keys="D" label="Quitar" />
-          )}
-          {displayConfig.mode === DisplayMode.Grid && (
-            <Shortcut keys="A" label="Agregar" />
+          {/* The rest are letter keys, which a remote does not have. */}
+          {!isTv && (
+            <>
+              <Shortcut
+                keys="G"
+                label={
+                  isFullscreen ? 'Salir Pantalla Completa' : 'Pantalla Completa'
+                }
+              />
+              <Shortcut
+                keys="M"
+                label={isMuted ? 'Activar Audio' : 'Silenciar'}
+              />
+              {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
+                <Shortcut keys="D" label="Quitar" />
+              )}
+              {displayConfig.mode === DisplayMode.Grid && (
+                <Shortcut keys="A" label="Agregar" />
+              )}
+            </>
           )}
         </div>
       )}
