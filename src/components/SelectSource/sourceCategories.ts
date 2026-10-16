@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import { useFavourites } from '../../hooks/useFavourites';
+import { useIsTv } from '../../hooks/useIsTv';
 import { useSourceCatalog } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { pruebasSources } from '../../sources/pruebas';
@@ -50,17 +51,34 @@ export const useActiveCategory = () => {
  * opening on a panel with nothing a phone can use in it. Screens go with it:
  * the phone fits whichever one is opened to its own shape, so switching
  * through them there would rewrite every one. The TV tab goes once Zapping or
- * YouTube is connected (see `useShowTvCatalog`).
+ * YouTube is connected (see `useShowTvCatalog`). A TV box drops Twitch,
+ * YouTube, Favourites and the test bench too (see `TV_HIDDEN_CATEGORIES`).
  */
 export const visibleCategoryOrder = (
   isMobile: boolean,
-  showTv: boolean
+  showTv: boolean,
+  isTvDevice: boolean
 ): SelectorCategories[] =>
   categoryOrder.filter(
     category =>
       !(isMobile && isPanelCategory(category)) &&
-      (showTv || category !== 'tv')
+      (showTv || category !== 'tv') &&
+      !(isTvDevice && TV_HIDDEN_CATEGORIES.includes(category))
   );
+
+/**
+ * Tabs a TV box goes without: Twitch and YouTube sign in through a browser
+ * redirect the WebView has no good way to finish (see `useConnectedProviders`
+ * for YouTube), and the test bench is for trying sources out at a desk, not
+ * from the sofa. Favourites go too, to keep the remote's tabs down to the
+ * catalogue and the screens.
+ */
+export const TV_HIDDEN_CATEGORIES: SelectorCategories[] = [
+  'twitch',
+  'youtube',
+  'favourites',
+  'pruebas'
+];
 
 /**
  * Countries whose channels are unfolded in the TV list. Only the home country
@@ -120,12 +138,15 @@ export function useRevealSource() {
   const [, setOpenCountries] = useOpenCountries();
   const { isFavourite } = useFavourites();
   const { tvGroups } = useSourceCatalog();
+  const isTv = useIsTv();
 
   return useCallback(
     (slug?: string) => {
       // Favourites gathers channels from every catalogue, so a starred channel
-      // is already listed where the user is standing.
-      if (slug && activeCategory === 'favourites' && isFavourite(slug)) return;
+      // is already listed where the user is standing — unless on a TV, which
+      // has no Favourites tab to be standing in.
+      if (slug && !isTv && activeCategory === 'favourites' && isFavourite(slug))
+        return;
 
       const category = slug ? categoryOfSlug(slug) : undefined;
       if (!category) {
@@ -152,6 +173,13 @@ export function useRevealSource() {
         open.includes(country) ? open : [...open, country]
       );
     },
-    [activeCategory, isFavourite, setActiveCategory, setOpenCountries, tvGroups]
+    [
+      activeCategory,
+      isFavourite,
+      isTv,
+      setActiveCategory,
+      setOpenCountries,
+      tvGroups
+    ]
   );
 }

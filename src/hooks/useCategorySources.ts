@@ -2,12 +2,14 @@
 import { useMemo } from 'react';
 import {
   categoryOrder,
+  TV_HIDDEN_CATEGORIES,
   SelectorCategories,
   showPruebas
 } from '../components/SelectSource/sourceCategories';
 import { SourceType } from '../sources';
 import { pruebasSources } from '../sources/pruebas';
 import { useFavourites } from './useFavourites';
+import { useIsTv } from './useIsTv';
 import { useShowTvCatalog } from './useSetupWizard';
 import { useSourceCatalog } from './useSourceCatalog';
 import { useSpotifyTabSections } from './useSpotifyLibrary';
@@ -140,8 +142,16 @@ export function useCategorySources(
  */
 export function useStockedCategories(): SelectorCategories[] {
   const all = useAllCategorySources();
+  // The reel walks the bands the tabs offer, so a TV skips the ones it has no
+  // tab for.
+  const isTv = useIsTv();
   return useMemo(
-    () => categoryOrder.filter(category => all[category]?.length),
-    [all]
+    () =>
+      categoryOrder.filter(
+        category =>
+          all[category]?.length &&
+          !(isTv && TV_HIDDEN_CATEGORIES.includes(category))
+      ),
+    [all, isTv]
   );
 }

@@ -190,20 +190,20 @@ export function SourceSlider({
   const [storedCategory, setActiveCategory] = useActiveCategory();
   const isMobile = useIsMobile();
   const showTv = useShowTvCatalog();
+  const isTvDevice = useIsTv();
   const categoryOrder = useMemo(
-    () => visibleCategoryOrder(isMobile, showTv),
-    [isMobile, showTv]
+    () => visibleCategoryOrder(isMobile, showTv, isTvDevice),
+    [isMobile, showTv, isTvDevice]
   );
   // A stored category can stop existing — `pruebas` outside dev, `layouts` on
-  // a phone, `tv` once connected — and the picker would then show an empty
-  // list no button points at.
+  // a phone, `tv` once connected, the ones a TV hides — and the picker would
+  // then show an empty list no button points at.
   const activeCategory = categoryOrder.includes(storedCategory)
     ? storedCategory
     : categoryOrder[0];
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const isTvDevice = useIsTv();
   const isLayouts = activeCategory === 'layouts';
   const isScreens = activeCategory === 'screens';
   // The tabs that are not a list of channels own their own arrows.
@@ -542,7 +542,8 @@ export function SourceSlider({
       if (!selectedSource || selectedSource.slug === YOUTUBE_LIVE_SLUG) return;
       toggleFavourite(selectedSource);
     },
-    { preventDefault: true }
+    // A TV has no Favourites tab to collect them in.
+    { preventDefault: true, enabled: !isTvDevice }
   );
   // Zapping and YouTube both put a connect/disconnect panel where the signals
   // TAB would otherwise be; Spotify puts the box its catalogue is typed into.
@@ -746,30 +747,32 @@ export function SourceSlider({
                   fallback={<div className="h-[44px] w-[44px]" />}
                 />
               )}
-              <div className="flex flex-col">
-                <button
-                  title={
-                    starred ? 'Quitar de favoritos' : 'Agregar a favoritos'
-                  }
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleFavourite(source);
-                  }}
-                  className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
-                >
-                  <Heart
-                    size={14}
-                    className={
-                      starred ? 'fill-red-500 text-red-500' : 'text-white'
+              {!isTvDevice && (
+                <div className="flex flex-col">
+                  <button
+                    title={
+                      starred ? 'Quitar de favoritos' : 'Agregar a favoritos'
                     }
-                  />
-                </button>
-                {isCaret && (
-                  <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
-                    F
-                  </span>
-                )}
-              </div>
+                    onClick={e => {
+                      e.stopPropagation();
+                      toggleFavourite(source);
+                    }}
+                    className="absolute -top-1.5 -left-1.5 rounded-full bg-black/70 p-0.5"
+                  >
+                    <Heart
+                      size={14}
+                      className={
+                        starred ? 'fill-red-500 text-red-500' : 'text-white'
+                      }
+                    />
+                  </button>
+                  {isCaret && (
+                    <span className="absolute top-1.5 left-3 text-[9px] leading-none text-gray-300 bg-black/70 rounded px-0.5">
+                      F
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             {isCaret && availableSignals.length > 1 && (
               <div className="ml-2 flex flex-row items-center gap-1 rounded bg-black/70 p-1">

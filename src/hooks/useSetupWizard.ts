@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import useSessionStorageState from 'use-session-storage-state';
+import { useIsTv } from './useIsTv';
 import { useYoutubeAuth } from './useYoutubeAuth';
 import { useZappingLoginToken } from './useZappingConfig';
 
@@ -29,17 +30,30 @@ function useSetupStep() {
   });
 }
 
-/** Which of the full-quality providers this browser is linked to. */
+/** The wizard's steps on this device: a TV box only offers Zapping. */
+export function useSetupSteps(): SetupStep[] {
+  return useIsTv() ? ['zapping'] : ['zapping', 'youtube'];
+}
+
+/**
+ * Which of the full-quality providers this browser is linked to.
+ *
+ * A TV box leaves YouTube out altogether: it has no YouTube tab, so a session
+ * left over from before would only hide the TV catalogue while offering
+ * nothing in its place — and there is no check to wait for.
+ */
 export function useConnectedProviders() {
   const [loginToken] = useZappingLoginToken();
-  const { isConnected: youtube, status: youtubeStatus } = useYoutubeAuth();
+  const { isConnected, status: youtubeStatus } = useYoutubeAuth();
+  const isTv = useIsTv();
   const zapping = Boolean(loginToken);
+  const youtube = !isTv && isConnected;
   return {
     zapping,
     youtube,
     any: zapping || youtube,
     /** False until the YouTube session has been checked with the backend. */
-    known: youtube || youtubeStatus === 'disconnected'
+    known: isTv || youtube || youtubeStatus === 'disconnected'
   };
 }
 

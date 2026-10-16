@@ -5,13 +5,12 @@ import { Button } from '../../../components/ui/button';
 import {
   SetupStep,
   useConnectedProviders,
+  useSetupSteps,
   useSetupWizard
 } from '../../hooks/useSetupWizard';
 import { useYoutubeAuth } from '../../hooks/useYoutubeAuth';
 import { ZappingConnect } from '../SelectSource/ZappingSelector/ZappingConnect';
 import { ZappingLogo } from '../SelectSource/ZappingSelector/ZappingLogo';
-
-const steps: SetupStep[] = ['zapping', 'youtube'];
 
 const Connected = ({ label }: { label: string }) => (
   <div className="flex items-center gap-2 rounded-md border border-green-700/50 bg-green-900/20 p-3 text-sm">
@@ -82,7 +81,8 @@ function YoutubeStep() {
 }
 
 /**
- * First-run setup: offers Zapping and YouTube one after the other. Connecting
+ * First-run setup: offers Zapping and YouTube one after the other (Zapping
+ * alone on a TV, see `useSetupSteps`). Connecting
  * either swaps the open-web TV catalogue for the real streams; skipping both
  * keeps it, which is the only way the TV tab stays around.
  */
@@ -94,7 +94,8 @@ function SetupWizard({
   step: SetupStep;
 }) {
   const { any } = useConnectedProviders();
-  const index = steps.indexOf(step);
+  const steps = useSetupSteps();
+  const index = Math.max(steps.indexOf(step), 0);
   const isLast = index === steps.length - 1;
   const next = () => (isLast ? finish() : setStep(steps[index + 1]));
 
@@ -115,7 +116,7 @@ function SetupWizard({
           ))}
         </div>
 
-        {step === 'zapping' ? <ZappingStep /> : <YoutubeStep />}
+        {steps[index] === 'zapping' ? <ZappingStep /> : <YoutubeStep />}
 
         <div className="flex items-center justify-between gap-2">
           {any ? (
