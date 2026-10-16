@@ -698,6 +698,12 @@ export function ChannelReel({
   // then kept, so a swipe that wanders cannot change its mind halfway.
 
   const isVertical = orientation === 'vertical';
+  /**
+   * Which way the channels run on the stage. The layout's own way, except in
+   * fullscreen: there the column beside the picture lists them top to bottom,
+   * so the picture slides up and down with it rather than across.
+   */
+  const slidesVertically = isVertical || fullscreen;
   const [drag, setDrag] = useState(0);
   const gesture = useRef<{
     id: number;
@@ -721,8 +727,8 @@ export function ChannelReel({
     if (!active || active.id !== event.pointerId) return;
     const dx = event.clientX - active.x;
     const dy = event.clientY - active.y;
-    const along = isVertical ? dy : dx;
-    const across = isVertical ? dx : dy;
+    const along = slidesVertically ? dy : dx;
+    const across = slidesVertically ? dx : dy;
 
     if (!active.axis) {
       // Under the threshold there is no telling the two apart yet, and a tap
@@ -749,7 +755,7 @@ export function ChannelReel({
     const dy = event.clientY - active.y;
     const isBandSwipe = active.axis === 'across';
     // However far it went along the axis it settled on; the other one is noise.
-    const moved = isBandSwipe === isVertical ? dx : dy;
+    const moved = isBandSwipe === slidesVertically ? dx : dy;
     // A short flick counts as much as a long drag: on a picture this size the
     // gesture that means "next" is thrown, not measured out.
     const speed = Math.abs(moved) / Math.max(event.timeStamp - active.at, 1);
@@ -882,7 +888,7 @@ export function ChannelReel({
               isOnAir ? 'z-10' : 'z-0 pointer-events-none'
             } ${drag ? '' : 'transition-transform duration-200 ease-out'}`}
             style={{
-              transform: isVertical
+              transform: slidesVertically
                 ? `translateY(calc(${shift} + ${drag}px))`
                 : `translateX(calc(${shift} + ${drag}px))`
             }}
