@@ -16,6 +16,14 @@ export const zappingLinkUrl = (code: string) =>
 
 export const ZAPPING_ACTIVATION_TTL_MS = 600 * 1000;
 
+/**
+ * Which streams `channelswithurl` hands out. `high` is a single 720p rendition
+ * (720p60 for sports); `auto` is adaptive — 720p, 540p and 360p (and 720p60
+ * for sports) — so a tile can play what its size calls for. The player locks
+ * the selected or fullscreen tile to the top rendition (see `VideoJS`).
+ */
+export const ZAPPING_QUALITY = 'auto';
+
 /** A channel as returned by `channelswithurl` (and by the bundled fallback). */
 export type ZappingChannel = {
   id: number;
@@ -189,7 +197,7 @@ export async function fetchZappingChannels(
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: form({
       token: loginToken || '',
-      quality: 'high',
+      quality: ZAPPING_QUALITY,
       hevc: '0',
       is3g: '0',
       lowLatency: '0'

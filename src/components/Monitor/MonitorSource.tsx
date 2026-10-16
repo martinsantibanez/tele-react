@@ -92,8 +92,12 @@ export function MonitorSource({
   // On a TV the selected tile is first in line for a decoder, so picking a
   // parked tile is how it comes back to life.
   const decodeSlot = useMemo(
-    () => ({ screen: idx, preferred: !!isBeingEdited }),
-    [idx, isBeingEdited]
+    () => ({
+      screen: idx,
+      preferred: !!isBeingEdited,
+      fullscreen: !!fullscreen
+    }),
+    [idx, isBeingEdited, fullscreen]
   );
 
   const parked = useParkedScreens().has(idx) && !fullscreen;

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import {
   fetchZappingChannels,
+  ZAPPING_QUALITY,
   zappingLogoUrl,
   ZappingChannel
 } from '@/lib/zapping';
@@ -15,6 +16,8 @@ const TTL_MS = 12 * 60 * 60 * 1000;
 type CachedChannels = {
   channels: Record<string, ZappingChannel>;
   fetchedAt: number;
+  /** The `quality` the urls were fetched for; a list for another is refetched. */
+  quality?: string;
 };
 
 // Several components call `useZappingChannels`; this keeps them from all
@@ -37,7 +40,10 @@ export function useZappingChannels() {
   );
   const [loginToken] = useZappingLoginToken();
 
-  const isStale = !cache || Date.now() - cache.fetchedAt > TTL_MS;
+  const isStale =
+    !cache ||
+    cache.quality !== ZAPPING_QUALITY ||
+    Date.now() - cache.fetchedAt > TTL_MS;
 
   useEffect(() => {
     if (!isStale) return;
@@ -48,7 +54,9 @@ export function useZappingChannels() {
     // (which it always does on StrictMode's double-mount).
     inFlight = inFlight ?? fetchZappingChannels(loginToken);
     inFlight
-      .then(channels => setCache({ channels, fetchedAt: Date.now() }))
+      .then(channels =>
+        setCache({ channels, fetchedAt: Date.now(), quality: ZAPPING_QUALITY })
+      )
       .catch(err => console.error('[zapping] channel list fetch failed', err))
       .finally(() => {
         inFlight = undefined;
@@ -58,13 +66,13 @@ export function useZappingChannels() {
   /** Sorted by channel number, which is how Zapping presents the catalogue. */
   const channels = useMemo(
     () =>
-      Object.values(cache?.channels ?? canalesZapping).sort(
-        (a, b) => a.number - b.number
-      ),
+      Object.values(
+        cache?.quality === ZAPPING_QUALITY ? cache.channels : canalesZapping
+      ).sort((a, b) => a.number - b.number),
     [cache]
   );
 
-  return { channels, isFallback: !cache };
+  return { channels, isFallback: cache?.quality !== ZAPPING_QUALITY };
 }
 
 export const zappingSlug = (channel: ZappingChannel) =>

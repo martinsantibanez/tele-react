@@ -155,10 +155,14 @@ export const reportDecodeTrouble = (id: string, kind: 'starved' | 'slow') => {
   if (recent.length >= 2) lowerCap(kind);
 };
 
-/** Where a player sits on the wall, for deciding who gets a decoder first. */
+/**
+ * Where a player sits on the wall: its screen, whether it is the selected one
+ * (first in line for a decoder), and whether it fills the screen.
+ */
 export const DecodeSlotContext = createContext<{
   screen: number;
   preferred: boolean;
+  fullscreen?: boolean;
 }>({ screen: Number.MAX_SAFE_INTEGER, preferred: false });
 
 const subscribe = (listener: () => void) => {

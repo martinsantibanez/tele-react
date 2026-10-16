@@ -1,9 +1,13 @@
 'use client';
 import qualitySelector from 'videojs-hls-quality-selector';
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+// Registers `player.qualityLevels()`, which VHS fills with the stream's
+// renditions; see the top-rendition lock below.
+import 'videojs-contrib-quality-levels';
 import {
+  DecodeSlotContext,
   reportDecodeTrouble,
   useDecodeSlot
 } from '../../../../hooks/useDecodeSlot';
@@ -263,6 +267,33 @@ const LivePlayer = ({
   useEffect(() => {
     playerRef.current?.muted(muted);
   }, [muted]);
+
+  // An adaptive stream plays what its tile's size calls for (VHS caps it at
+  // the player's dimensions), so a wall of small tiles pulls small renditions.
+  // The tile being watched — selected, or filling the screen — is held to the
+  // top one instead, so it never dips while the bandwidth estimate settles.
+  // Switching levels takes effect at the next segment, without a reload.
+  const { preferred, fullscreen } = useContext(DecodeSlotContext);
+  const lockTop = preferred || !!fullscreen;
+  useEffect(() => {
+    const player = playerRef.current;
+    const levels = player?.qualityLevels?.();
+    if (!levels) return;
+    const apply = () => {
+      const all = Array.from({ length: levels.length }, (_, i) => levels[i]);
+      const top = all.reduce(
+        (best, level) =>
+          !best || (level.bitrate ?? 0) > (best.bitrate ?? 0) ? level : best,
+        undefined
+      );
+      all.forEach(level => {
+        level.enabled = !lockTop || level === top;
+      });
+    };
+    apply();
+    levels.on('addqualitylevel', apply);
+    return () => levels.off('addqualitylevel', apply);
+  }, [lockTop]);
 
   useEffect(() => {
     const player = playerRef.current;
