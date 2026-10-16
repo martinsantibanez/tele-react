@@ -38,6 +38,9 @@ type Props = {
   idx: number;
 };
 
+/** The picker sidebar's width, in pixels, on a desktop or a TV. */
+export const PICKER_WIDTH = 340;
+
 export function MonitorSource({
   sourceSlug,
   storedSource,
@@ -72,7 +75,14 @@ export function MonitorSource({
   // Out of the picker the selected tile is the one that sounds, and its border
   // says so; muted, nothing would mark which tile the arrows are on.
   const showFocus =
-    isBeingEdited && (isEditing || swapSourceIdx !== undefined || isMuted);
+    !fullscreen &&
+    isBeingEdited &&
+    (isEditing || swapSourceIdx !== undefined || isMuted);
+  // The tile's own marks are for picking it out of the wall. Fullscreen there
+  // is no wall, and with the picker open beside it they would only sit on the
+  // picture.
+  const showTileChrome =
+    !fullscreen && (isEditing || swapSourceIdx !== undefined);
   const resolveSource = useResolveSource();
   const source = useMemo(
     () => resolveSource(sourceSlug, storedSource),
@@ -102,6 +112,13 @@ export function MonitorSource({
       // Monitor reads its number back off here.
       data-screen-idx={idx}
       className={fullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}
+      // The picker can open beside a fullscreen tile, and the picture makes
+      // way for it rather than covering the list.
+      style={
+        fullscreen && isEditing && !isMobile
+          ? { left: PICKER_WIDTH }
+          : undefined
+      }
     >
       <div
         className={`w-full h-full relative box-border ${
@@ -173,7 +190,7 @@ export function MonitorSource({
 
             It is also the tile's own handle: a thumb has no number keys, and
             the player underneath swallows any tap meant for the tile itself. */}
-        {(isEditing || swapSourceIdx !== undefined) && (
+        {showTileChrome && (
           <button
             type="button"
             onClick={handleChangeClick}
@@ -192,7 +209,7 @@ export function MonitorSource({
             {!!source && <SourceLogo source={source} />}
           </button>
         )}
-        {(isEditing || swapSourceIdx !== undefined) && (
+        {showTileChrome && (
           <div className="absolute top-[1%] right-1 z-[2] flex justify-end">
             {isEditing &&
               (isMobile ? (

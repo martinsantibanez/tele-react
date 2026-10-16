@@ -351,6 +351,114 @@ function ZapBanner({
 }
 
 /**
+ * The fullscreen banner: the same channel banner stood on its side and docked
+ * to the left of the picture, with room to say what the channels either side
+ * are showing too — the question a nudge up or down is asking. Fades like the
+ * pill does, and points at the whole list one key to the right.
+ */
+function ZapColumn({
+  current,
+  previous,
+  next,
+  nowPlayingLabel,
+  visible,
+  onPrev,
+  onNext
+}: {
+  current?: SourceType;
+  previous?: SourceType;
+  next?: SourceType;
+  nowPlayingLabel: (source?: SourceType) => string | undefined;
+  visible: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (!current) return null;
+
+  const neighbour = (
+    source: SourceType | undefined,
+    towards: 'previous' | 'next'
+  ) => {
+    const isPrevious = towards === 'previous';
+    const Chevron = isPrevious ? ChevronUp : ChevronDown;
+    // Holds its height at the ends of the band, so the channel on air does not
+    // jump about in the column.
+    if (!source) return <div className="h-14 flex-none" aria-hidden />;
+    return (
+      <button
+        type="button"
+        onClick={isPrevious ? onPrev : onNext}
+        aria-label={`${isPrevious ? 'Canal anterior' : 'Canal siguiente'}: ${
+          source.name ?? source.slug
+        }`}
+        className="flex h-14 flex-none items-center gap-3 rounded-xl px-3 text-left text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        <Chevron size={18} aria-hidden className="flex-none text-gray-500" />
+        <div className="flex h-8 w-8 flex-none items-center justify-center opacity-80">
+          <SourceImage
+            src={source.logoUrl ?? source.imageUrl}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-sm">{source.name}</div>
+          {nowPlayingLabel(source) && (
+            <div className="truncate text-[11px] text-gray-400">
+              {nowPlayingLabel(source)}
+            </div>
+          )}
+        </div>
+      </button>
+    );
+  };
+
+  const nowPlaying = nowPlayingLabel(current);
+
+  return (
+    <div
+      className={`absolute top-1/2 left-6 z-20 w-72 -translate-y-1/2 transition-all duration-300 ease-out xl:w-80 ${
+        visible
+          ? 'translate-x-0 opacity-100'
+          : 'pointer-events-none -translate-x-3 opacity-0'
+      }`}
+      aria-hidden={!visible}
+    >
+      <div className="flex flex-col gap-1 rounded-2xl bg-black/70 p-2 text-white backdrop-blur-sm">
+        {neighbour(previous, 'previous')}
+
+        <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3">
+          <div className="flex h-12 w-12 flex-none items-center justify-center">
+            <SourceImage
+              src={current.logoUrl ?? current.imageUrl}
+              alt=""
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-base font-semibold">
+              {current.name}
+            </div>
+            {nowPlaying && (
+              <div className="line-clamp-2 text-xs text-gray-300">
+                {nowPlaying}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {neighbour(next, 'next')}
+
+        <div className="flex items-center justify-end gap-1 px-3 pt-1 text-[11px] text-gray-400">
+          Todos los canales
+          <ChevronRight size={14} aria-hidden />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * The channel on air, named under the picture: the vertical layout's answer to
  * the banner above.
  *
@@ -455,9 +563,11 @@ export function ChannelReel({
    * showing layouts; it is not pushed back onto a catalogue, or the Layouts tab
    * could never be opened again to switch the reel back off.
    */
-  const band: SelectorCategories = bands[storedCategory]?.length
+  // `stocked` rather than the bands themselves: it also leaves out the tabs a
+  // TV has no button for.
+  const band: SelectorCategories = stocked.includes(storedCategory)
     ? storedCategory
-    : lastBand && bands[lastBand]?.length
+    : lastBand && stocked.includes(lastBand)
       ? lastBand
       : (stocked[0] ?? storedCategory);
 
@@ -669,16 +779,19 @@ export function ChannelReel({
   // Not while fullscreen, though: there the catalogue switching under the
   // picture reads as the channel changing for no reason. The zapping display
   // keeps them, its tabs are drawn beside the picture. Fullscreen still takes
-  // the keys, only to do nothing with them: on the TV a key nobody takes moves
-  // the focus onto whatever button is nearest, and OK would then press it.
+  // left, only to do nothing with it: on the TV a key nobody takes moves the
+  // focus onto whatever button is nearest, and OK would then press it. Right
+  // is the Monitor's there, and opens the picker beside the picture.
   useHotkeys('left', () => !fullscreen && stepBand(-1), options, [
     stepBand,
     fullscreen
   ]);
-  useHotkeys('right', () => !fullscreen && stepBand(1), options, [
-    stepBand,
-    fullscreen
-  ]);
+  useHotkeys(
+    'right',
+    () => stepBand(1),
+    { ...options, enabled: keysLive && !fullscreen },
+    [stepBand]
+  );
   // A remote's channel keys, in the same direction as the arrows.
   useKeyNames(
     { ChannelUp: () => step(-1), ChannelDown: () => step(1) },
@@ -866,7 +979,19 @@ export function ChannelReel({
       ) : (
         <>
           {stage}
-          {active && (
+          {active && fullscreen && (
+            <ZapColumn
+              current={current}
+              previous={previous}
+              next={next}
+              nowPlayingLabel={nowPlayingLabel}
+              // The picker beside the picture is already listing them.
+              visible={bannerVisible && !isEditing}
+              onPrev={() => step(-1)}
+              onNext={() => step(1)}
+            />
+          )}
+          {active && !fullscreen && (
             <ZapBanner
               current={current}
               previous={previous}

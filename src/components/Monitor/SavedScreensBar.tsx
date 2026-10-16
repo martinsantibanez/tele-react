@@ -95,7 +95,7 @@ export function SavedScreensBar() {
     : isTv
       ? displayConfig.mode === DisplayMode.Zapping
         ? undefined
-        : ['CH +', 'CH −']
+        : ['CH −', 'CH +']
       : ['Z', 'X'];
   const stepKeyFor = (index: number) =>
     index === activeIndex - 1

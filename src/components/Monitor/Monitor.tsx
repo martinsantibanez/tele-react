@@ -60,7 +60,7 @@ import {
   useRevealSource
 } from '../SelectSource/sourceCategories';
 import { ControlBar } from './ControlBar';
-import { OnSwitchCb } from './MonitorSource';
+import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
 import { fitSourcesToLayout } from './predefinedLayouts';
 import { Screen } from './Screen';
 
@@ -242,9 +242,12 @@ export const Monitor = () => {
   ]);
 
   // The picker, the grid and fullscreen are three levels, one inside the next:
-  // OK goes a level in and Back comes a level out. Fullscreen covers the
-  // picker, so the two are never open together — the picker's arrows would be
-  // walking a list nobody can see.
+  // OK goes a level in and Back comes a level out. Going fullscreen closes the
+  // picker, but → opens it again beside the picture, to browse the whole list
+  // without leaving it; OK or Back then put the picture back on its own.
+  // A phone has no room beside the picture, and a YouTube tile is not one the
+  // picker points, so there the picker still leaves fullscreen.
+  const pickerBesideFullscreen = !isMobile && !isYoutubeMode;
   const toggleFullscreen = () => {
     if (isYoutubeMode && !isFullscreen) {
       const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
@@ -255,7 +258,7 @@ export const Monitor = () => {
   };
 
   const togglePicker = () => {
-    if (!isEditing) setIsFullscreen(false);
+    if (!isEditing && !pickerBesideFullscreen) setIsFullscreen(false);
     toggleEditting();
   };
 
@@ -459,7 +462,8 @@ export const Monitor = () => {
     'escape',
     () => {
       if (isFullscreen) {
-        setIsFullscreen(false);
+        if (isEditing) setIsEditing(false);
+        else setIsFullscreen(false);
         return;
       }
       if (swapSourceIdx !== undefined) {
@@ -495,6 +499,18 @@ export const Monitor = () => {
   useHotkeys('right', () => moveSelection('right'), arrowOptions, [
     moveSelection
   ]);
+  useHotkeys(
+    'right',
+    () => {
+      revealScreenSource(editingSourceIdx);
+      setIsEditing(true);
+    },
+    {
+      enabled: isFullscreen && !isEditing && pickerBesideFullscreen,
+      preventDefault: true
+    },
+    [editingSourceIdx, selectedSources, revealSource]
+  );
 
   // Stops at the ends, like the saved screens strip's own Z and X.
   const stepSavedScreen = (delta: number) => {
@@ -507,14 +523,15 @@ export const Monitor = () => {
   // A remote's channel keys switch saved screens from the grid. Fullscreen
   // they zap instead (see `ChannelReel`), and so they do on the zapping
   // display, which is one channel on air. PageUp and PageDown are the
-  // keyboard's pair, and always mean the saved screens.
+  // keyboard's pair, and always mean the saved screens. CH+ moves on to the
+  // next screen along the strip, the way it moves a set-top box up a channel.
   useKeyNames(
     {
       PageUp: () => stepSavedScreen(-1),
       PageDown: () => stepSavedScreen(1),
       ...(hasGridLevel && {
-        ChannelUp: () => stepSavedScreen(-1),
-        ChannelDown: () => stepSavedScreen(1)
+        ChannelUp: () => stepSavedScreen(1),
+        ChannelDown: () => stepSavedScreen(-1)
       })
     },
     !isFullscreen
@@ -595,7 +612,7 @@ export const Monitor = () => {
           />
           {savedScreens.length > 1 && (
             <Shortcut
-              keys={isTv ? 'CH+ / CH−' : 'RePág / AvPág'}
+              keys={isTv ? 'CH− / CH+' : 'RePág / AvPág'}
               label="Cambiar pantalla guardada"
             />
           )}
@@ -723,7 +740,10 @@ export const Monitor = () => {
   return (
     <div className="flex h-screen overflow-hidden">
       {isEditing && (
-        <div className="flex h-full w-[340px] flex-none flex-col overflow-y-auto border-r border-gray-800 p-3">
+        <div
+          className="flex h-full flex-none flex-col overflow-y-auto border-r border-gray-800 p-3"
+          style={{ width: PICKER_WIDTH }}
+        >
           {picker}
         </div>
       )}
