@@ -695,7 +695,9 @@ export const Monitor = () => {
             }
           />
         </div>
-        {floatingControls}
+        {/* Pointer controls: a remote has OK, Back and the picker for all of
+            them, and nothing to click these with. */}
+        {!isTv && floatingControls}
       </div>
 
       {isEditing && !isMobile && <ControlBar className="w-full flex-none" />}

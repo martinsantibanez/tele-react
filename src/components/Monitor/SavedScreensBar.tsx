@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
+import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import {
   useActiveScreenIndex,
   useNewSavedScreen,
@@ -11,6 +12,7 @@ import {
 } from '../../hooks/useSavedScreens';
 import { useIsTv } from '../../hooks/useIsTv';
 import { useIsMobile } from '../../hooks/useViewport';
+import { DisplayMode } from '../../types/Monitor';
 import { ScreenThumbnail } from '../SelectSource/ScreenThumbnail';
 
 const THUMB_WIDTH = 96;
@@ -32,6 +34,7 @@ export function SavedScreensBar() {
   const [savedScreens, setSavedScreens] = useSavedScreens();
   const [activeIndex, setActiveIndex] = useActiveScreenIndex();
   const newSavedScreen = useNewSavedScreen();
+  const [displayConfig] = useDisplayConfig();
   // Only renaming asks for a name: new screens start without one.
   const [pendingName, setPendingName] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
@@ -81,7 +84,25 @@ export function SavedScreensBar() {
   };
 
   // The user is always working on a screen, so the last one can't be dropped.
-  const canDelete = savedScreens.length > 1;
+  // A remote has no pointer for the tile's X, nor letters for ⇧D.
+  const canDelete = savedScreens.length > 1 && !isTv;
+
+  // The key that lands on each of the active screen's neighbours, written
+  // under it. On the zapping display the remote's channel keys zap instead
+  // (see the Monitor), so there is nothing to write there.
+  const stepKeys: [string, string] | undefined = isMobile
+    ? undefined
+    : isTv
+      ? displayConfig.mode === DisplayMode.Zapping
+        ? undefined
+        : ['CH +', 'CH −']
+      : ['Z', 'X'];
+  const stepKeyFor = (index: number) =>
+    index === activeIndex - 1
+      ? stepKeys?.[0]
+      : index === activeIndex + 1
+        ? stepKeys?.[1]
+        : undefined;
 
   const startDelete = (index = activeIndex) => {
     if (!canDelete || !savedScreens[index]) return;
@@ -151,6 +172,7 @@ export function SavedScreensBar() {
       <div className="mx-auto flex w-max items-start gap-2">
         {savedScreens.map((saved, index) => {
           const isActive = index === activeIndex;
+          const stepKey = stepKeyFor(index);
           return (
             <div
               key={`${saved.name}-${index}`}
@@ -192,20 +214,33 @@ export function SavedScreensBar() {
                     {saved.name}
                   </div>
                 )}
+                {stepKey && (
+                  <div
+                    className={`leading-none font-bold text-gray-300 ${
+                      isTv ? 'text-xs' : 'text-[10px]'
+                    }`}
+                  >
+                    {stepKey}
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
-        <button
-          type="button"
-          onClick={newSavedScreen}
-          aria-label="Nueva pantalla"
-          title="Nueva pantalla"
-          className="mt-1 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
-          style={{ width: thumbWidth, height: thumbHeight }}
-        >
-          <Plus size={isMobile ? 18 : 22} />
-        </button>
+        {/* On a TV new screens come from the picker's screens tab, which the
+            remote can reach; this one only takes a click. */}
+        {!isTv && (
+          <button
+            type="button"
+            onClick={newSavedScreen}
+            aria-label="Nueva pantalla"
+            title="Nueva pantalla"
+            className="mt-1 flex shrink-0 items-center justify-center rounded-sm bg-black text-gray-500 hover:text-gray-300"
+            style={{ width: thumbWidth, height: thumbHeight }}
+          >
+            <Plus size={isMobile ? 18 : 22} />
+          </button>
+        )}
       </div>
     </div>
   );
