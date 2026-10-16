@@ -1,7 +1,9 @@
 'use client';
 import { ExternalLink, Loader2, RotateCw } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../../../../components/ui/button';
 import { useZappingActivation } from '../../../hooks/useZappingConfig';
+import { useIsMobile } from '../../../hooks/useViewport';
 
 const mmss = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
@@ -22,6 +24,8 @@ export function ZappingConnect() {
     start,
     cancel
   } = useZappingActivation();
+  // The phone is what the code is scanned with, so it gets no code to scan.
+  const isMobile = useIsMobile();
 
   return (
     <div className="grid gap-3">
@@ -35,6 +39,19 @@ export function ZappingConnect() {
           <div className="text-center font-mono text-3xl font-bold tracking-[0.3em]">
             {activation.code}
           </div>
+          {!isMobile && linkUrl && (
+            <div className="grid justify-items-center gap-1">
+              {/* The link carries the code, so scanning it lands on the page
+                  with the code already filled in. Dark on white, with a quiet
+                  zone around it, whatever the theme: phones read that best. */}
+              <div className="rounded-md bg-white p-2">
+                <QRCodeSVG value={linkUrl} size={132} marginSize={1} />
+              </div>
+              <span className="text-xs text-muted-foreground">
+                O escanéalo con el celular
+              </span>
+            </div>
+          )}
           <Button asChild variant="secondary">
             <a href={linkUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
