@@ -1,9 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
 
 val teleUrl: String = providers.gradleProperty("teleUrl").get()
+val teleReleaseUrl: String = providers.gradleProperty("teleReleaseUrl").get()
+
+// Release signing comes from keystore.properties (not checked in); without it
+// the release build is left unsigned.
+val keystoreProps = Properties().apply {
+    rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use(::load)
+}
 
 android {
     namespace = "cl.tele.tv"
@@ -15,7 +24,17 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
-        buildConfigField("String", "TELE_URL", "\"$teleUrl\"")
+    }
+
+    signingConfigs {
+        if (keystoreProps.isNotEmpty()) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildFeatures {
@@ -23,8 +42,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "TELE_URL", "\"$teleUrl\"")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "TELE_URL", "\"$teleReleaseUrl\"")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 

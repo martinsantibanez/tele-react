@@ -23,6 +23,23 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n cl.tele.tv/.MainActivity
 ```
 
+## Release build
+
+Release builds open `teleReleaseUrl` (https://ver-tele.vercel.app) and are
+signed with the key named in `android/keystore.properties` (not checked in;
+the keystore and a copy of the properties live in `~/.android-keys/`). Keep
+that key safe: updates must be signed with the same key, or each TV has to
+uninstall the app (losing its saved screens) before installing.
+
+```sh
+./install-tvs.sh --build 192.168.100.105 192.168.100.120   # build, install, launch
+```
+
+The APK at `app/build/outputs/apk/release/app-release.apk` can also be
+sideloaded directly. Bump `versionCode` for each release you hand out.
+
+## Debugging
+
 - **Debugging:** with the TV connected over adb, open `chrome://inspect` in desktop
   Chrome; debug builds list the WebView there (console, DOM, network).
 - **Other URL:** build with `-PteleUrl=https://…`, or launch with
