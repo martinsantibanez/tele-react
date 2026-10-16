@@ -57,6 +57,18 @@ export const twoBigLayout: LayoutType = [
   }
 ];
 
+// 2 side by side, each one the full height
+export const twoSideBySideLayout: LayoutType = [
+  {
+    cols: 6,
+    rows: 9
+  },
+  {
+    cols: 6,
+    rows: 9
+  }
+];
+
 export const fitSourcesToLayout = (
   sources: SourceNode[],
   layout: LayoutType

@@ -55,7 +55,10 @@ export function MonitorSource({
   // the tile.
   const muted = isMuted || idx !== editingSourceIdx;
   const isMobile = useIsMobile();
-  const showFocus = isBeingEdited && (isEditing || swapSourceIdx !== undefined);
+  // Out of the picker the selected tile is the one that sounds, and its border
+  // says so; muted, nothing would mark which tile the arrows are on.
+  const showFocus =
+    isBeingEdited && (isEditing || swapSourceIdx !== undefined || isMuted);
   const resolveSource = useResolveSource();
   const source = useMemo(
     () => resolveSource(sourceSlug, storedSource),

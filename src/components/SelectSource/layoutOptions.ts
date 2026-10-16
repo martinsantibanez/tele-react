@@ -1,6 +1,10 @@
 import { defaultDisplayConfig } from '../../hooks/defaultScreen';
 import { DisplayConfig, DisplayMode } from '../../types/Monitor';
-import { initialLayout, twoBigLayout } from '../Monitor/predefinedLayouts';
+import {
+  initialLayout,
+  twoBigLayout,
+  twoSideBySideLayout
+} from '../Monitor/predefinedLayouts';
 
 export type PossibleLayout = {
   name: string;
@@ -22,6 +26,16 @@ export const possibleLayouts: PossibleLayout[] = [
       grid: { size: 1 }
     },
     imgName: 'layout4.png'
+  },
+  {
+    // Two pictures are what a TV box can play smoothly at once.
+    name: '2 pantallas',
+    config: {
+      mode: DisplayMode.Layout,
+      layout: twoSideBySideLayout,
+      grid: { size: 1 }
+    },
+    imgName: 'layout7.png'
   },
   {
     name: 'Grid 2',

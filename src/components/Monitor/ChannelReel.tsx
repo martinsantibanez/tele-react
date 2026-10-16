@@ -13,6 +13,7 @@ import {
   useStockedCategories
 } from '../../hooks/useCategorySources';
 import { useNowPlayingLabel } from '../../hooks/useNowPlayingLabel';
+import { useKeyNames } from '../../hooks/useRemoteKeys';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useMediaQuery } from '../../hooks/useViewport';
 import { useZappingBand, useZappingCursor } from '../../hooks/useZappingCursor';
@@ -645,8 +646,17 @@ export function ChannelReel({
   // with the picture. The swipes below are the ones that follow the layout.
   useHotkeys('up', () => step(-1), options, [step]);
   useHotkeys('down', () => step(1), options, [step]);
-  useHotkeys('left', () => stepBand(-1), options, [stepBand]);
-  useHotkeys('right', () => stepBand(1), options, [stepBand]);
+  // Not while fullscreen, though: there the catalogue switching under the
+  // picture reads as the channel changing for no reason. The zapping display
+  // keeps them, its tabs are drawn beside the picture.
+  const bandOptions = { ...options, enabled: keysLive && !fullscreen };
+  useHotkeys('left', () => stepBand(-1), bandOptions, [stepBand]);
+  useHotkeys('right', () => stepBand(1), bandOptions, [stepBand]);
+  // A remote's channel keys, in the same direction as the arrows.
+  useKeyNames(
+    { ChannelUp: () => step(-1), ChannelDown: () => step(1) },
+    keysLive
+  );
 
   // ── Banner (horizontal layout only) ─────────────────────────────────────
   // The vertical layout keeps its strips docked in the flow, always visible,
@@ -783,7 +793,7 @@ export function ChannelReel({
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-6 text-center text-gray-400">
         <span>No hay canales en {categoryLabels[band]}</span>
-        {stocked.length > 0 && (
+        {stocked.length > 0 && !fullscreen && (
           <span className="text-xs">← → para cambiar de categoría</span>
         )}
       </div>

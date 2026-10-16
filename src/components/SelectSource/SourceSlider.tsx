@@ -40,6 +40,11 @@ import {
 } from '../../hooks/useSpotifyLibrary';
 import { SpotifyConfig } from './SpotifySelector/SpotifyConfig';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
+import {
+  SavedScreen,
+  useActiveScreenIndex,
+  useSavedScreens
+} from '../../hooks/useSavedScreens';
 import { useShowTvCatalog } from '../../hooks/useSetupWizard';
 import { ZappingConfig } from './ZappingSelector/ZappingConfig';
 import { YoutubeConfig } from './YoutubeSelector/YoutubeConfig';
@@ -60,6 +65,7 @@ import {
 import { VirtualList } from '../VirtualList/VirtualList';
 import { SourceImage } from '../SourceImage';
 import { CategoryTabs } from './CategoryTabs';
+import { ScreenThumbnail } from './ScreenThumbnail';
 import {
   normalizeSearch,
   showPruebas,
@@ -200,6 +206,8 @@ export function SourceSlider({
   const [accessToken, setTwitchToken] = useTwitchToken();
   const [zappingToken] = useZappingToken();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
+  const [savedScreens] = useSavedScreens();
+  const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
   const isLayouts = activeCategory === 'layouts';
   const isTv = activeCategory === 'tv';
   const isZapping = activeCategory === 'zapping';
@@ -614,7 +622,35 @@ export function SourceSlider({
     ]
   );
 
+  // Saved screens first: switching between them is what this tab is for most
+  // of the time, and the row Tab starts on. Naming and deleting them stays in
+  // the strip under the monitor.
   const layoutRows = [
+    sliderRow<SavedScreen>({
+      key: 'saved',
+      items: savedScreens,
+      selectedIndex: activeScreenIndex,
+      onSelect: index => setActiveScreenIndex(index),
+      getItemKey: (saved, index) => `${saved.name}-${index}`,
+      itemHeight: COMPACT_ITEM_HEIGHT,
+      renderItem: (saved, { isSelected }) => (
+        <div
+          className={`cursor-pointer p-1 ${isSelected ? 'bg-gray-800' : ''}`}
+        >
+          <div className="flex flex-col items-center gap-2">
+            <ScreenThumbnail
+              screen={saved.screen}
+              width={112}
+              height={63}
+              className={isSelected ? 'ring-2 ring-white' : undefined}
+            />
+            <div className="max-w-full truncate text-xs font-semibold">
+              {saved.name}
+            </div>
+          </div>
+        </div>
+      )
+    }),
     sliderRow<PossibleLayout>({
       key: 'layouts',
       items: possibleLayouts,
@@ -1057,7 +1093,7 @@ export function SourceSlider({
       />
       {showHints && (
         <div className="text-[9px] leading-none text-gray-400 text-center">
-          ← → categorías · ↑ ↓ {isLayouts ? 'layouts' : 'canales'}
+          ← → categorías · ↑ ↓ {isLayouts ? 'pantallas' : 'canales'}
         </div>
       )}
       {isLayouts ? (

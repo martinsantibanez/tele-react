@@ -29,7 +29,16 @@ import {
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useFeaturedScreen } from '../../hooks/useFeaturedScreen';
 import { useFullscreenZapping } from '../../hooks/useFullscreenZapping';
+import {
+  neighbourScreen,
+  useKeyNames,
+  useOkKey
+} from '../../hooks/useRemoteKeys';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import {
+  useActiveScreenIndex,
+  useSavedScreens
+} from '../../hooks/useSavedScreens';
 import { useViewport } from '../../hooks/useViewport';
 import { useYoutubeGridSources } from '../../hooks/useYoutubeLiveSubs';
 import { useYoutubeLoginScreen } from '../../hooks/useYoutubeLoginScreen';
@@ -97,6 +106,9 @@ export const Monitor = () => {
   const revealSource = useRevealSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenZapping, setFullscreenZapping] = useFullscreenZapping();
+  const [savedScreens] = useSavedScreens();
+  const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
+  const screenAreaRef = useRef<HTMLDivElement>(null);
   useYoutubeLoginScreen();
 
   const isYoutubeMode = displayConfig.mode === DisplayMode.Youtube;
@@ -225,12 +237,22 @@ export const Monitor = () => {
     setSelectedSources
   ]);
 
+  // The picker, the grid and fullscreen are three levels, one inside the next:
+  // OK goes a level in and Back comes a level out. Fullscreen covers the
+  // picker, so the two are never open together — the picker's arrows would be
+  // walking a list nobody can see.
   const toggleFullscreen = () => {
     if (isYoutubeMode && !isFullscreen) {
       const slug = youtubeNodes[editingSourceIdx]?.sourceSlug;
       if (slug) setYoutubeFocusSlug(slug);
     }
+    if (!isFullscreen) setIsEditing(false);
     setIsFullscreen(current => !current);
+  };
+
+  const togglePicker = () => {
+    if (!isEditing) setIsFullscreen(false);
+    toggleEditting();
   };
 
   const handlePromote = () => {
@@ -373,7 +395,37 @@ export const Monitor = () => {
     };
   }, []);
 
-  useHotkeys('e', () => toggleEditting(), [toggleEditting]);
+  const canSwap = !isYoutubeMode && !isFullscreen;
+
+  /** Marks the selected screen, or swaps it with the one already marked. */
+  const swapStep = () => {
+    if (!canSwap) return;
+    if (swapSourceIdx === undefined) {
+      setSwapSourceIdx(editingSourceIdx);
+      return;
+    }
+    if (swapSourceIdx !== editingSourceIdx) {
+      handleSwitch(swapSourceIdx, editingSourceIdx);
+      setEditingSourceIdx(swapSourceIdx);
+    }
+    setSwapSourceIdx(undefined);
+  };
+
+  // The zapping display is one channel filling the monitor already: there is
+  // no grid level to it.
+  const hasGridLevel = !isZappingMode;
+
+  useOkKey({
+    onPress: () => {
+      // Halfway through a swap, OK finishes it wherever it is pressed.
+      if (swapSourceIdx !== undefined) swapStep();
+      else if (isEditing) setIsEditing(false);
+      else if (!isFullscreen && hasGridLevel) toggleFullscreen();
+    },
+    onLongPress: swapStep
+  });
+
+  useHotkeys('e', () => togglePicker(), [togglePicker]);
   useHotkeys(
     [
       '1,2,3,4,5,6,7,8,9',
@@ -393,22 +445,6 @@ export const Monitor = () => {
       revealSource
     ]
   );
-  useHotkeys(
-    'enter',
-    () => {
-      if (isYoutubeMode) return;
-      if (swapSourceIdx === undefined) {
-        setSwapSourceIdx(editingSourceIdx);
-        return;
-      }
-      if (swapSourceIdx !== editingSourceIdx) {
-        handleSwitch(swapSourceIdx, editingSourceIdx);
-        setEditingSourceIdx(swapSourceIdx);
-      }
-      setSwapSourceIdx(undefined);
-    },
-    [editingSourceIdx, swapSourceIdx, isYoutubeMode]
-  );
   useHotkeys('g', () => toggleFullscreen(), [
     isYoutubeMode,
     isFullscreen,
@@ -422,9 +458,62 @@ export const Monitor = () => {
         setIsFullscreen(false);
         return;
       }
-      setSwapSourceIdx(undefined);
+      if (swapSourceIdx !== undefined) {
+        setSwapSourceIdx(undefined);
+        return;
+      }
+      // From the grid Back opens the picker on the selected screen; from the
+      // picker it closes it again. On the TV a second Back in quick
+      // succession leaves the app, so this never traps the remote.
+      if (!isEditing) revealScreenSource(editingSourceIdx);
+      setIsEditing(current => !current);
     },
-    [isFullscreen]
+    [isFullscreen, swapSourceIdx, isEditing, editingSourceIdx, selectedSources]
+  );
+
+  // With the picker away, the arrows walk the tiles. The picker owns them
+  // while it is open, and so does the reel while a tile is fullscreen.
+  const gridArrows = !isEditing && !isFullscreen && hasGridLevel;
+  const moveSelection = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const area = screenAreaRef.current;
+    if (!area) return;
+    const target = neighbourScreen(area, editingSourceIdx, direction);
+    if (target !== undefined) selectScreen(target);
+  };
+  const arrowOptions = { enabled: gridArrows, preventDefault: true };
+  useHotkeys('up', () => moveSelection('up'), arrowOptions, [moveSelection]);
+  useHotkeys('down', () => moveSelection('down'), arrowOptions, [
+    moveSelection
+  ]);
+  useHotkeys('left', () => moveSelection('left'), arrowOptions, [
+    moveSelection
+  ]);
+  useHotkeys('right', () => moveSelection('right'), arrowOptions, [
+    moveSelection
+  ]);
+
+  // Stops at the ends, like the saved screens strip's own Z and X.
+  const stepSavedScreen = (delta: number) => {
+    const target = Math.min(
+      Math.max(activeScreenIndex + delta, 0),
+      savedScreens.length - 1
+    );
+    if (target !== activeScreenIndex) setActiveScreenIndex(target);
+  };
+  // A remote's channel keys switch saved screens from the grid. Fullscreen
+  // they zap instead (see `ChannelReel`), and so they do on the zapping
+  // display, which is one channel on air. PageUp and PageDown are the
+  // keyboard's pair, and always mean the saved screens.
+  useKeyNames(
+    {
+      PageUp: () => stepSavedScreen(-1),
+      PageDown: () => stepSavedScreen(1),
+      ...(hasGridLevel && {
+        ChannelUp: () => stepSavedScreen(-1),
+        ChannelDown: () => stepSavedScreen(1)
+      })
+    },
+    !isFullscreen
   );
   useHotkeys('m', () => toggleMute(), [toggleMute]);
   useHotkeys(
@@ -482,8 +571,19 @@ export const Monitor = () => {
             keys="Enter"
             label={
               swapSourceIdx === undefined
-                ? 'Marcar para Intercambiar'
+                ? 'Ver pantallas'
                 : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
+            }
+          />
+          {canSwap && swapSourceIdx === undefined && (
+            <Shortcut keys="Mantener Enter" label="Marcar para Intercambiar" />
+          )}
+          <Shortcut
+            keys="Esc"
+            label={
+              swapSourceIdx === undefined
+                ? 'Cerrar selector'
+                : 'Cancelar intercambio'
             }
           />
           <Shortcut
@@ -493,6 +593,9 @@ export const Monitor = () => {
             }
           />
           <Shortcut keys="M" label={isMuted ? 'Activar Audio' : 'Silenciar'} />
+          {savedScreens.length > 1 && (
+            <Shortcut keys="RePág / AvPág" label="Cambiar pantalla guardada" />
+          )}
           {displayConfig.mode === DisplayMode.Grid && canRemoveScreen && (
             <Shortcut keys="D" label="Quitar" />
           )}
@@ -526,7 +629,7 @@ export const Monitor = () => {
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
       <FloatingButton
-        onClick={toggleEditting}
+        onClick={togglePicker}
         label={isEditing ? 'Salir de edición' : 'Editar canales'}
       >
         {isEditing ? <X size={20} /> : <Pencil size={20} />}
@@ -541,6 +644,7 @@ export const Monitor = () => {
         style={{ containerType: 'size' }}
       >
         <div
+          ref={screenAreaRef}
           className={
             isZappingMode
               ? 'flex min-h-0 min-w-0 flex-1 self-stretch'
