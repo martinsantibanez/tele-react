@@ -3,9 +3,6 @@ import qualitySelector from 'videojs-hls-quality-selector';
 import { useContext, useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-// Registers `player.qualityLevels()`, which VHS fills with the stream's
-// renditions; see the top-rendition lock below.
-import 'videojs-contrib-quality-levels';
 import {
   DecodeSlotContext,
   reportDecodeTrouble,
@@ -54,6 +51,38 @@ const frameCount = (video: HTMLVideoElement, at: number) => {
     dropped: quality.droppedVideoFrames
   };
 };
+
+// The bits of VHS (video.js's HLS engine) the top-rendition lock touches.
+type VhsPlaylist = {
+  disabled?: boolean;
+  excludeUntil?: number;
+  attributes?: { BANDWIDTH?: number };
+};
+type Vhs = {
+  playlists?: { master?: { playlists?: VhsPlaylist[] } };
+  selectPlaylist: () => VhsPlaylist | undefined;
+};
+
+/**
+ * The rendition the tile being watched is held to: the highest-bandwidth one
+ * VHS has not ruled out (for failing, or for a codec the device can't play).
+ */
+const topPlaylist = (vhs: Vhs) => {
+  const now = Date.now();
+  return (vhs.playlists?.master?.playlists ?? [])
+    .filter(pl => !pl.disabled && !((pl.excludeUntil ?? 0) > now))
+    .reduce<VhsPlaylist | undefined>(
+      (best, pl) =>
+        !best ||
+        (pl.attributes?.BANDWIDTH ?? 0) > (best.attributes?.BANDWIDTH ?? 0)
+          ? pl
+          : best,
+      undefined
+    );
+};
+
+/** The VHS instances whose rendition picks already go through `lockTopRef`. */
+const steeredVhs = new WeakSet<Vhs>();
 
 /**
  * Watches a TV player for the two ways a TV runs out of decoding (see
@@ -135,6 +164,14 @@ const LivePlayer = ({
   // Undoes the hold, once the player is there to undo it on.
   const resumeRef = useRef<() => void>(() => {});
 
+  // An adaptive stream plays what its tile's size calls for (VHS caps it at
+  // the player's dimensions), so a wall of small tiles pulls small renditions.
+  // The tile being watched — selected, or filling the screen — is held to the
+  // top one instead, so it never dips while the bandwidth estimate settles.
+  const { preferred, fullscreen } = useContext(DecodeSlotContext);
+  const lockTopRef = useRef(false);
+  lockTopRef.current = preferred || !!fullscreen;
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -206,7 +243,22 @@ const LivePlayer = ({
       resume();
     };
 
+    // The lock steers VHS's own pick, which it makes after every segment and
+    // switches to without touching what is buffered. Enabling or disabling
+    // quality levels instead makes VHS throw the buffer away and seek, so the
+    // tile would stall and rebuffer each time it is selected or let go.
+    // Every source gets a new VHS, hence on each `loadedmetadata`.
+    const steerRenditions = () => {
+      const vhs = (p.tech(true) as { vhs?: Vhs } | undefined)?.vhs;
+      if (!vhs || steeredVhs.has(vhs)) return;
+      steeredVhs.add(vhs);
+      const standard = vhs.selectPlaylist;
+      vhs.selectPlaylist = () =>
+        (lockTopRef.current && topPlaylist(vhs)) || standard();
+    };
+
     resumeRef.current = resume;
+    p.on('loadedmetadata', steerRenditions);
     p.on('pause', resume);
     p.on('ended', reload);
     p.on('error', reload);
@@ -248,6 +300,7 @@ const LivePlayer = ({
       window.clearInterval(watchdog);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.off('loadedmetadata', steerRenditions);
         playerRef.current.off('pause', resume);
         playerRef.current.off('ended', reload);
         playerRef.current.off('error', reload);
@@ -267,33 +320,6 @@ const LivePlayer = ({
   useEffect(() => {
     playerRef.current?.muted(muted);
   }, [muted]);
-
-  // An adaptive stream plays what its tile's size calls for (VHS caps it at
-  // the player's dimensions), so a wall of small tiles pulls small renditions.
-  // The tile being watched — selected, or filling the screen — is held to the
-  // top one instead, so it never dips while the bandwidth estimate settles.
-  // Switching levels takes effect at the next segment, without a reload.
-  const { preferred, fullscreen } = useContext(DecodeSlotContext);
-  const lockTop = preferred || !!fullscreen;
-  useEffect(() => {
-    const player = playerRef.current;
-    const levels = player?.qualityLevels?.();
-    if (!levels) return;
-    const apply = () => {
-      const all = Array.from({ length: levels.length }, (_, i) => levels[i]);
-      const top = all.reduce(
-        (best, level) =>
-          !best || (level.bitrate ?? 0) > (best.bitrate ?? 0) ? level : best,
-        undefined
-      );
-      all.forEach(level => {
-        level.enabled = !lockTop || level === top;
-      });
-    };
-    apply();
-    levels.on('addqualitylevel', apply);
-    return () => levels.off('addqualitylevel', apply);
-  }, [lockTop]);
 
   useEffect(() => {
     const player = playerRef.current;
