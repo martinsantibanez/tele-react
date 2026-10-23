@@ -238,13 +238,25 @@ export const Monitor = () => {
   // A phone has no room beside the picture, and a YouTube tile is not one the
   // picker points, so there the picker still leaves fullscreen.
   const pickerBesideFullscreen = !isMobile && !isLiveMode;
+  // Coming back out of fullscreen opens the picker again if it was open going
+  // in, so a look at the picture does not end the editing.
+  const pickerBeforeFullscreen = useRef(false);
+  const leaveFullscreen = () => {
+    setIsFullscreen(false);
+    if (!pickerBeforeFullscreen.current) return;
+    pickerBeforeFullscreen.current = false;
+    revealScreenSource(editingSourceIdx);
+    setIsEditing(true);
+  };
   const toggleFullscreen = () => {
-    if (isLiveMode && !isFullscreen) {
+    if (isFullscreen) return leaveFullscreen();
+    if (isLiveMode) {
       const slug = liveNodes[editingSourceIdx]?.sourceSlug;
       if (slug) setLiveFocusSlug(slug);
     }
-    if (!isFullscreen) setIsEditing(false);
-    setIsFullscreen(current => !current);
+    pickerBeforeFullscreen.current = isEditing;
+    setIsEditing(false);
+    setIsFullscreen(true);
   };
 
   const togglePicker = () => {
@@ -389,15 +401,18 @@ export const Monitor = () => {
   useHotkeys('g', () => toggleFullscreen(), [
     isLiveMode,
     isFullscreen,
+    isEditing,
     liveNodes,
-    editingSourceIdx
+    editingSourceIdx,
+    selectedSources,
+    revealSource
   ]);
   useHotkeys(
     'escape',
     () => {
       if (isFullscreen) {
         if (isEditing) setIsEditing(false);
-        else setIsFullscreen(false);
+        else leaveFullscreen();
         return;
       }
       if (swapSourceIdx !== undefined) {
@@ -410,7 +425,14 @@ export const Monitor = () => {
       if (!isEditing) revealScreenSource(editingSourceIdx);
       setIsEditing(current => !current);
     },
-    [isFullscreen, swapSourceIdx, isEditing, editingSourceIdx, selectedSources]
+    [
+      isFullscreen,
+      swapSourceIdx,
+      isEditing,
+      editingSourceIdx,
+      selectedSources,
+      revealSource
+    ]
   );
 
   // With the picker away, the arrows walk the tiles. The picker owns them
