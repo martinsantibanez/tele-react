@@ -1,6 +1,6 @@
 'use client';
 import { CheckCircle2, Youtube } from 'lucide-react';
-import { PropsWithChildren, ReactNode } from 'react';
+import { PropsWithChildren, ReactNode, useEffect, useRef } from 'react';
 import { Button } from '../../../components/ui/button';
 import {
   SetupStep,
@@ -46,7 +46,7 @@ function ZappingStep() {
       {zapping ? (
         <Connected label="Cuenta de Zapping conectada" />
       ) : (
-        <ZappingConnect />
+        <ZappingConnect autoFocus />
       )}
     </>
   );
@@ -67,7 +67,7 @@ function YoutubeStep() {
         <Connected label="Cuenta de YouTube conectada" />
       ) : (
         <div className="grid gap-2">
-          <Button onClick={connect}>
+          <Button onClick={connect} autoFocus>
             <Youtube className="mr-2 h-4 w-4" />
             Conectar con YouTube
           </Button>
@@ -93,11 +93,21 @@ function SetupWizard({
 }: Pick<ReturnType<typeof useSetupWizard>, 'setStep' | 'finish'> & {
   step: SetupStep;
 }) {
-  const { any } = useConnectedProviders();
+  const providers = useConnectedProviders();
+  const { any } = providers;
   const steps = useSetupSteps();
   const index = Math.max(steps.indexOf(step), 0);
   const isLast = index === steps.length - 1;
   const next = () => (isLast ? finish() : setStep(steps[index + 1]));
+
+  // While a step is still to connect, its own button has the focus (see the
+  // steps); once it is, moving on is all that's left, so the focus goes there
+  // instead of being dropped with the button that just went away.
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const stepConnected = providers[steps[index]];
+  useEffect(() => {
+    if (stepConnected) nextRef.current?.focus();
+  }, [index, stepConnected]);
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background p-4">
@@ -129,7 +139,11 @@ function SetupWizard({
           {/* On the last step with nothing linked, finishing *is* continuing
               without — one button says it. */}
           {(!isLast || any) && (
-            <Button variant={any ? 'default' : 'outline'} onClick={next}>
+            <Button
+              ref={nextRef}
+              variant={any ? 'default' : 'outline'}
+              onClick={next}
+            >
               {isLast ? 'Listo' : 'Siguiente'}
             </Button>
           )}

@@ -1,6 +1,7 @@
 'use client';
 import { ExternalLink, Loader2, RotateCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useRef } from 'react';
 import { Button } from '../../../../components/ui/button';
 import { useZappingActivation } from '../../../hooks/useZappingConfig';
 import { useIsMobile } from '../../../hooks/useViewport';
@@ -12,8 +13,11 @@ const mmss = (seconds: number) =>
  * Connects the app to a Zapping account by pairing it as a device: we show a
  * code, the user enters it at zapping.com while logged in, and the backend
  * hands us the durable loginToken.
+ *
+ * With `autoFocus`, each state's main button takes the focus as it appears, so
+ * a remote's D-pad always has somewhere to start from.
  */
-export function ZappingConnect() {
+export function ZappingConnect({ autoFocus }: { autoFocus?: boolean }) {
   const {
     activation,
     linkUrl,
@@ -26,6 +30,14 @@ export function ZappingConnect() {
   } = useZappingActivation();
   // The phone is what the code is scanned with, so it gets no code to scan.
   const isMobile = useIsMobile();
+
+  // React only autofocuses form controls, so the link is focused by hand, once
+  // per code: the countdown re-renders every second.
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const code = activation?.code;
+  useEffect(() => {
+    if (autoFocus && code) linkRef.current?.focus();
+  }, [autoFocus, code]);
 
   return (
     <div className="grid gap-3">
@@ -53,7 +65,12 @@ export function ZappingConnect() {
             </div>
           )}
           <Button asChild variant="secondary">
-            <a href={linkUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              href={linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              ref={linkRef}
+            >
               <ExternalLink className="mr-2 h-4 w-4" />
               Abrir zapping.com/smart
             </a>
@@ -81,7 +98,11 @@ export function ZappingConnect() {
             </p>
           )}
           {error && <p className="text-xs text-destructive">{error}</p>}
-          <Button onClick={start} disabled={isRequesting}>
+          <Button
+            onClick={start}
+            disabled={isRequesting}
+            autoFocus={autoFocus}
+          >
             {isRequesting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
