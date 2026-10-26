@@ -3,9 +3,20 @@ import { RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '../../../components/ui/button';
+import {
+  defaultSavedScreens,
+  mobileSavedScreens,
+  tvSavedScreens
+} from '../../hooks/defaultScreen';
 import { useDisplayConfig } from '../../hooks/useDisplayConfig';
 import { useIsTv } from '../../hooks/useIsTv';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import {
+  SavedScreen,
+  useActiveScreenIndex,
+  useSavedScreens
+} from '../../hooks/useSavedScreens';
+import { isMobileViewport } from '../../hooks/useViewport';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import {
   useZappingLoginToken,
@@ -13,13 +24,7 @@ import {
 } from '../../hooks/useZappingConfig';
 import { useZappingTopGridSources } from '../../hooks/useZappingTopGrid';
 import { embeddedSource } from '../../sources';
-import {
-  DisplayConfig,
-  DisplayMode,
-  ScreenType,
-  SourceNode
-} from '../../types/Monitor';
-import { defaultGrid } from '../GridDisplay/initialGrid';
+import { DisplayConfig, DisplayMode, ScreenType } from '../../types/Monitor';
 import {
   tvZappingPresetScreens,
   zappingPresetScreens
@@ -41,21 +46,38 @@ const THUMB_HEIGHT = 72;
 const CONFIRM_MS = 3000;
 
 /**
- * The channels a screen starts with: the first Zapping preset once an account
- * is paired — the open-web set is what those replace — and the usual open-web
- * channels otherwise. Zapping nodes carry their source from the live
- * catalogue, as the seeding does (see `useZappingPresetScreens`).
+ * The screens the device starts with: the Zapping presets once an account is
+ * paired — the open-web starters are what those replace — and the starters
+ * meant for this device otherwise. Zapping nodes carry their source from the
+ * live catalogue, as the seeding does (see `useZappingPresetScreens`).
+ *
+ * A function rather than a list, so the device is asked about when the reset
+ * happens and not on every render.
  */
-function useDefaultSources(isTv: boolean): SourceNode[] {
+function useDefaultScreens(isTv: boolean): () => SavedScreen[] {
   const [loginToken] = useZappingLoginToken();
   const zappingSources = useZappingSources();
-  if (!loginToken) return defaultGrid;
-  const presets = isTv ? tvZappingPresetScreens : zappingPresetScreens;
-  const bySlug = new Map(zappingSources.map(src => [src.slug, src]));
-  return presets[0].screen.sources.map(node => {
-    const source = node.sourceSlug && bySlug.get(node.sourceSlug);
-    return source ? { ...node, source: embeddedSource(source) } : node;
-  });
+  return () => {
+    if (!loginToken) {
+      return isTv
+        ? tvSavedScreens
+        : isMobileViewport()
+          ? mobileSavedScreens
+          : defaultSavedScreens;
+    }
+    const presets = isTv ? tvZappingPresetScreens : zappingPresetScreens;
+    const bySlug = new Map(zappingSources.map(src => [src.slug, src]));
+    return presets.map(preset => ({
+      name: preset.name,
+      screen: {
+        config: preset.screen.config,
+        sources: preset.screen.sources.map(node => {
+          const source = node.sourceSlug && bySlug.get(node.sourceSlug);
+          return source ? { ...node, source: embeddedSource(source) } : node;
+        })
+      }
+    }));
+  };
 }
 
 const screenCount = (count: number) =>
@@ -73,13 +95,16 @@ const screenCount = (count: number) =>
  */
 export function LayoutsPanel() {
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
-  const [sources, setSources] = useSavedGrid();
+  const [sources] = useSavedGrid();
+  const [, setSavedScreens] = useSavedScreens();
+  const [, setActiveIndex] = useActiveScreenIndex();
   const isTv = useIsTv();
   const [zappingToken] = useZappingToken();
-  const defaultSources = useDefaultSources(isTv);
+  const defaultScreens = useDefaultScreens(isTv);
 
-  // Resetting throws away every channel on the screen, so it takes a second
-  // press; one left hanging lapses rather than waiting to go off later.
+  // Resetting throws away every screen and the channels on them, back to the
+  // ones the device started with, so it takes a second press; one left hanging
+  // lapses rather than waiting to go off later.
   const [confirmingReset, setConfirmingReset] = useState(false);
   useEffect(() => {
     if (!confirmingReset) return;
@@ -91,7 +116,8 @@ export function LayoutsPanel() {
       setConfirmingReset(true);
       return;
     }
-    setSources(defaultSources);
+    setSavedScreens(defaultScreens());
+    setActiveIndex(0);
     setConfirmingReset(false);
   };
 
@@ -199,7 +225,7 @@ export function LayoutsPanel() {
         onClick={resetSources}
         onBlur={() => setConfirmingReset(false)}
         className="mt-1 shrink-0"
-        title="Vuelve a poner los canales de inicio en la pantalla al aire"
+        title="Vuelve a poner todas las pantallas de inicio con sus canales"
       >
         <RotateCcw aria-hidden />
         {confirmingReset
