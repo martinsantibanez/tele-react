@@ -1,0 +1,210 @@
+<!doctype html>
+<!--
+  Ver Tele's public homepage for the Google OAuth consent screen. Plain static
+  HTML on purpose: the app itself only renders client-side, and Google wants a
+  homepage whose source describes the app and links the privacy policy.
+  Served at /about by a rewrite in next.config.js.
+-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ver Tele · TV chilena en vivo, en varias pantallas</title>
+    <meta
+      name="description"
+      content="Ver Tele es un visor gratuito de canales de TV chilena en vivo, en una grilla de varias pantallas, para computador, celular y Android TV."
+    />
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #111111;
+        --muted: #555555;
+        --rule: #e2e2e2;
+        --accent: #111111;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0a0a0a;
+          --fg: #f2f2f2;
+          --muted: #a3a3a3;
+          --rule: #262626;
+          --accent: #f2f2f2;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--muted);
+        font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2.5rem 1rem 4rem;
+      }
+      h1,
+      h2 {
+        color: var(--fg);
+        line-height: 1.25;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        margin: 2rem 0 0.5rem;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 2px;
+      }
+      code {
+        font-size: 0.9em;
+      }
+      ul {
+        padding-left: 1.5rem;
+      }
+      li + li {
+        margin-top: 0.25rem;
+      }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
+      }
+      nav span {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .cta {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.6rem 1.1rem;
+        border-radius: 0.5rem;
+        background: var(--fg);
+        color: var(--bg);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--rule);
+        margin: 3rem 0;
+      }
+      footer {
+        margin-top: 3rem;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav>
+        <strong style="color: var(--fg)">Ver Tele</strong>
+        <span>
+          <a href="#es">Español</a>
+          <a href="#en">English</a>
+        </span>
+      </nav>
+
+      <section id="es" lang="es">
+        <h1>Ver Tele</h1>
+        <p>
+          Un visor gratuito de canales de TV chilena en vivo. Arma una grilla
+          con varias pantallas y mira noticias, deportes y señales de todo el
+          país al mismo tiempo, en el computador, el celular o un Android TV.
+        </p>
+        <a class="cta" href="/">Abrir Ver Tele</a>
+
+        <h2>Qué puedes ver</h2>
+        <ul>
+          <li>Las señales públicas de los canales de TV abierta y regionales.</li>
+          <li>
+            Si tienes cuenta de Zapping, sus canales en alta calidad, con tu
+            propia cuenta.
+          </li>
+          <li>
+            Si conectas YouTube, las transmisiones en vivo de los canales a los
+            que estás suscrito.
+          </li>
+          <li>También transmisiones de Twitch y tu música de Spotify.</li>
+        </ul>
+
+        <h2>Cómo usamos tu cuenta de YouTube</h2>
+        <p>
+          Conectar YouTube es opcional. Pedimos solo el permiso de lectura
+          <code>youtube.readonly</code>, y lo usamos para leer la lista de
+          canales a los que estás suscrito y saber cuáles están en vivo ahora,
+          para que puedas ponerlos en tu grilla. No publicamos ni cambiamos
+          nada en tu cuenta, no guardamos tus datos en servidores y no los
+          compartimos con nadie. Puedes desconectarte cuando quieras. Los
+          detalles están en la
+          <a href="/privacy">política de privacidad</a>.
+        </p>
+      </section>
+
+      <hr />
+
+      <section id="en" lang="en">
+        <h1>Ver Tele</h1>
+        <p>
+          A free viewer for live Chilean TV channels. Build a multi-screen grid
+          and watch news, sports and channels from across the country at the
+          same time, on a computer, a phone or an Android TV.
+        </p>
+        <a class="cta" href="/">Open Ver Tele</a>
+
+        <h2>What you can watch</h2>
+        <ul>
+          <li>The public streams of Chile's national and regional channels.</li>
+          <li>
+            With a Zapping subscription, its channels in high quality, using
+            your own account.
+          </li>
+          <li>
+            If you connect YouTube, the live streams of the channels you are
+            subscribed to.
+          </li>
+          <li>Twitch streams and your music from Spotify, too.</li>
+        </ul>
+
+        <h2>How we use your YouTube account</h2>
+        <p>
+          Connecting YouTube is optional. We request only the read-only
+          <code>youtube.readonly</code> scope, and use it to read the list of
+          channels you subscribe to and find which of them are live right now,
+          so you can put them on your grid. We never post or change anything on
+          your account, do not store your data on our servers and do not share
+          it with anyone. You can disconnect at any time. Full details are in
+          the <a href="/privacy">privacy policy</a>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          <a href="/privacy">Política de privacidad / Privacy policy</a> ·
+          <a href="mailto:liturgia-lamento.7q@icloud.com">Contacto / Contact</a>
+          ·
+          <a
+            href="https://github.com/martinsantibanez/tele-react"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub</a
+          >
+        </p>
+        <p>
+          Ver Tele no está afiliado a YouTube, Google, Zapping ni a los canales
+          que muestra; cada señal pertenece a su dueño. Ver Tele is not
+          affiliated with YouTube, Google, Zapping or the channels it shows;
+          each stream belongs to its owner.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

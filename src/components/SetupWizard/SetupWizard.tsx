@@ -160,6 +160,10 @@ function SetupWizard({
         {/* Google's OAuth verification wants the policy linked from the home
             page, which is this wizard for anyone new. */}
         <p className="text-center text-xs text-muted-foreground">
+          <a href="/about" className="underline underline-offset-2">
+            Acerca de Ver Tele
+          </a>
+          {' · '}
           <a href="/privacy" className="underline underline-offset-2">
             Política de privacidad
           </a>

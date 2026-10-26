@@ -287,6 +287,9 @@ export default function PrivacyPage() {
             ← Ver Tele
           </Link>
           <span className="flex gap-3">
+            <a href="/about" className="underline underline-offset-2">
+              Acerca de
+            </a>
             <a href="#es" className="underline underline-offset-2">
               Español
             </a>
