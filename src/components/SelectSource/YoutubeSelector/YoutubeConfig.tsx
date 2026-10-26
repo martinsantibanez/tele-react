@@ -72,9 +72,13 @@ export function YoutubeConfig() {
               </p>
               <p className="text-xs text-muted-foreground">
                 Usamos el permiso de solo lectura <code>youtube.readonly</code>.
-                La sesión se guarda de forma segura en el servidor y se mantiene
-                conectada sin volver a pedir permiso. Puedes desconectarte
-                cuando quieras. Código en{' '}
+                La sesión se guarda cifrada en una cookie de tu navegador y se
+                mantiene conectada sin volver a pedir permiso. Puedes
+                desconectarte cuando quieras.{' '}
+                <a href="/privacy" style={{ textDecoration: 'underline' }}>
+                  Política de privacidad
+                </a>
+                . Código en{' '}
                 <a
                   href="https://github.com/martinsantibanez/tele-react"
                   target="_blank"

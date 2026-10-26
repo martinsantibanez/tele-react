@@ -72,7 +72,10 @@ function YoutubeStep() {
             Conectar con YouTube
           </Button>
           <p className="text-xs text-muted-foreground">
-            Solo pedimos permiso de lectura (<code>youtube.readonly</code>).
+            Solo pedimos permiso de lectura (<code>youtube.readonly</code>).{' '}
+            <a href="/privacy" className="underline underline-offset-2">
+              Política de privacidad
+            </a>
           </p>
         </div>
       )}
@@ -154,6 +157,13 @@ function SetupWizard({
             calidad.
           </p>
         )}
+        {/* Google's OAuth verification wants the policy linked from the home
+            page, which is this wizard for anyone new. */}
+        <p className="text-center text-xs text-muted-foreground">
+          <a href="/privacy" className="underline underline-offset-2">
+            Política de privacidad
+          </a>
+        </p>
       </div>
     </div>
   );
