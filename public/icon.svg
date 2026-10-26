@@ -1,0 +1,9 @@
+<!-- The Lucide "tv" icon (https://lucide.dev, ISC License; copyright Cole Bemis
+     2013-2022 as part of Feather, and Lucide Contributors 2022) on a blue tile. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88">
+  <rect width="88" height="88" rx="20" fill="#185FA5"/>
+  <g transform="translate(16 16) scale(2.333)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="20" height="15" x="2" y="7" rx="2"/>
+    <polyline points="17 2 12 7 7 2"/>
+  </g>
+</svg>

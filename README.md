@@ -22,3 +22,4 @@ pnpm dev
 ## Credits
 
 - Layout images from [@AINMcl/MonitorTV](https://github.com/AINMcl/MonitorTV)
+- App icon based on the `tv` icon from [Lucide](https://lucide.dev) ([ISC License](https://lucide.dev/license))
