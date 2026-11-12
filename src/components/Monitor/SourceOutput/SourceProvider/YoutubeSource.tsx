@@ -1,5 +1,10 @@
 'use client';
 import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  claimPlayback,
+  releasePlayback,
+  releasePlaybackSoon
+} from '../../../../hooks/youtubePlayback';
 import { useTileClipper } from '../../../ClipEditor/useTileClipper';
 
 type Props = {
@@ -46,6 +51,18 @@ const LIVE_EDGE_TOLERANCE = 15;
  * still loading, the edge moved — must not turn into a stream of them.
  */
 const SNAP_COOLDOWN = 8000;
+
+/**
+ * How long a player may sit buffering before it counts as done with its
+ * stream. A live that has ended does not always come to a clean end in the
+ * embed: it can just spin.
+ */
+const STALL_MS = 45_000;
+
+/** The player's states, as it reports them (ended is 0, unstarted -1). */
+const PLAYING = 1;
+const PAUSED = 2;
+const BUFFERING = 3;
 
 /** Tile size measured off the DOM; null until the first measurement lands. */
 type Box = { width: number; height: number };
@@ -219,6 +236,57 @@ export function YoutubeSource({
     // Keyed on the source: a new stream in this tile is a new player, and
     // everything learned about the last one is void.
   }, [src, interactive, listen, post]);
+
+  /**
+   * Whether this player is still going through its stream, for a live that
+   * has ended on YouTube to stay on the wall until the viewer has caught up
+   * with its end (see `youtubePlayback`). Playing, paused or buffering holds
+   * the stream; its end, or buffering that never resumes, lets it go. Keyed on
+   * the video alone: going fullscreen keeps the same player, which would not
+   * report its state again to a listener set up anew.
+   */
+  useEffect(() => {
+    if (!videoId) return;
+    const player = Symbol('youtube player');
+    let stall: ReturnType<typeof setTimeout> | undefined;
+    const onState = (state: number) => {
+      clearTimeout(stall);
+      if (state === PLAYING || state === PAUSED || state === BUFFERING) {
+        claimPlayback(videoId, player);
+        if (state === BUFFERING)
+          stall = setTimeout(() => releasePlayback(videoId, player), STALL_MS);
+      } else {
+        releasePlayback(videoId, player);
+      }
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      if (typeof event.data !== 'string') return;
+      let data: {
+        event?: string;
+        info?: number | { playerState?: number } | null;
+      };
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      if (data.event === 'onStateChange' && typeof data.info === 'number')
+        onState(data.info);
+      else if (
+        data.event === 'infoDelivery' &&
+        typeof data.info === 'object' &&
+        typeof data.info?.playerState === 'number'
+      )
+        onState(data.info.playerState);
+    };
+    window.addEventListener('message', onMessage);
+    return () => {
+      window.removeEventListener('message', onMessage);
+      clearTimeout(stall);
+      releasePlaybackSoon(videoId, player);
+    };
+  }, [videoId]);
 
   useEffect(() => {
     const func = muted ? 'mute' : 'unMute';

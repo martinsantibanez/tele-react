@@ -10,6 +10,7 @@ import {
 import { SourceType } from '../sources';
 import { SourceNode } from '../types/Monitor';
 import { useYoutubeAuth } from './useYoutubeAuth';
+import { useStillPlaying } from './youtubePlayback';
 
 /** Subscriptions change rarely; live status is the only thing polled often. */
 const TTL_MS = 12 * 60 * 60 * 1000;
@@ -195,20 +196,35 @@ export function assignLiveSlugs(
 }
 
 /**
+ * The last source seen for every channel the poll has listed, so one that has
+ * just dropped out can be held while it is still being watched. Module-level
+ * so every consumer — the catalogue, the wall, the off-air check — holds the
+ * same channels.
+ */
+const lastSeen = new Map<string, SourceType>();
+
+/**
  * The live subs mapped onto the app's `SourceType`. A saved screen keeps only
  * the slug and a snapshot of the channel, and `useResolveSource` prefers
  * whatever this returns, so a tile pointed at a stream that has since ended
  * picks up the channel's current one by being looked up again.
+ *
+ * A channel the poll no longer lists stays for as long as a player on the page
+ * is still going through its stream. The poll says when the broadcast ended;
+ * the viewer, behind the live edge by the player's latency or by having
+ * rewound, is not there yet — and the tile should not end before the stream
+ * it is showing does.
  */
 export function useYoutubeLiveSources(): SourceType[] {
   const { live, subscriptions } = useYoutubeLiveSubs();
+  const stillPlaying = useStillPlaying();
   // A live's own thumbnail is a still of the stream, so the channel's mark has
   // to come from the subscription it was found through.
   const avatarByChannel = useMemo(
     () => new Map(subscriptions.map(s => [s.channelId, s.thumbnailUrl])),
     [subscriptions]
   );
-  return useMemo(
+  const onAir = useMemo<SourceType[]>(
     () =>
       assignLiveSlugs(live).map(v => ({
         slug: v.slug,
@@ -224,6 +240,27 @@ export function useYoutubeLiveSources(): SourceType[] {
       })),
     [live, avatarByChannel]
   );
+  return useMemo(() => {
+    const listed = new Set(onAir.map(src => src.slug));
+    const playing = new Set(
+      onAir.map(src => src.youtubeVideoId).filter(Boolean)
+    );
+    const held: SourceType[] = [];
+    lastSeen.forEach((src, slug) => {
+      if (listed.has(slug)) return;
+      // Still being watched, and not by now carried by another slug (the
+      // channel's other live taking over its place).
+      if (
+        src.youtubeVideoId &&
+        stillPlaying.has(src.youtubeVideoId) &&
+        !playing.has(src.youtubeVideoId)
+      )
+        held.push(src);
+      else lastSeen.delete(slug);
+    });
+    onAir.forEach(src => lastSeen.set(src.slug, src));
+    return held.length ? [...onAir, ...held] : onAir;
+  }, [onAir, stillPlaying]);
 }
 
 const byChannelTitle = (a: SourceType, b: SourceType) => {
