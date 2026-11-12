@@ -18,7 +18,8 @@ const sections: { title: string; keys: [string, string][] }[] = [
     keys: [
       ['← →', 'Retroceder / adelantar 5 s'],
       ['J / L', 'Retroceder / adelantar 10 s'],
-      ['C', 'Crear un clip (también ✂ en la barra del video)']
+      ['C', 'Crear un clip (también ✂ en la barra del video)'],
+      ['I / O', 'Marcar inicio / fin del clip y editarlo']
     ]
   },
   {

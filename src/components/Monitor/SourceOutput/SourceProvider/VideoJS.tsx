@@ -6,6 +6,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import { heldRange, topPlaylist, Vhs, vhsOf } from '@/lib/vhs';
+import type { Range } from '../../../ClipEditor/ClipTimeline';
 import {
   DecodeSlotContext,
   reportDecodeTrouble,
@@ -15,6 +16,17 @@ import { isTvDevice } from '../../../../hooks/useIsTv';
 
 // Mediabunny and the editor only load once a clip is asked for.
 const ClipEditor = lazy(() => import('../../../ClipEditor/ClipEditor'));
+
+const icon = (paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto">${paths}</svg>`;
+// A bracket opening, and one closing: where the clip starts, where it ends.
+const MARK_START_ICON = icon(
+  '<path d="M9 4H5v16h4"/><path d="m11 8 4 4-4 4"/>'
+);
+const MARK_END_ICON = icon('<path d="M15 4h4v16h-4"/><path d="m7 8 4 4-4 4"/>');
+
+const formatClock = (unix: number) =>
+  new Date(unix * 1000).toLocaleTimeString('es-CL', { hour12: false });
 
 const SCISSORS_ICON =
   '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>';
@@ -31,8 +43,8 @@ type Props = {
   paused?: boolean;
   /**
    * Takes ← → (5 s) and J L (10 s) to move through the stream's rewind
-   * window, and C to cut a clip from it. Only for a stream that keeps one, on
-   * the tile filling the screen.
+   * window, C to cut a clip from it, and I and O to mark one's start and end.
+   * Only for a stream that keeps one, on the tile filling the screen.
    */
   seekKeys?: boolean;
   /**
@@ -197,18 +209,54 @@ const LivePlayer = ({
   // Undoes the hold, once the player is there to undo it on.
   const resumeRef = useRef<() => void>(() => {});
 
-  // The clip editor, open on the stream this many seconds behind live. The
-  // tile keeps playing under it, quiet, so it is where it was once closed.
-  const [clipBehind, setClipBehind] = useState<number>();
-  const clipOpen = clipBehind !== undefined;
-  const openClip = () => {
+  // The clip editor, open on the stream this many seconds behind live, or on
+  // the clip marked on it. The tile keeps playing under it, quiet, so it is
+  // where it was once closed.
+  const [clip, setClip] = useState<{ behind: number; range?: Range }>();
+  const clipOpen = clip !== undefined;
+  // How far behind live the tile is playing.
+  const behindLive = () => {
     const player = playerRef.current;
     if (!player || player.isDisposed()) return;
     const held = heldRange(player);
-    setClipBehind(held ? Math.max(0, held.end - player.currentTime()) : 0);
+    return held ? Math.max(0, held.end - player.currentTime()) : 0;
   };
-  const openClipRef = useRef(openClip);
-  openClipRef.current = openClip;
+  const openClip = () => {
+    const behind = behindLive();
+    if (behind !== undefined) setClip({ behind });
+  };
+
+  // Where a clip being marked starts, by the clock (unix seconds) rather
+  // than the player's, which a reload or a reach further back starts over.
+  // Another channel in the tile drops it.
+  const [marked, setMarked] = useState<{ src: string; at: number }>();
+  const markedAt = marked?.src === src ? marked.at : undefined;
+  const markStart = () => {
+    const behind = behindLive();
+    if (behind !== undefined)
+      setMarked({ src, at: Date.now() / 1000 - behind });
+  };
+  // Ends it where the tile is, and opens the editor on it. Marked backwards,
+  // having rewound past its start, it is the same clip.
+  const markEnd = () => {
+    const behind = behindLive();
+    if (markedAt === undefined || behind === undefined) return;
+    const now = Date.now() / 1000;
+    const at = now - behind;
+    const range = {
+      start: Math.min(markedAt, at),
+      end: Math.max(markedAt, at)
+    };
+    setMarked(undefined);
+    setClip({ behind: now - range.end, range });
+  };
+
+  // For the control bar's buttons, set up once with the player.
+  const clipActionsRef = useRef({ openClip, markStart, markEnd });
+  clipActionsRef.current = { openClip, markStart, markEnd };
+  const markButtonsRef = useRef<
+    { start: videojs.Component; end: videojs.Component } | undefined
+  >(undefined);
 
   // An adaptive stream plays what its tile's size calls for (VHS caps it at
   // the player's dimensions), so a wall of small tiles pulls small renditions.
@@ -275,20 +323,44 @@ const LivePlayer = ({
     currentSrcRef.current = src;
 
     // Beside the volume: the right end of the bar is under the monitor's own
-    // buttons when the tile fills the screen.
+    // buttons when the tile fills the screen. The scissors, then marking a
+    // clip's start and its end; the end only once there is a start.
     const controlBar = canClip() ? p.getChild('ControlBar') : undefined;
     if (controlBar) {
-      const clipButton = controlBar.addChild(
-        'button',
-        { controlText: 'Crear clip' },
-        controlBar.children().indexOf(controlBar.getChild('VolumePanel')!) + 1
+      let index =
+        controlBar.children().indexOf(controlBar.getChild('VolumePanel')!) + 1;
+      const addButton = (
+        controlText: string,
+        className: string,
+        svg: string,
+        onClick: () => void
+      ) => {
+        const button = controlBar.addChild('button', { controlText }, index++);
+        button.addClass(className);
+        button
+          .el()
+          .querySelector('.vjs-icon-placeholder')
+          ?.insertAdjacentHTML('beforeend', svg);
+        button.on('click', onClick);
+        return button;
+      };
+      addButton('Crear clip (C)', 'vjs-clip-button', SCISSORS_ICON, () =>
+        clipActionsRef.current.openClip()
       );
-      clipButton.addClass('vjs-clip-button');
-      clipButton
-        .el()
-        .querySelector('.vjs-icon-placeholder')
-        ?.insertAdjacentHTML('beforeend', SCISSORS_ICON);
-      clipButton.on('click', () => openClipRef.current());
+      const start = addButton(
+        'Marcar inicio del clip (I)',
+        'vjs-clip-button',
+        MARK_START_ICON,
+        () => clipActionsRef.current.markStart()
+      );
+      const end = addButton(
+        'Marcar fin y editar el clip (O)',
+        'vjs-clip-button',
+        MARK_END_ICON,
+        () => clipActionsRef.current.markEnd()
+      );
+      end.hide();
+      markButtonsRef.current = { start, end };
     }
 
     // Keep the stream running: resume on any pause, and reload it if it stalls.
@@ -406,6 +478,7 @@ const LivePlayer = ({
         playerRef.current.dispose();
       }
       playerRef.current = undefined;
+      markButtonsRef.current = undefined;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -428,6 +501,22 @@ const LivePlayer = ({
   useEffect(() => {
     playerRef.current?.muted(muted || clipOpen);
   }, [muted, clipOpen]);
+
+  // A start marked lights its button up, says when it was, and brings out
+  // the end's.
+  useEffect(() => {
+    const buttons = markButtonsRef.current;
+    if (!buttons) return;
+    const isMarked = markedAt !== undefined;
+    buttons.start.toggleClass('vjs-clip-marked', isMarked);
+    buttons.start.controlText(
+      isMarked
+        ? `Inicio marcado a las ${formatClock(markedAt)}: marcar de nuevo (I)`
+        : 'Marcar inicio del clip (I)'
+    );
+    if (isMarked) buttons.end.show();
+    else buttons.end.hide();
+  }, [markedAt]);
 
   // Filling the screen, its control bar makes room for the monitor's buttons
   // (see globals.css). A TV has no such buttons.
@@ -474,7 +563,10 @@ const LivePlayer = ({
     if (!player || player.isDisposed()) return;
     // A reach further back still loading: the presses add up until it lands.
     if (pendingBehindRef.current !== undefined) {
-      pendingBehindRef.current = Math.max(0, pendingBehindRef.current - seconds);
+      pendingBehindRef.current = Math.max(
+        0,
+        pendingBehindRef.current - seconds
+      );
       return;
     }
     const seekable = player.seekable();
@@ -490,7 +582,13 @@ const LivePlayer = ({
   useHotkeys('right', () => seekBy(ARROW_SEEK_S), seekOptions);
   useHotkeys('j', () => seekBy(-JL_SEEK_S), seekOptions);
   useHotkeys('l', () => seekBy(JL_SEEK_S), seekOptions);
-  useHotkeys('c', openClip, { ...seekOptions, enabled: seekKeys && canClip() });
+  const clipKeys = { ...seekOptions, enabled: seekKeys && canClip() };
+  useHotkeys('c', openClip, clipKeys);
+  useHotkeys('i', markStart, clipKeys);
+  useHotkeys('o', markEnd, {
+    ...clipKeys,
+    enabled: clipKeys.enabled && markedAt !== undefined
+  });
 
   useEffect(() => {
     if (muted || clipOpen) return;
@@ -522,8 +620,9 @@ const LivePlayer = ({
               title={title}
               src={src}
               rewind={rewind}
-              behind={clipBehind}
-              onClose={() => setClipBehind(undefined)}
+              behind={clip.behind}
+              range={clip.range}
+              onClose={() => setClip(undefined)}
             />
           </Suspense>,
           document.body

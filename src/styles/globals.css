@@ -161,3 +161,9 @@ html[data-tv] :focus-visible {
     display: none;
   }
 }
+
+/* A clip's start marked on the tile, its end still to come. Set by
+   `VideoJS`. */
+.video-js .vjs-clip-button.vjs-clip-marked {
+  color: #fbbf24;
+}

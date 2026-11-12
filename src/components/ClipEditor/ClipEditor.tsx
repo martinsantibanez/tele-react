@@ -50,6 +50,11 @@ type Props = {
       rewind?: { src: (startTime: number) => string; limitS: number };
       /** How far behind live the tile was; the clip starts out ending there. */
       behind: number;
+      /**
+       * Or the clip marked on the tile, in wall-clock unix seconds: it starts
+       * out as that, the playhead at its start.
+       */
+      range?: Range;
       recording?: never;
     }
   | {
@@ -61,6 +66,7 @@ type Props = {
       src?: never;
       rewind?: never;
       behind?: never;
+      range?: never;
     }
 );
 
@@ -72,6 +78,12 @@ const FIRST_CLIP_S = 30;
 const FRAME_S = 1 / 30;
 const QUALITIES = [720, 1080];
 const TICK_MS = 60;
+
+/**
+ * Where to put the playhead and the selection once the stream loads, as
+ * seconds behind its live edge.
+ */
+type Land = { time: number; sel?: Range };
 
 /** A part of the picture to frame: how far in, and about where. */
 type Region = { zoom: number; centre: { x: number; y: number } };
@@ -158,6 +170,7 @@ export default function ClipEditor({
   src,
   rewind,
   behind = 0,
+  range,
   recording,
   onClose
 }: Props) {
@@ -168,10 +181,12 @@ export default function ClipEditor({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const reaches = rewind ? REACHES_S.filter(r => r <= rewind.limitS) : [];
-  const [reach, setReach] = useState(
-    () =>
-      reaches.find(r => r >= behind + 10 * 60) ?? reaches[reaches.length - 1]
-  );
+  const [reach, setReach] = useState(() => {
+    const back = range ? Date.now() / 1000 - range.start : behind;
+    return (
+      reaches.find(r => r >= back + 10 * 60) ?? reaches[reaches.length - 1]
+    );
+  });
   const urlFor = (r = reach) =>
     rewind && r ? rewind.src(Math.floor(Date.now() / 1000 - r)) : src!;
 
@@ -233,13 +248,22 @@ export default function ClipEditor({
   loopRef.current = loop && !marking;
   const panesRef = useRef({ panes, height: size.height });
   panesRef.current = { panes, height: size.height };
-  // Where to put the playhead and the selection once the stream loads, as
-  // seconds behind its live edge.
-  // A recording is played from its start, and the clip is all of it.
-  const landRef = useRef<{ time: number; sel?: Range } | undefined>(
+  // Where to put the playhead and the selection once the stream loads (see
+  // `Land`). A recording is played from its start, and the clip is all of
+  // it. A marked clip is placed by the clock as the stream lands, its end
+  // being live then, and played from its start.
+  const landRef = useRef<Land | (() => Land) | undefined>(
     recording
       ? { time: Infinity, sel: { start: Infinity, end: 0 } }
-      : { time: behind }
+      : range
+        ? () => {
+            const now = Date.now() / 1000;
+            return {
+              time: now - range.start,
+              sel: { start: now - range.start, end: now - range.end }
+            };
+          }
+        : { time: behind }
   );
 
   useEffect(() => {
@@ -275,26 +299,34 @@ export default function ClipEditor({
       if (vhs) vhs.selectPlaylist = () => topPlaylist(vhs);
     };
     const land = () => {
-      const pending = landRef.current;
       const held = heldRange(p);
-      if (!pending || !held) return;
+      if (!landRef.current || !held) return;
+      const pending =
+        typeof landRef.current === 'function'
+          ? landRef.current()
+          : landRef.current;
       landRef.current = undefined;
       const { start, end } = held;
       const t = clamp(end - pending.time, start, end);
       p.currentTime(t);
       setTime(t);
       setStream({ start, end });
-      setClockOffset(
-        recording ? recording.startedAt : Date.now() / 1000 - end
+      setClockOffset(recording ? recording.startedAt : Date.now() / 1000 - end);
+      if (!pending.sel) {
+        return setSel({ start: Math.max(start, t - FIRST_CLIP_S), end: t });
+      }
+      // Kept to what the stream holds, and to a clip's bounds: one marked
+      // too long keeps its start, one too short grows past its end.
+      const from = clamp(end - pending.sel.start, start, end);
+      const to = clamp(
+        end - pending.sel.end,
+        Math.min(from + CLIP_MIN_S, end),
+        from + CLIP_MAX_S
       );
-      setSel(
-        pending.sel
-          ? {
-              start: clamp(end - pending.sel.start, start, end),
-              end: clamp(end - pending.sel.end, start, end)
-            }
-          : { start: Math.max(start, t - FIRST_CLIP_S), end: t }
-      );
+      setSel({
+        start: Math.max(start, Math.min(from, to - CLIP_MIN_S)),
+        end: to
+      });
     };
     const onSize = () => {
       const video = videoRef.current;
