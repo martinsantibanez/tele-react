@@ -25,8 +25,8 @@ export function ZappingSource({
   fullscreen = false
 }: Props) {
   const [zappingToken] = useZappingToken();
-  // A rewindable channel is played reaching the last hour back, so its seek bar
-  // covers it; the rest keep the ~30s their live playlist lists. With the
+  // A rewindable channel plays its live playlist like the rest, and reaches
+  // the last hour back once it is rewound past it (see `VideoJS`). With the
   // picker open beside the picture the arrows are its, to walk the list with.
   const { isEditing } = useTeleContext();
 
