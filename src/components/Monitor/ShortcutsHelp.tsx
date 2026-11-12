@@ -5,13 +5,17 @@ const sections: { title: string; keys: [string, string][] }[] = [
     title: 'Monitor',
     keys: [
       ['E', 'Abrir o cerrar el selector'],
-      ['1 – 9', 'Elegir pantalla (⇧ para la 10 a la 18)'],
-      ['Enter', 'Pantalla completa / cerrar selector'],
+      ['1 – 9', 'Destacar pantalla (⇧ para la 10 a la 18)'],
+      ['Enter', 'Destacar / pantalla completa / cerrar selector'],
       ['Mantener Enter', 'Marcar para intercambiar'],
-      ['Esc', 'Abrir o cerrar el selector'],
+      ['Esc', 'Volver a la grilla / abrir o cerrar el selector'],
       ['G', 'Pantalla completa'],
       ['M', 'Silenciar']
     ]
+  },
+  {
+    title: 'Pantalla destacada',
+    keys: [['← → ↑ ↓', 'Destacar la anterior / siguiente']]
   },
   {
     title: 'Pantalla completa (Zapping)',

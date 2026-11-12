@@ -1,7 +1,9 @@
 'use client';
 import {
+  LayoutGrid,
   Maximize2,
   Minimize2,
+  PanelsTopLeft,
   Pencil,
   Plus,
   Volume2,
@@ -64,6 +66,7 @@ import { gridColumnsFor } from '../SelectSource/layoutOptions';
 import { ControlBar } from './ControlBar';
 import { screenLabel } from './SavedScreensBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
+import { FOCUS_MIN_TILES } from './focusWall';
 import { fillSlots, slotCount } from './predefinedLayouts';
 import { Screen } from './Screen';
 import { ShortcutsHelp } from './ShortcutsHelp';
@@ -207,6 +210,22 @@ export const Monitor = () => {
     displayConfig.grid.size,
     drawnTiles.length
   ]);
+
+  // Between the grid and fullscreen sits the focus wall: the selected tile
+  // enlarged, the others still playing as previews around it (see
+  // `focusWallRects`). Picking a tile takes the grid there; the selected tile
+  // is always the enlarged one, so picking another brings it in. Laid out for
+  // a 16:9 monitor, so not on a phone, and for the walls of tiles — a layout
+  // has its own big screen already.
+  //
+  // Kept as the saved screen it was turned on for: another one is other
+  // channels, and opens on its grid.
+  const [focusedScreen, setFocusedScreen] = useState<number>();
+  const setIsFocused = (focused: boolean) =>
+    setFocusedScreen(focused ? activeScreenIndex : undefined);
+  const canFocus =
+    !isMobile && (isGrid || isLiveMode) && drawnTiles.length >= FOCUS_MIN_TILES;
+  const focusActive = focusedScreen === activeScreenIndex && canFocus;
 
   const monitorRatio = useMemo(() => {
     if (!isMobile || !isGrid) return 16 / 9;
@@ -381,20 +400,33 @@ export const Monitor = () => {
     revealScreenSource(newIdx);
   };
 
+  /** Whether there was such a tile on the wall to select. */
   const selectScreen = (idx: number) => {
-    if (idx < 0 || idx >= visibleScreenCount) return;
-    if (isHiddenTile(idx)) return;
+    if (idx < 0 || idx >= visibleScreenCount) return false;
+    if (isHiddenTile(idx)) return false;
     if (isLiveMode) {
       setEditingSourceIdx(idx);
       setLiveFocusSlug(liveNodes[idx]?.sourceSlug);
-      return;
+      return true;
     }
     setEditingSourceIdx(idx);
     revealScreenSource(idx);
+    return true;
   };
 
-  const selectScreenRef = useRef(selectScreen);
-  selectScreenRef.current = selectScreen;
+  /**
+   * A tile picked out on purpose — clicked, its number pressed, its key on
+   * the deck — rather than walked onto with the arrows: off the grid, it is
+   * also enlarged. With the picker open a pick is only which tile to edit, and
+   * the wall stays as it is.
+   */
+  const pickScreen = (idx: number) => {
+    if (!selectScreen(idx)) return;
+    if (canFocus && !isEditing && !isFullscreen) setIsFocused(true);
+  };
+
+  const selectScreenRef = useRef(pickScreen);
+  selectScreenRef.current = pickScreen;
 
   const toggleLiveOnly = (idx: number) => {
     // Set while off air, or while they are hidden, the tile would vanish from
@@ -516,7 +548,11 @@ export const Monitor = () => {
       // Halfway through a swap, OK finishes it wherever it is pressed.
       if (swapSourceIdx !== undefined) swapStep();
       else if (isEditing) setIsEditing(false);
-      else if (!isFullscreen && hasGridLevel) toggleFullscreen();
+      else if (!isFullscreen && hasGridLevel) {
+        // A level at a time: the grid to the focus wall, and on to fullscreen.
+        if (canFocus && !focusActive) setIsFocused(true);
+        else toggleFullscreen();
+      }
     },
     onLongPress: swapStep
   });
@@ -530,9 +566,12 @@ export const Monitor = () => {
     e => {
       const idx = getIndexFromKeyEvent(e);
       if (idx === undefined) return;
-      selectScreen(idx);
+      pickScreen(idx);
     },
     [
+      canFocus,
+      isFullscreen,
+      isEditing,
       visibleScreenCount,
       swapSourceIdx,
       isLiveMode,
@@ -562,6 +601,10 @@ export const Monitor = () => {
         setSwapSourceIdx(undefined);
         return;
       }
+      if (focusActive && !isEditing) {
+        setIsFocused(false);
+        return;
+      }
       // From the grid Back opens the picker on the selected screen; from the
       // picker it closes it again. On the TV a second Back in quick
       // succession leaves the app, so this never traps the remote.
@@ -571,6 +614,7 @@ export const Monitor = () => {
     [
       isFullscreen,
       swapSourceIdx,
+      focusActive,
       isEditing,
       editingSourceIdx,
       selectedSources,
@@ -582,6 +626,16 @@ export const Monitor = () => {
   // while it is open, and so does the reel while a tile is fullscreen.
   const gridArrows = !isEditing && !isFullscreen && hasGridLevel;
   const moveSelection = (direction: 'up' | 'down' | 'left' | 'right') => {
+    // On the focus wall each step brings the next tile in, so where the tiles
+    // sit keeps changing under the arrows: they go by the tiles' order
+    // instead, the previews' own, round and round.
+    if (focusActive) {
+      const at = drawnTiles.indexOf(editingSourceIdx);
+      const step = direction === 'left' || direction === 'up' ? -1 : 1;
+      const count = drawnTiles.length;
+      selectScreen(drawnTiles[(at + step + count) % count]);
+      return;
+    }
     const area = screenAreaRef.current;
     if (!area) return;
     const target = neighbourScreen(area, editingSourceIdx, direction);
@@ -670,11 +724,29 @@ export const Monitor = () => {
     measureTiles: () => {
       // The reel is one channel filling the monitor.
       if (isZappingMode) return [[0, 0, 1, 1]];
+      const fraction = (value: number) => Math.round(value * 1000) / 1000;
+      // The deck keeps the grid while the monitor is on the focus wall: each
+      // pick there moves the tiles, and the keys would move under the finger.
+      if (focusActive) {
+        const cols = isGrid
+          ? gridColumns
+          : Math.ceil(Math.sqrt(activeSources.length));
+        const rows = Math.ceil(drawnTiles.length / cols);
+        return drawnTiles.map((_, n) => {
+          const col = n % cols;
+          const row = Math.floor(n / cols);
+          return [
+            fraction(col / cols),
+            fraction(row / rows),
+            fraction((col + 1) / cols),
+            fraction((row + 1) / rows)
+          ];
+        });
+      }
       const area = screenAreaRef.current;
       const box = area?.getBoundingClientRect();
       if (!area || !box?.width || !box.height) return [];
       const rects: TileRect[] = [];
-      const fraction = (value: number) => Math.round(value * 1000) / 1000;
       area.querySelectorAll<HTMLElement>('[data-screen-idx]').forEach(el => {
         const idx = Number(el.dataset.screenIdx);
         if (Number.isNaN(idx) || rects[idx]) return;
@@ -690,7 +762,7 @@ export const Monitor = () => {
       });
       return drawnTiles.map(idx => rects[idx]);
     },
-    layoutKey: `${JSON.stringify(displayConfig)}|${gridColumns}|${drawnTiles}`,
+    layoutKey: `${JSON.stringify(displayConfig)}|${gridColumns}|${drawnTiles}|${focusActive}`,
     onCommand: command => {
       if (command.type === 'screen') {
         if (command.index < savedScreens.length)
@@ -698,11 +770,15 @@ export const Monitor = () => {
       } else if (command.type === 'tile') {
         const idx = drawnTiles[command.index];
         if (idx === undefined) return;
-        // Pressing the tile that is heard again takes it fullscreen (or back),
-        // like OK on it.
-        if (idx === editingSourceIdx) {
-          if (isFullscreen || hasGridLevel) toggleFullscreen();
-        } else selectScreen(idx);
+        if (idx !== editingSourceIdx) return pickScreen(idx);
+        // Pressing the tile that is heard again steps it up a level: the grid
+        // to the focus wall, then fullscreen. From fullscreen it goes all the
+        // way back to the grid, as the deck has no Back key of its own.
+        if (isFullscreen) {
+          setIsFocused(false);
+          leaveFullscreen();
+        } else if (canFocus && !focusActive) setIsFocused(true);
+        else if (hasGridLevel) toggleFullscreen();
       } else toggleMute();
     }
   });
@@ -814,6 +890,18 @@ export const Monitor = () => {
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
+      {canFocus && !isFullscreen && (
+        <FloatingButton
+          onClick={() => setIsFocused(!focusActive)}
+          label={
+            focusActive
+              ? 'Volver a la grilla (Esc)'
+              : 'Destacar pantalla (Enter)'
+          }
+        >
+          {focusActive ? <LayoutGrid size={20} /> : <PanelsTopLeft size={20} />}
+        </FloatingButton>
+      )}
       {isEditing && canEditTiles && (
         <FloatingButton onClick={addTile} label="Agregar pantalla">
           <Plus size={20} />
@@ -852,11 +940,12 @@ export const Monitor = () => {
         >
           <Screen
             screen={screen}
-            onSelect={selectScreen}
+            onSelect={pickScreen}
             onEdit={isLiveMode ? undefined : handleSourceEdit}
             editingSourceIdx={editingSourceIdx}
             swapSourceIdx={swapSourceIdx}
             fullscreenIdx={fullscreenIdx}
+            focusIdx={focusActive ? editingSourceIdx : undefined}
             onSwitch={isLiveMode ? undefined : handleSwitch}
             gridColumns={gridColumns}
             onSourceChange={isZappingMode ? handleSourceChange : undefined}

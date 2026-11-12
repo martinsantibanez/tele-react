@@ -1,9 +1,12 @@
 import { useParkedScreens } from '../../hooks/useDecodeSlot';
+import { useIsTv } from '../../hooks/useIsTv';
 import { canBeOffAir } from '../../hooks/useOffAir';
 import { SourceType } from '../../sources';
 import { SourceNode } from '../../types/Monitor';
 import { MonitorSource } from '../Monitor/MonitorSource';
+import { focusWallRects } from '../Monitor/focusWall';
 import { parkedWallRects, rectStyle } from '../Monitor/parkedWall';
+import { WallClock } from '../Monitor/WallClock';
 
 type Props = {
   sources: SourceNode[];
@@ -13,6 +16,11 @@ type Props = {
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
+  /**
+   * The tile enlarged on the focus wall, with the others small around it.
+   * Unset, the tiles keep the grid.
+   */
+  focusIdx?: number;
   /** Lets a tile be zapped with once fullscreened — see `MonitorSource`. */
   onFullscreenSourceChange?: (source: SourceType) => void;
   /** Tiles kept in place, number and all, but not drawn: see `Screen`. */
@@ -29,6 +37,7 @@ export function GridDisplay({
   editingSourceIdx,
   swapSourceIdx,
   fullscreenIdx,
+  focusIdx,
   onFullscreenSourceChange,
   hidden,
   isOffAir,
@@ -38,10 +47,19 @@ export function GridDisplay({
   // With tiles parked the grid gives way: each tile is placed by hand instead,
   // inside the same wrapper, so no player is torn down by the switch.
   const parked = useParkedScreens();
-  const rects = parkedWallRects(
-    sources.flatMap((_, idx) => (hidden?.has(idx) ? [] : [idx])),
-    parked
-  );
+  const isTv = useIsTv();
+  const drawn = sources.flatMap((_, idx) => (hidden?.has(idx) ? [] : [idx]));
+  // The focus wall places every tile by hand too, parked or not: a parked
+  // preview is its logo, in its own cell.
+  const focus =
+    focusIdx === undefined ? undefined : focusWallRects(drawn, focusIdx);
+  const rects = focus?.rects ?? parkedWallRects(drawn, parked);
+  // Tiles glide to their new cells as another one is brought in. Not on a TV,
+  // whose WebView would redraw every player on every frame of it.
+  const glide =
+    focus && !isTv
+      ? 'transition-[left,top,width,height] duration-300 ease-out motion-reduce:transition-none'
+      : '';
   return (
     <>
       {sources.map((node, idx) => {
@@ -53,7 +71,7 @@ export function GridDisplay({
         return (
           <div
             key={`${node.uuid}`}
-            className="min-h-0 min-w-0"
+            className={`min-h-0 min-w-0 ${glide}`}
             style={rect ? rectStyle(rect) : undefined}
           >
             <MonitorSource
@@ -83,6 +101,12 @@ export function GridDisplay({
           </div>
         );
       })}
+      {/* An odd count leaves the focus wall a cell short of a tile. */}
+      {focus?.spare.map((rect, n) => (
+        <div key={`spare-${n}`} className={glide} style={rectStyle(rect)}>
+          {n === 0 && <WallClock />}
+        </div>
+      ))}
     </>
   );
 }
