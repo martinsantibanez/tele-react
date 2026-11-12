@@ -1,5 +1,5 @@
 'use client';
-import { Replace } from 'lucide-react';
+import { Radio, Replace } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { DecodeSlotContext, useParkedScreens } from '../../hooks/useDecodeSlot';
@@ -37,6 +37,14 @@ type Props = {
    */
   onZapChange?: (source: SourceType) => void;
   idx: number;
+  /**
+   * A live-only tile whose channel is not on air. It is only drawn at all with
+   * the picker open, and then as what it is waiting for rather than a player.
+   */
+  offAir?: boolean;
+  liveOnly?: boolean;
+  /** Offered in the tile's pill, beside Cambiar, when set. */
+  onToggleLiveOnly?: () => void;
 };
 
 /** The picker sidebar's width, in pixels, on a desktop or a TV. */
@@ -53,7 +61,10 @@ export function MonitorSource({
   fullscreen,
   covered,
   onZapChange,
-  idx
+  idx,
+  offAir,
+  liveOnly,
+  onToggleLiveOnly
 }: Props) {
   const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
     useTeleContext();
@@ -149,7 +160,7 @@ export function MonitorSource({
               asked to see it bigger. Mounted all along, fullscreen only wakes
               it up. */}
           <DecodeSlotContext.Provider value={decodeSlot}>
-            {onZapChange ? (
+            {offAir ? null : onZapChange ? (
               <ChannelReel
                 node={{ sourceSlug, source: storedSource, activeSignal }}
                 onSelectSource={fullscreen ? onZapChange : undefined}
@@ -191,6 +202,23 @@ export function MonitorSource({
             />
             <span className="max-w-full truncate text-xs text-white/60">
               {source.name}
+            </span>
+          </div>
+        )}
+        {offAir && (
+          <div className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center gap-1 border border-dashed border-white/20 bg-neutral-900 p-2 text-center">
+            {!!source && (
+              <SourceImage
+                src={source.logoUrl ?? source.imageUrl}
+                className="max-h-[45%] max-w-[60%] rounded-full object-contain opacity-50"
+                fallback={source.titleIcons}
+              />
+            )}
+            <span className="max-w-full truncate text-xs text-white/60">
+              {source?.name}
+            </span>
+            <span className="text-[11px] text-white/40">
+              Fuera del aire · aparece al estar en vivo
             </span>
           </div>
         )}
@@ -256,6 +284,20 @@ export function MonitorSource({
                   >
                     <Replace size={12} />
                     Cambiar
+                  </button>
+                )}
+                {onToggleLiveOnly && (
+                  <button
+                    type="button"
+                    onClick={onToggleLiveOnly}
+                    aria-pressed={liveOnly}
+                    title="Mostrar solo mientras esté en vivo, sin ocupar un lugar de la grilla"
+                    className={`flex h-full items-center gap-1 border-l border-white/20 px-2 text-[11px] font-medium transition-colors ${
+                      liveOnly ? 'bg-red-600 text-white' : 'hover:bg-white/20'
+                    }`}
+                  >
+                    <Radio size={12} />
+                    Solo en vivo
                   </button>
                 )}
               </div>

@@ -1,6 +1,8 @@
 'use client';
 import { GridDisplay } from '../GridDisplay/GridDisplay';
 import { Layout } from '../Layout/Layout';
+import { useTeleContext } from '../../context/TeleContext';
+import { useOffAir } from '../../hooks/useOffAir';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { ChannelReel } from './ChannelReel';
@@ -36,6 +38,8 @@ type Props = {
    * control, this is scoped to whichever one tile is currently fullscreened.
    */
   onFullscreenSourceChange?: (source: SourceType) => void;
+  /** Flips a grid tile between always there and only there while live. */
+  onToggleLiveOnly?: (idx: number) => void;
 };
 
 export function Screen({
@@ -47,9 +51,12 @@ export function Screen({
   fullscreenIdx,
   gridColumns,
   onSourceChange,
-  onFullscreenSourceChange
+  onFullscreenSourceChange,
+  onToggleLiveOnly
 }: Props) {
   const isMobile = useIsMobile();
+  const isOffAir = useOffAir();
+  const { isEditing } = useTeleContext();
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Zapping) {
     // The screen keeps exactly one channel — whatever is on air — and the reel
@@ -116,7 +123,14 @@ export function Screen({
   if (config.mode === DisplayMode.Grid) {
     const cols = gridColumns || config.grid.size;
     const shown = visibleSources(config, sources ?? []);
-    const rows = Math.ceil(shown.length / cols) || 1;
+    // A live-only tile off air is not drawn, and takes its row with it. With
+    // the picker open it is, as a placeholder, so it can still be picked and
+    // changed — the wall it is being edited from is the whole screen.
+    const hidden = isEditing
+      ? undefined
+      : new Set(shown.flatMap((node, idx) => (isOffAir(node) ? [idx] : [])));
+    const drawn = shown.length - (hidden?.size ?? 0);
+    const rows = Math.ceil(drawn / cols) || 1;
     return (
       <div
         className="relative grid h-full w-full"
@@ -133,6 +147,9 @@ export function Screen({
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
           onFullscreenSourceChange={onFullscreenSourceChange}
+          hidden={hidden}
+          isOffAir={isOffAir}
+          onToggleLiveOnly={onToggleLiveOnly}
         />
       </div>
     );

@@ -30,6 +30,7 @@ import {
   useKeyNames,
   useOkKey
 } from '../../hooks/useRemoteKeys';
+import { canBeOffAir, useOffAir } from '../../hooks/useOffAir';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import {
@@ -178,6 +179,27 @@ export const Monitor = () => {
 
   const visibleScreenCount = slotCount(displayConfig, activeSources);
 
+  // A live-only tile off air is not on the wall while the picker is away, so
+  // it is not a tile to be on either: nothing to see or hear, and no
+  // neighbours for the arrows to find from it.
+  const isOffAir = useOffAir();
+  const isHiddenTile = (idx: number) =>
+    isGrid && !isLiveMode && !isEditing && isOffAir(activeSources[idx]);
+  const selectedTileHidden = isHiddenTile(editingSourceIdx);
+  useEffect(() => {
+    if (!selectedTileHidden) return;
+    const first = activeSources.findIndex(
+      (node, idx) => idx < visibleScreenCount && !isOffAir(node)
+    );
+    if (first >= 0) setEditingSourceIdx(first);
+  }, [
+    selectedTileHidden,
+    activeSources,
+    visibleScreenCount,
+    isOffAir,
+    setEditingSourceIdx
+  ]);
+
   useEffect(() => {
     if (!visibleScreenCount) return;
     setEditingSourceIdx(current => Math.min(current, visibleScreenCount - 1));
@@ -291,7 +313,10 @@ export const Monitor = () => {
             ...src,
             sourceSlug: source.slug,
             source: embeddedSource(source),
-            activeSignal: undefined
+            activeSignal: undefined,
+            // Kept from one favourite to the next, so the extra tile can be
+            // pointed elsewhere; a channel that is always on cannot be it.
+            liveOnly: (src.liveOnly && canBeOffAir(source.slug)) || undefined
           };
         else return src;
       });
@@ -317,6 +342,7 @@ export const Monitor = () => {
 
   const selectScreen = (idx: number) => {
     if (idx < 0 || idx >= visibleScreenCount) return;
+    if (isHiddenTile(idx)) return;
     if (isLiveMode) {
       setEditingSourceIdx(idx);
       setLiveFocusSlug(liveNodes[idx]?.sourceSlug);
@@ -328,6 +354,13 @@ export const Monitor = () => {
 
   const selectScreenRef = useRef(selectScreen);
   selectScreenRef.current = selectScreen;
+
+  const toggleLiveOnly = (idx: number) =>
+    setSelectedSources(sources =>
+      sources.map((src, i) =>
+        i === idx ? { ...src, liveOnly: !src.liveOnly || undefined } : src
+      )
+    );
 
   const handleSwitch: OnSwitchCb = (left: number, right: number) => {
     setSelectedSources(sources => {
@@ -653,6 +686,7 @@ export const Monitor = () => {
             onFullscreenSourceChange={
               isLiveMode ? undefined : handleSourceChange
             }
+            onToggleLiveOnly={isLiveMode ? undefined : toggleLiveOnly}
           />
         </div>
         {/* Pointer controls: a remote has OK, Back and the picker for all of

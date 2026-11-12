@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import {
   fetchLiveFromChannels,
@@ -64,6 +64,16 @@ export function useYoutubeLiveSubs() {
   const [liveCache, setLiveCache] = useLocalStorageState<
     CachedLive | undefined
   >('youtubeLive', { defaultValue: undefined });
+
+  // The staleness below is only looked at on a render, and a wall left to play
+  // on its own may not render again for hours. A tick a minute keeps the poll
+  // going — the fetch itself still only runs every LIVE_TTL_MS.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!isConnected) return;
+    const id = setInterval(() => tick(t => t + 1), RETRY_MS);
+    return () => clearInterval(id);
+  }, [isConnected]);
 
   const subsStale = !subsCache || Date.now() - subsCache.fetchedAt > TTL_MS;
   const liveStale =
@@ -132,8 +142,9 @@ export function useYoutubeLiveSubs() {
  * stream and starts another the slug is stable, so a user who added it to a
  * layout keeps watching the channel instead of a dead video id.
  */
+export const YOUTUBE_LIVE_SLUG_PREFIX = 'custom_yt_live_';
 export const youtubeLiveSlug = (channelId: string) =>
-  `custom_yt_live_${channelId}`;
+  `${YOUTUBE_LIVE_SLUG_PREFIX}${channelId}`;
 
 /**
  * Assign a unique, stable slug to every live video. A channel almost always has

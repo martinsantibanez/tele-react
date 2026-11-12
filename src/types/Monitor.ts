@@ -13,6 +13,13 @@ export type SourceNode = {
   source?: SourceType;
   uuid?: string;
   activeSignal?: string;
+  /**
+   * Only on screen while the channel is on air, and not one of the grid's
+   * count while it is: a YouTube favourite set this way adds itself to the
+   * wall when it goes live — a row of its own if it has to — and gives the
+   * room back when it ends. See `useOffAir`.
+   */
+  liveOnly?: boolean;
 };
 
 export type ColType = {

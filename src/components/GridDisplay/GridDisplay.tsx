@@ -1,4 +1,5 @@
 import { useParkedScreens } from '../../hooks/useDecodeSlot';
+import { canBeOffAir } from '../../hooks/useOffAir';
 import { SourceType } from '../../sources';
 import { SourceNode } from '../../types/Monitor';
 import { MonitorSource } from '../Monitor/MonitorSource';
@@ -14,6 +15,10 @@ type Props = {
   fullscreenIdx?: number;
   /** Lets a tile be zapped with once fullscreened — see `MonitorSource`. */
   onFullscreenSourceChange?: (source: SourceType) => void;
+  /** Tiles kept in place, number and all, but not drawn: see `Screen`. */
+  hidden?: Set<number>;
+  isOffAir?: (node: SourceNode) => boolean;
+  onToggleLiveOnly?: (idx: number) => void;
 };
 
 export function GridDisplay({
@@ -23,18 +28,25 @@ export function GridDisplay({
   editingSourceIdx,
   swapSourceIdx,
   fullscreenIdx,
-  onFullscreenSourceChange
+  onFullscreenSourceChange,
+  hidden,
+  isOffAir,
+  onToggleLiveOnly
 }: Props) {
   // With tiles parked the grid gives way: each tile is placed by hand instead,
   // inside the same wrapper, so no player is torn down by the switch.
   const parked = useParkedScreens();
   const rects = parkedWallRects(
-    sources.map((_, idx) => idx),
+    sources.flatMap((_, idx) => (hidden?.has(idx) ? [] : [idx])),
     parked
   );
   return (
     <>
       {sources.map((node, idx) => {
+        // Still rendered, as nothing: the tiles around it keep their place
+        // in the DOM, and a player that moves there reloads.
+        if (hidden?.has(idx))
+          return <div key={`${node.uuid}`} className="hidden" />;
         const rect = rects?.get(idx);
         return (
           <div
@@ -54,6 +66,16 @@ export function GridDisplay({
               fullscreen={idx === fullscreenIdx}
               covered={fullscreenIdx !== undefined && idx !== fullscreenIdx}
               onZapChange={onFullscreenSourceChange}
+              offAir={isOffAir?.(node)}
+              liveOnly={!!node.liveOnly}
+              // Offered on a channel that can go off air, and on any tile
+              // already set, so it can always be set back.
+              onToggleLiveOnly={
+                onToggleLiveOnly &&
+                (node.liveOnly || canBeOffAir(node.sourceSlug))
+                  ? () => onToggleLiveOnly(idx)
+                  : undefined
+              }
             />
           </div>
         );

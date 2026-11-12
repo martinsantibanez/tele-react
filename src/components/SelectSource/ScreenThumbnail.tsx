@@ -1,6 +1,7 @@
 'use client';
 import { Flame, YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
+import { useOffAir } from '../../hooks/useOffAir';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
@@ -27,6 +28,7 @@ export function ScreenThumbnail({
   className
 }: Props) {
   const resolveSource = useResolveSource();
+  const isOffAir = useOffAir();
   const { config, sources = [] } = screen;
 
   const resolve: SlotResolver = node =>
@@ -54,7 +56,10 @@ export function ScreenThumbnail({
         <ZappingPreview node={sources[0]} resolve={resolve} />
       ) : config.mode === DisplayMode.Grid ? (
         <GridPreview
-          sources={visibleSources(config, sources)}
+          // As the wall itself is: a favourite on air shows up here too.
+          sources={visibleSources(config, sources).filter(
+            node => !isOffAir(node)
+          )}
           size={config.grid.size}
           resolve={resolve}
         />

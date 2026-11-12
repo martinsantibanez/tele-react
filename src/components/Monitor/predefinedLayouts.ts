@@ -84,12 +84,30 @@ export const slotCount = (config: DisplayConfig, sources: SourceNode[]) => {
     case DisplayMode.Layout:
       return config.layout.length;
     case DisplayMode.Grid:
-      return config.grid.count ?? sources.length;
+      return config.grid.count === undefined
+        ? sources.length
+        : gridSlotCount(config.grid.count, sources);
     case DisplayMode.Zapping:
       return 1;
     default:
       return sources.length;
   }
+};
+
+/**
+ * A grid's count is of the tiles that are always there. The `liveOnly` ones
+ * ride along on top of it — however many sit before the last of them, and any
+ * straight after it — so setting one never pushes a regular channel off the
+ * end. Short of the count, it is topped up with empty slots (`fillSlots`).
+ */
+const gridSlotCount = (count: number, sources: SourceNode[]) => {
+  let always = 0;
+  for (let idx = 0; idx < sources.length; idx++) {
+    if (sources[idx].liveOnly) continue;
+    if (always === count) return idx;
+    always++;
+  }
+  return sources.length + (count - always);
 };
 
 /** The channels a screen shows: the ones past its slots are kept, unseen. */
