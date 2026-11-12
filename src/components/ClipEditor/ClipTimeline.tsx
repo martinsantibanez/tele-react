@@ -64,10 +64,12 @@ const followPress = (
   const up = (ev: PointerEvent) => {
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
     onEnd?.(toTime(ev.clientX), moved);
   };
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
   return toTime(e.clientX);
 };
 
@@ -212,7 +214,7 @@ export function ClipTimeline({
       <div
         ref={overviewRef}
         onPointerDown={pressOverview}
-        className="relative h-9 cursor-crosshair overflow-hidden rounded bg-white/5"
+        className="relative h-9 cursor-crosshair touch-none overflow-hidden rounded bg-white/5 pointer-coarse:h-11"
         title="Arrastra para elegir los minutos del clip"
       >
         <Ticks view={stream} toClock={toClock} count={8} />
@@ -235,7 +237,7 @@ export function ClipTimeline({
       <div
         ref={detailRef}
         onPointerDown={pressDetail}
-        className="relative h-16 cursor-text rounded bg-white/5"
+        className="relative h-16 cursor-text touch-none rounded bg-white/5"
       >
         <div className="absolute inset-0 overflow-hidden rounded">
           <Ticks view={detail} toClock={toClock} count={10} />

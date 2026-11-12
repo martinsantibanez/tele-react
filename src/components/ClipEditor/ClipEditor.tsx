@@ -504,9 +504,11 @@ export default function ClipEditor({
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   };
 
   const toClock = (t: number) => t + clockOffset;
@@ -656,20 +658,85 @@ export default function ClipEditor({
   // The preview canvas, at half the clip's size: plenty for a thumbnail.
   const previewSize = { width: size.width / 2, height: size.height / 2 };
 
+  // Where the clip goes out: at the end of the settings, or at the bottom of
+  // the screen when everything is stacked.
+  const exportPanel = (
+    <>
+      {job.state === 'error' && (
+        <p className="rounded bg-red-500/15 px-2 py-1.5 text-xs text-red-300">
+          No se pudo exportar: {job.message}
+        </p>
+      )}
+      {supported === false && (
+        <p className="rounded bg-red-500/15 px-2 py-1.5 text-xs text-red-300">
+          Este navegador no puede codificar video H.264.
+        </p>
+      )}
+      {job.state === 'exporting' ? (
+        <>
+          <div className="h-2 overflow-hidden rounded bg-white/10">
+            <div
+              className="h-full bg-amber-400 transition-[width]"
+              style={{ width: `${job.progress * 100}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs text-white/70">
+            <span className="flex items-center gap-1.5">
+              <Loader2 size={14} className="animate-spin" />
+              Exportando… {Math.round(job.progress * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={cancelExport}
+              className="rounded px-2 py-1 hover:bg-white/10"
+            >
+              Cancelar
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="flex gap-2 lg:flex-col">
+          {job.state === 'done' && (
+            <button
+              type="button"
+              onClick={() => download(job.url, job.name)}
+              className="flex flex-1 items-center justify-center gap-2 rounded border border-white/20 px-3 py-2 text-sm whitespace-nowrap hover:bg-white/10"
+            >
+              <Download size={16} />
+              Descargar<span className="hidden sm:inline">
+                {' '}
+                de nuevo
+              </span> · {(job.bytes / 1024 / 1024).toFixed(1)} MB
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={startExport}
+            disabled={!sel || !stream || supported === false}
+            className="flex flex-1 items-center justify-center gap-2 rounded bg-amber-400 px-3 py-2.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
+          >
+            <Scissors size={16} />
+            Exportar MP4 · {formatDuration(clipLength)}
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col bg-neutral-950 text-white"
       role="dialog"
       aria-label="Crear clip"
     >
-      <header className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
-        <Scissors size={18} className="text-amber-400" />
-        <h2 className="truncate font-semibold">
+      <header className="flex items-center gap-2 border-b border-white/10 py-2 pr-2 pl-3 sm:gap-3 sm:px-4">
+        <Scissors size={18} className="shrink-0 text-amber-400" />
+        <h2 className="min-w-0 truncate font-semibold">
           Clip <span className="font-normal text-white/60">· {title}</span>
         </h2>
         {reaches.length > 0 && (
-          <div className="ml-4 flex items-center gap-2 text-xs text-white/60">
-            Alcance
+          <div className="flex shrink-0 items-center gap-2 text-xs text-white/60 sm:ml-4">
+            <span className="hidden sm:inline">Alcance</span>
             <div className="flex overflow-hidden rounded border border-white/15">
               {reaches.map(r => (
                 <button
@@ -692,7 +759,7 @@ export default function ClipEditor({
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto rounded p-1.5 hover:bg-white/10"
+          className="ml-auto shrink-0 rounded p-1.5 hover:bg-white/10"
           aria-label="Cerrar (Esc)"
           title="Cerrar (Esc)"
         >
@@ -700,11 +767,14 @@ export default function ClipEditor({
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {/* Stacked, on a phone or a narrow window, it all scrolls: the picture
+          on top, as tall as it needs to be, then the timeline and the
+          settings, with the export button kept at the bottom. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain lg:flex-row lg:overflow-hidden">
+        <div className="flex shrink-0 flex-col lg:min-h-0 lg:min-w-0 lg:flex-1 lg:shrink">
           <div
             ref={stageRef}
-            className="relative min-h-[200px] flex-1 overflow-hidden bg-black"
+            className="relative h-[min(56.25vw,45svh)] min-h-[180px] shrink-0 overflow-hidden bg-black lg:h-auto lg:min-h-[200px] lg:flex-1"
           >
             <div
               ref={holderRef}
@@ -728,8 +798,8 @@ export default function ClipEditor({
             )}
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-white/10 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-3 border-t border-white/10 px-3 py-3 sm:px-4">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
               <TransportButton
                 onClick={() => sel && seek(sel.start)}
                 label="Ir al inicio del clip (Inicio)"
@@ -752,20 +822,20 @@ export default function ClipEditor({
               <span className="w-20 text-sm text-white/80 tabular-nums">
                 {stream ? formatClock(toClock(time)) : '--:--:--'}
               </span>
-              <div className="mx-1 h-6 w-px bg-white/15" />
+              <div className="mx-1 hidden h-6 w-px bg-white/15 sm:block" />
               <button
                 type="button"
                 onClick={markIn}
                 className="rounded border border-white/15 px-2.5 py-1 text-sm hover:bg-white/10"
               >
-                Marcar inicio <Kbd>I</Kbd>
+                Marcar inicio <Kbd hint>I</Kbd>
               </button>
               <button
                 type="button"
                 onClick={markOut}
                 className="rounded border border-white/15 px-2.5 py-1 text-sm hover:bg-white/10"
               >
-                Marcar fin <Kbd>O</Kbd>
+                Marcar fin <Kbd hint>O</Kbd>
               </button>
               <TransportButton
                 onClick={() => setLoop(l => !l)}
@@ -781,7 +851,7 @@ export default function ClipEditor({
                 {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </TransportButton>
               {sel && stream && (
-                <div className="ml-auto text-sm text-white/70 tabular-nums">
+                <div className="ml-auto text-sm whitespace-nowrap text-white/70 tabular-nums">
                   {formatClock(toClock(sel.start))} –{' '}
                   {formatClock(toClock(sel.end))}
                   <span className="ml-2 font-semibold text-amber-400">
@@ -803,20 +873,24 @@ export default function ClipEditor({
                 }}
               />
             ) : (
-              <div className="h-[6.75rem] animate-pulse rounded bg-white/5" />
+              <div className="h-[6.75rem] animate-pulse rounded bg-white/5 pointer-coarse:h-[7.25rem]" />
             )}
             <p className="text-[11px] text-white/40">
               Arrastra sobre la barra de arriba para elegir los minutos; ajusta
-              los extremos en la de abajo. <Kbd>Espacio</Kbd> reproducir ·{' '}
-              <Kbd>← →</Kbd> 1 s (⇧ 5 s) · <Kbd>J L</Kbd> 10 s · <Kbd>, .</Kbd>{' '}
-              cuadro · <Kbd>I O</Kbd> inicio y fin · <Kbd>Esc</Kbd> cerrar
+              los extremos en la de abajo.{' '}
+              {/* No keyboard to speak of on a touch screen. */}
+              <span className="pointer-coarse:hidden">
+                <Kbd>Espacio</Kbd> reproducir · <Kbd>← →</Kbd> 1 s (⇧ 5 s) ·{' '}
+                <Kbd>J L</Kbd> 10 s · <Kbd>, .</Kbd> cuadro · <Kbd>I O</Kbd>{' '}
+                inicio y fin · <Kbd>Esc</Kbd> cerrar
+              </span>
             </p>
           </div>
         </div>
 
-        <aside className="flex w-full shrink-0 flex-col gap-4 overflow-y-auto border-t border-white/10 p-4 lg:w-80 lg:border-t-0 lg:border-l">
+        <aside className="flex w-full shrink-0 flex-col gap-4 border-t border-white/10 p-3 sm:p-4 lg:w-80 lg:overflow-y-auto lg:border-t-0 lg:border-l">
           <Section title="Formato">
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
               {CLIP_ASPECTS.map((a, i) => {
                 const r =
                   a.ratio === 'source'
@@ -900,7 +974,7 @@ export default function ClipEditor({
                   controls
                   autoPlay
                   loop
-                  className="max-h-[340px] max-w-full"
+                  className="max-h-[min(340px,50svh)] max-w-full"
                 />
               ) : (
                 <div className="relative max-w-full">
@@ -908,7 +982,7 @@ export default function ClipEditor({
                     ref={canvasRef}
                     width={previewSize.width}
                     height={previewSize.height}
-                    className="block max-h-[340px] max-w-full bg-neutral-900"
+                    className="block max-h-[min(340px,50svh)] max-w-full bg-neutral-900"
                     style={{ aspectRatio: `${size.width} / ${size.height}` }}
                   />
                   {split && (
@@ -985,68 +1059,15 @@ export default function ClipEditor({
             </div>
           </Section>
 
-          <div className="mt-auto flex flex-col gap-2">
-            {job.state === 'error' && (
-              <p className="rounded bg-red-500/15 px-2 py-1.5 text-xs text-red-300">
-                No se pudo exportar: {job.message}
-              </p>
-            )}
-            {supported === false && (
-              <p className="rounded bg-red-500/15 px-2 py-1.5 text-xs text-red-300">
-                Este navegador no puede codificar video H.264.
-              </p>
-            )}
-            {job.state === 'exporting' ? (
-              <>
-                <div className="h-2 overflow-hidden rounded bg-white/10">
-                  <div
-                    className="h-full bg-amber-400 transition-[width]"
-                    style={{ width: `${job.progress * 100}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs text-white/70">
-                  <span className="flex items-center gap-1.5">
-                    <Loader2 size={14} className="animate-spin" />
-                    Exportando… {Math.round(job.progress * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={cancelExport}
-                    className="rounded px-2 py-1 hover:bg-white/10"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                {job.state === 'done' && (
-                  <button
-                    type="button"
-                    onClick={() => download(job.url, job.name)}
-                    className="flex items-center justify-center gap-2 rounded border border-white/20 px-3 py-2 text-sm hover:bg-white/10"
-                  >
-                    <Download size={16} />
-                    Descargar de nuevo · {(job.bytes / 1024 / 1024).toFixed(
-                      1
-                    )}{' '}
-                    MB
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={startExport}
-                  disabled={!sel || !stream || supported === false}
-                  className="flex items-center justify-center gap-2 rounded bg-amber-400 px-3 py-2.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
-                >
-                  <Scissors size={16} />
-                  Exportar MP4 · {formatDuration(clipLength)}
-                </button>
-              </>
-            )}
+          <div className="mt-auto hidden flex-col gap-2 lg:flex">
+            {exportPanel}
           </div>
         </aside>
       </div>
+
+      <footer className="flex flex-col gap-2 border-t border-white/10 bg-neutral-950 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 lg:hidden">
+        {exportPanel}
+      </footer>
     </div>
   );
 }
@@ -1138,9 +1159,20 @@ function LayoutButton({
   );
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
+/** A key, or with `hint`, one beside a button: not there on a touch screen. */
+function Kbd({
+  children,
+  hint
+}: {
+  children: React.ReactNode;
+  hint?: boolean;
+}) {
   return (
-    <kbd className="rounded border border-white/20 px-1 font-sans text-[10px] text-white/70">
+    <kbd
+      className={`rounded border border-white/20 px-1 font-sans text-[10px] text-white/70 ${
+        hint ? 'pointer-coarse:hidden' : ''
+      }`}
+    >
       {children}
     </kbd>
   );

@@ -56,9 +56,11 @@ export function CropFrame({
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   };
 
   const pressFrame = (e: React.PointerEvent, i: number) => {
@@ -130,7 +132,7 @@ export function CropFrame({
           key={i}
           onPointerDown={e => pressFrame(e, i)}
           onWheel={e => wheel(e, i)}
-          className="absolute cursor-move outline-2"
+          className="absolute cursor-move touch-none outline-2"
           style={{
             ...placed[i],
             outlineColor: color,
@@ -147,7 +149,7 @@ export function CropFrame({
             <div
               key={position}
               onPointerDown={e => pressCorner(e, i)}
-              className={`absolute size-3 rounded-sm bg-white ${position} ${
+              className={`absolute size-3 touch-none rounded-sm bg-white before:absolute before:-inset-1.5 before:content-[''] pointer-coarse:before:-inset-3.5 ${position} ${
                 frames.length > 1 ? 'border-2' : 'border border-black/40'
               }`}
               style={frames.length > 1 ? { borderColor: color } : undefined}
