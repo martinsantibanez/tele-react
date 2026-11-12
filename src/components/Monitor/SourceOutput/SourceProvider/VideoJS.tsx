@@ -1,9 +1,11 @@
 'use client';
 import qualitySelector from 'videojs-hls-quality-selector';
-import { useContext, useEffect, useRef } from 'react';
+import { lazy, Suspense, useContext, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import { heldRange, topPlaylist, Vhs, vhsOf } from '@/lib/vhs';
 import {
   DecodeSlotContext,
   reportDecodeTrouble,
@@ -11,8 +13,16 @@ import {
 } from '../../../../hooks/useDecodeSlot';
 import { isTvDevice } from '../../../../hooks/useIsTv';
 
+// Mediabunny and the editor only load once a clip is asked for.
+const ClipEditor = lazy(() => import('../../../ClipEditor/ClipEditor'));
+
+const SCISSORS_ICON =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>';
+
 type Props = {
   src: string;
+  /** What is playing, for the clips cut from it. */
+  title?: string;
   muted?: boolean;
   /**
    * Holds the player still: no decoding, no keeping it running. Lifting it
@@ -21,7 +31,8 @@ type Props = {
   paused?: boolean;
   /**
    * Takes ← → (5 s) and J L (10 s) to move through the stream's rewind
-   * window. Only for a stream that keeps one, on the tile filling the screen.
+   * window, and C to cut a clip from it. Only for a stream that keeps one, on
+   * the tile filling the screen.
    */
   seekKeys?: boolean;
   /**
@@ -73,35 +84,6 @@ const frameCount = (video: HTMLVideoElement, at: number) => {
     total: quality.totalVideoFrames,
     dropped: quality.droppedVideoFrames
   };
-};
-
-// The bits of VHS (video.js's HLS engine) the top-rendition lock touches.
-type VhsPlaylist = {
-  disabled?: boolean;
-  excludeUntil?: number;
-  attributes?: { BANDWIDTH?: number };
-};
-type Vhs = {
-  playlists?: { master?: { playlists?: VhsPlaylist[] } };
-  selectPlaylist: () => VhsPlaylist | undefined;
-};
-
-/**
- * The rendition the tile being watched is held to: the highest-bandwidth one
- * VHS has not ruled out (for failing, or for a codec the device can't play).
- */
-const topPlaylist = (vhs: Vhs) => {
-  const now = Date.now();
-  return (vhs.playlists?.master?.playlists ?? [])
-    .filter(pl => !pl.disabled && !((pl.excludeUntil ?? 0) > now))
-    .reduce<VhsPlaylist | undefined>(
-      (best, pl) =>
-        !best ||
-        (pl.attributes?.BANDWIDTH ?? 0) > (best.attributes?.BANDWIDTH ?? 0)
-          ? pl
-          : best,
-      undefined
-    );
 };
 
 /** The VHS instances whose rendition picks already go through `lockTopRef`. */
@@ -170,8 +152,16 @@ const VideoPlayer = (props: Props) => {
  */
 const ParkedPlayer = () => <div className="h-full w-full bg-black" />;
 
+/**
+ * Whether clips can be cut here: not on a TV, which has neither the decoders
+ * to spare nor the mouse, and only with WebCodecs to encode them.
+ */
+const canClip = () =>
+  !isTvDevice() && typeof window !== 'undefined' && 'VideoEncoder' in window;
+
 const LivePlayer = ({
   src,
+  title = 'clip',
   muted = true,
   paused = false,
   seekKeys = false,
@@ -206,6 +196,19 @@ const LivePlayer = ({
   pausedRef.current = paused;
   // Undoes the hold, once the player is there to undo it on.
   const resumeRef = useRef<() => void>(() => {});
+
+  // The clip editor, open on the stream this many seconds behind live. The
+  // tile keeps playing under it, quiet, so it is where it was once closed.
+  const [clipBehind, setClipBehind] = useState<number>();
+  const clipOpen = clipBehind !== undefined;
+  const openClip = () => {
+    const player = playerRef.current;
+    if (!player || player.isDisposed()) return;
+    const held = heldRange(player);
+    setClipBehind(held ? Math.max(0, held.end - player.currentTime()) : 0);
+  };
+  const openClipRef = useRef(openClip);
+  openClipRef.current = openClip;
 
   // An adaptive stream plays what its tile's size calls for (VHS caps it at
   // the player's dimensions), so a wall of small tiles pulls small renditions.
@@ -271,6 +274,23 @@ const LivePlayer = ({
     playerRef.current = p;
     currentSrcRef.current = src;
 
+    // Beside the volume: the right end of the bar is under the monitor's own
+    // buttons when the tile fills the screen.
+    const controlBar = canClip() ? p.getChild('ControlBar') : undefined;
+    if (controlBar) {
+      const clipButton = controlBar.addChild(
+        'button',
+        { controlText: 'Crear clip' },
+        controlBar.children().indexOf(controlBar.getChild('VolumePanel')!) + 1
+      );
+      clipButton.addClass('vjs-clip-button');
+      clipButton
+        .el()
+        .querySelector('.vjs-icon-placeholder')
+        ?.insertAdjacentHTML('beforeend', SCISSORS_ICON);
+      clipButton.on('click', () => openClipRef.current());
+    }
+
     // Keep the stream running: resume on any pause, and reload it if it stalls.
     const resume = () => {
       if (p.isDisposed() || !p.paused() || pausedRef.current) return;
@@ -297,7 +317,7 @@ const LivePlayer = ({
     // tile would stall and rebuffer each time it is selected or let go.
     // Every source gets a new VHS, hence on each `loadedmetadata`.
     const steerRenditions = () => {
-      const vhs = (p.tech(true) as { vhs?: Vhs } | undefined)?.vhs;
+      const vhs = vhsOf(p);
       if (!vhs || steeredVhs.has(vhs)) return;
       steeredVhs.add(vhs);
       const standard = vhs.selectPlaylist;
@@ -406,8 +426,18 @@ const LivePlayer = ({
   }, [src, canRewind]);
 
   useEffect(() => {
-    playerRef.current?.muted(muted);
-  }, [muted]);
+    playerRef.current?.muted(muted || clipOpen);
+  }, [muted, clipOpen]);
+
+  // Filling the screen, its control bar makes room for the monitor's buttons
+  // (see globals.css). A TV has no such buttons.
+  const besideMonitorButtons = !!fullscreen && !isTvDevice();
+  useEffect(() => {
+    playerRef.current?.toggleClass(
+      'vjs-beside-monitor-buttons',
+      besideMonitorButtons
+    );
+  }, [besideMonitorButtons]);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -460,9 +490,10 @@ const LivePlayer = ({
   useHotkeys('right', () => seekBy(ARROW_SEEK_S), seekOptions);
   useHotkeys('j', () => seekBy(-JL_SEEK_S), seekOptions);
   useHotkeys('l', () => seekBy(JL_SEEK_S), seekOptions);
+  useHotkeys('c', openClip, { ...seekOptions, enabled: seekKeys && canClip() });
 
   useEffect(() => {
-    if (muted) return;
+    if (muted || clipOpen) return;
     const unlock = () => {
       const player = playerRef.current;
       if (!player || player.isDisposed() || pausedRef.current) return;
@@ -479,9 +510,26 @@ const LivePlayer = ({
         document.removeEventListener(e, unlock, { capture: true } as never)
       );
     };
-  }, [muted]);
+  }, [muted, clipOpen]);
 
-  return <div ref={containerRef} data-vjs-player className="w-full h-full" />;
+  return (
+    <>
+      <div ref={containerRef} data-vjs-player className="w-full h-full" />
+      {clipOpen &&
+        createPortal(
+          <Suspense fallback={null}>
+            <ClipEditor
+              title={title}
+              src={src}
+              rewind={rewind}
+              behind={clipBehind}
+              onClose={() => setClipBehind(undefined)}
+            />
+          </Suspense>,
+          document.body
+        )}
+    </>
+  );
 };
 
 export default VideoPlayer;

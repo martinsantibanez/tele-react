@@ -1,0 +1,252 @@
+import {
+  ALL_FORMATS,
+  BufferTarget,
+  canEncodeVideo,
+  Conversion,
+  Input,
+  Mp4OutputFormat,
+  Output,
+  QUALITY_HIGH,
+  UrlSource
+} from 'mediabunny';
+
+/** A segment of the stream, placed on the timeline of the player showing it. */
+export type ClipSegment = {
+  /** Its media sequence number, the same in every rendition. */
+  sequence: number;
+  /** Where the player has it, in seconds. */
+  start: number;
+  end: number;
+};
+
+/** The part of the frame a clip keeps, as fractions of its width and height. */
+export type ClipCrop = { x: number; y: number; width: number; height: number };
+
+/** A clip's shape: original, vertical for social media, square or portrait. */
+export type ClipAspect = { label: string; ratio: number | 'source' };
+
+export const CLIP_ASPECTS: ClipAspect[] = [
+  { label: 'Original', ratio: 'source' },
+  { label: 'Vertical 9:16', ratio: 9 / 16 },
+  { label: 'Cuadrado 1:1', ratio: 1 },
+  { label: 'Retrato 4:5', ratio: 4 / 5 }
+];
+
+/** A clip longer than this is a recording, not a clip, and wouldn't fit in memory. */
+export const CLIP_MAX_S = 10 * 60;
+export const CLIP_MIN_S = 1;
+
+/**
+ * The pixel size of a clip of `ratio` (width / height) whose short side is
+ * `shortSide`. Even, as H.264 asks.
+ */
+export const clipSize = (ratio: number, shortSide: number) => {
+  const even = (n: number) => Math.round(n / 2) * 2;
+  return ratio >= 1
+    ? { width: even(shortSide * ratio), height: shortSide }
+    : { width: shortSide, height: even(shortSide / ratio) };
+};
+
+/** Whether this browser can encode the clips: WebCodecs and H.264. */
+export const canExportClips = async () =>
+  typeof VideoEncoder !== 'undefined' &&
+  (await canEncodeVideo('avc', { width: 1080, height: 1920 }));
+
+// Tags that describe the whole playlist; any other tag belongs to the segment
+// that follows it.
+const PLAYLIST_TAGS = [
+  '#EXT-X-VERSION',
+  '#EXT-X-TARGETDURATION',
+  '#EXT-X-INDEPENDENT-SEGMENTS',
+  '#EXT-X-ALLOW-CACHE',
+  '#EXT-X-START'
+];
+const DROPPED_TAGS = [
+  '#EXTM3U',
+  '#EXT-X-MEDIA-SEQUENCE',
+  '#EXT-X-DISCONTINUITY-SEQUENCE',
+  '#EXT-X-PLAYLIST-TYPE',
+  '#EXT-X-ENDLIST'
+];
+
+/**
+ * A media playlist cut down to the segments `first` to `last`, ended, so it
+ * reads as a finished video holding just those. The key and init section in
+ * force at the first one kept are carried over to it. URIs are left as they
+ * are: the playlist is served from its own url, which they are relative to.
+ *
+ * A live playlist may have slid past `first` since; it then starts at the
+ * earliest still listed, which it returns as `first`.
+ */
+export const slicePlaylist = (text: string, first: number, last: number) => {
+  const head: string[] = [];
+  const kept: string[] = [];
+  let keptFirst: number | undefined;
+  let sequence = 0;
+  let tags: string[] = [];
+  let key: string | undefined;
+  let map: string | undefined;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('#EXT-X-MEDIA-SEQUENCE:')) {
+      sequence = parseInt(line.slice('#EXT-X-MEDIA-SEQUENCE:'.length), 10);
+    } else if (DROPPED_TAGS.some(tag => line.startsWith(tag))) {
+      continue;
+    } else if (PLAYLIST_TAGS.some(tag => line.startsWith(tag))) {
+      head.push(line);
+    } else if (line.startsWith('#')) {
+      if (line.startsWith('#EXT-X-KEY')) key = line;
+      if (line.startsWith('#EXT-X-MAP')) map = line;
+      tags.push(line);
+    } else {
+      if (sequence >= first && sequence <= last) {
+        if (keptFirst === undefined) {
+          keptFirst = sequence;
+          tags = tags.filter(tag => tag !== '#EXT-X-DISCONTINUITY');
+          if (map && !tags.includes(map)) tags.unshift(map);
+          if (key && !tags.includes(key)) tags.unshift(key);
+        }
+        kept.push(...tags, line);
+      }
+      tags = [];
+      sequence++;
+    }
+  }
+  if (keptFirst === undefined) return undefined;
+  return {
+    first: keptFirst,
+    text: [
+      '#EXTM3U',
+      ...head,
+      '#EXT-X-PLAYLIST-TYPE:VOD',
+      `#EXT-X-MEDIA-SEQUENCE:${keptFirst}`,
+      ...kept,
+      '#EXT-X-ENDLIST'
+    ].join('\n')
+  };
+};
+
+type ExportOptions = {
+  /** The media playlist of the rendition to cut from. */
+  playlistUrl: string;
+  /** The stream's segments, on the timeline `start` and `end` are on. */
+  segments: ClipSegment[];
+  start: number;
+  end: number;
+  crop: ClipCrop;
+  width: number;
+  height: number;
+  onProgress?: (progress: number) => void;
+  signal: AbortSignal;
+};
+
+const requestUrl = (input: RequestInfo | URL) =>
+  typeof input === 'string'
+    ? input
+    : input instanceof URL
+      ? input.href
+      : input.url;
+
+/**
+ * Cuts `start`–`end` out of a stream into an MP4 (H.264 and AAC), cropped to
+ * `crop` and scaled to `width` × `height`.
+ *
+ * Only the segments the clip covers are downloaded: the stream's playlist is
+ * served to Mediabunny cut down to them, so the clip's time starts at the
+ * first one's. Mediabunny reads the HLS itself — keys, discontinuities and
+ * all — and decodes and encodes on the browser's WebCodecs.
+ */
+export async function exportClip({
+  playlistUrl,
+  segments,
+  start,
+  end,
+  crop,
+  width,
+  height,
+  onProgress,
+  signal
+}: ExportOptions): Promise<Blob> {
+  const covered = segments.filter(s => s.end > start && s.start < end);
+  if (!covered.length) throw new Error('El clip quedó fuera de la señal');
+  const last = covered[covered.length - 1];
+
+  const res = await fetch(playlistUrl, { signal });
+  if (!res.ok) throw new Error(`La señal respondió ${res.status}`);
+  const playlist = slicePlaylist(
+    await res.text(),
+    covered[0].sequence,
+    last.sequence
+  );
+  const first = covered.find(s => s.sequence === playlist?.first);
+  if (!playlist || !first) {
+    throw new Error('El clip ya no está en la señal');
+  }
+  // What slid off the front of a live playlist meanwhile is lost to the clip.
+  start = Math.max(start, first.start);
+
+  const fetchFn: typeof fetch = (input, init) =>
+    requestUrl(input) === playlistUrl
+      ? Promise.resolve(
+          new Response(playlist.text, {
+            headers: { 'Content-Type': 'application/vnd.apple.mpegurl' }
+          })
+        )
+      : fetch(input, init);
+
+  const input = new Input({
+    source: new UrlSource(playlistUrl, { fetchFn, parallelism: 4 }),
+    formats: ALL_FORMATS,
+    // Times from the first segment, not the wall clock, to match `segments`.
+    formatOptions: { hls: { offsetTimestampsByDateTime: false } }
+  });
+  const target = new BufferTarget();
+  const output = new Output({
+    format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
+    target
+  });
+
+  try {
+    const conversion = await Conversion.init({
+      input,
+      output,
+      trim: { start: start - first.start, end: end - first.start },
+      video: async track => {
+        const frameW = await track.getDisplayWidth();
+        const frameH = await track.getDisplayHeight();
+        return {
+          crop: {
+            left: Math.round(crop.x * frameW),
+            top: Math.round(crop.y * frameH),
+            width: Math.round(crop.width * frameW),
+            height: Math.round(crop.height * frameH)
+          },
+          width,
+          height,
+          fit: 'fill',
+          codec: 'avc',
+          quality: QUALITY_HIGH,
+          forceTranscode: true
+        };
+      },
+      audio: { codec: 'aac' },
+      showWarnings: false
+    });
+    if (!conversion.isValid) {
+      throw new Error('Este navegador no puede codificar el clip');
+    }
+    conversion.onProgress = progress => onProgress?.(progress);
+    const cancel = () => void conversion.cancel();
+    signal.addEventListener('abort', cancel);
+    try {
+      await conversion.execute();
+    } finally {
+      signal.removeEventListener('abort', cancel);
+    }
+  } finally {
+    input.dispose();
+  }
+  if (!target.buffer) throw new Error('El clip salió vacío');
+  return new Blob([target.buffer], { type: 'video/mp4' });
+}

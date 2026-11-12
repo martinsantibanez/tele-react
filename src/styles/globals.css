@@ -137,3 +137,27 @@ html[data-tv] :focus-visible {
   outline: 3px solid white !important;
   outline-offset: 2px;
 }
+
+/* The tile filling the screen has the monitor's own buttons (mute,
+   fullscreen, picker) in its bottom-right corner. Its control bar is made as
+   tall as they are, so they sit level with it, and its controls stop short of
+   them: the buttons read as the end of the bar. Sizes follow `FloatingButton`:
+   three of 40px, 8px apart, 8px in from the edge, and 8px of space. Set by
+   `VideoJS`. */
+.video-js.vjs-beside-monitor-buttons .vjs-control-bar {
+  font-size: 14px;
+  padding-right: 152px;
+}
+/* A phone has no room for both: the monitor's buttons already mute and leave
+   fullscreen, so the player's own volume, picture-in-picture and fullscreen
+   controls give way to them. */
+@media (max-width: 640px) {
+  .video-js.vjs-beside-monitor-buttons
+    :is(
+      .vjs-volume-panel,
+      .vjs-picture-in-picture-control,
+      .vjs-fullscreen-control
+    ) {
+    display: none;
+  }
+}

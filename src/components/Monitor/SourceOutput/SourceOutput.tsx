@@ -59,7 +59,14 @@ function SignalOutput({
   if (type === 'iframe' && input.iframeSrc) {
     return <IframeOutput src={input.iframeSrc} />;
   } else if (type === 'm3u8' && input.m3u8Url && typeof window !== 'undefined') {
-    return <VideoPlayer src={input.m3u8Url} muted={muted} paused={paused} />;
+    return (
+      <VideoPlayer
+        src={input.m3u8Url}
+        title={source.name}
+        muted={muted}
+        paused={paused}
+      />
+    );
   } else if (type === 'youtube' && input.youtubeVideoId) {
     return (
       <YoutubeSource
@@ -129,7 +136,14 @@ export function SourceOutput({
     const Component = source.component;
     return <Component />;
   } else if (source.m3u8Url && typeof window !== 'undefined') {
-    return <VideoPlayer src={source.m3u8Url} muted={muted} paused={paused} />;
+    return (
+      <VideoPlayer
+        src={source.m3u8Url}
+        title={source.name}
+        muted={muted}
+        paused={paused}
+      />
+    );
   } else if (source.youtubeVideoId) {
     return (
       <YoutubeSource
@@ -146,6 +160,7 @@ export function SourceOutput({
     return (
       <ZappingSource
         channelId={source.zappingChannel}
+        name={source.name}
         rewindable={source.zappingRewind}
         muted={muted}
         paused={paused}

@@ -6,6 +6,8 @@ import VideoPlayer from './VideoJS';
 
 type Props = {
   channelId: string;
+  /** The channel's name, for the clips cut from it. */
+  name?: string;
   /** Whether Zapping keeps the channel's past, beyond the live window. */
   rewindable?: boolean;
   muted?: boolean;
@@ -16,6 +18,7 @@ type Props = {
 
 export function ZappingSource({
   channelId,
+  name,
   rewindable = false,
   muted = true,
   paused = false,
@@ -33,6 +36,7 @@ export function ZappingSource({
   return (
     <VideoPlayer
       src={href}
+      title={name}
       muted={muted}
       paused={paused}
       seekKeys={fullscreen && !isEditing}

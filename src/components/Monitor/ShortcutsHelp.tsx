@@ -17,7 +17,19 @@ const sections: { title: string; keys: [string, string][] }[] = [
     title: 'Pantalla completa (Zapping)',
     keys: [
       ['← →', 'Retroceder / adelantar 5 s'],
-      ['J / L', 'Retroceder / adelantar 10 s']
+      ['J / L', 'Retroceder / adelantar 10 s'],
+      ['C', 'Crear un clip (también ✂ en la barra del video)']
+    ]
+  },
+  {
+    title: 'Editor de clips',
+    keys: [
+      ['Espacio', 'Reproducir / pausar'],
+      ['I / O', 'Marcar inicio / fin'],
+      ['← →', 'Retroceder / adelantar 1 s (⇧ 5 s)'],
+      [', .', 'Cuadro anterior / siguiente'],
+      ['Inicio / Fin', 'Ir al inicio / fin del clip'],
+      ['Esc', 'Cerrar']
     ]
   },
   {

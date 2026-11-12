@@ -586,7 +586,13 @@ export const Monitor = () => {
   );
 
   const floatingControls = (
-    <div className="absolute right-2 bottom-2 z-[60] flex items-center gap-2">
+    // Fullscreen they sit level with the player's control bar, which is as
+    // tall as they are (see globals.css).
+    <div
+      className={`absolute right-2 z-[60] flex items-center gap-2 ${
+        isFullscreen ? 'bottom-[1px]' : 'bottom-2'
+      }`}
+    >
       <FloatingButton
         onClick={toggleMute}
         label={isMuted ? 'Activar el audio (M)' : 'Silenciar (M)'}
