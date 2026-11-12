@@ -38,6 +38,8 @@ const sections: { title: string; keys: [string, string][] }[] = [
       ['← →', 'Retroceder / adelantar 1 s (⇧ 5 s)'],
       [', .', 'Cuadro anterior / siguiente'],
       ['Inicio / Fin', 'Ir al inicio / fin del clip'],
+      ['+ / −', 'Acercar / alejar la barra del clip (Ctrl + rueda en ambas)'],
+      ['R', 'Traer lo último de la señal (Zapping)'],
       ['Esc', 'Cerrar']
     ]
   },

@@ -7,6 +7,7 @@ import {
   Loader2,
   Pause,
   Play,
+  RefreshCw,
   Repeat,
   Scissors,
   Volume2,
@@ -30,12 +31,15 @@ import {
   exportClip,
   exportRecordingClip
 } from '@/lib/clip';
+import { HlsSnapshot, liveLead, snapshotToLive } from '@/lib/hlsSnapshot';
 import { heldRange, topPlaylist, vhsOf } from '@/lib/vhs';
 import {
   ClipTimeline,
   formatClock,
   formatDuration,
-  Range
+  Range,
+  TimelineControls,
+  ZOOM_STEP
 } from './ClipTimeline';
 import { Box, CropFrame, Frame, MAX_ZOOM } from './CropFrame';
 
@@ -78,10 +82,12 @@ const FIRST_CLIP_S = 30;
 const FRAME_S = 1 / 30;
 const QUALITIES = [720, 1080];
 const TICK_MS = 60;
+/** How often to ask how far live has moved on past what the editor has. */
+const LEAD_MS = 6000;
 
 /**
- * Where to put the playhead and the selection once the stream loads, as
- * seconds behind its live edge.
+ * Where to put the playhead and the selection once the stream loads, by the
+ * clock (unix seconds).
  */
 type Land = { time: number; sel?: Range };
 
@@ -189,10 +195,18 @@ export default function ClipEditor({
   });
   const urlFor = (r = reach) =>
     rewind && r ? rewind.src(Math.floor(Date.now() / 1000 - r)) : src!;
+  // A stream that rewinds is played from a snapshot of it caught up to live
+  // (see `HlsSnapshot`), taken anew to catch up again.
+  const snapshotRef = useRef<HlsSnapshot | undefined>(undefined);
+  const loadingRef = useRef<AbortController | undefined>(undefined);
+  // How many seconds live has moved on past the snapshot.
+  const [lead, setLead] = useState(0);
+  const [snapshotted, setSnapshotted] = useState(false);
 
   const [stream, setStream] = useState<Range>();
-  // Wall-clock seconds at player time 0, taken from the stream's end being
-  // live when it loads. Fixed from then on: the timeline doesn't move.
+  // Wall-clock seconds at player time 0: from where the snapshot ends, or
+  // else from the stream's end being live when it loads. Fixed from then on:
+  // the timeline doesn't move.
   const [clockOffset, setClockOffset] = useState(0);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -250,21 +264,15 @@ export default function ClipEditor({
   panesRef.current = { panes, height: size.height };
   // Where to put the playhead and the selection once the stream loads (see
   // `Land`). A recording is played from its start, and the clip is all of
-  // it. A marked clip is placed by the clock as the stream lands, its end
-  // being live then, and played from its start.
-  const landRef = useRef<Land | (() => Land) | undefined>(
+  // it. A marked clip is played from its start.
+  const [firstLand] = useState<Land>(() =>
     recording
-      ? { time: Infinity, sel: { start: Infinity, end: 0 } }
+      ? { time: -Infinity, sel: { start: -Infinity, end: Infinity } }
       : range
-        ? () => {
-            const now = Date.now() / 1000;
-            return {
-              time: now - range.start,
-              sel: { start: now - range.start, end: now - range.end }
-            };
-          }
-        : { time: behind }
+        ? { time: range.start, sel: range }
+        : { time: Date.now() / 1000 - behind }
   );
+  const landRef = useRef<Land | undefined>(firstLand);
 
   useEffect(() => {
     canExportClips().then(setSupported, () => setSupported(false));
@@ -284,11 +292,11 @@ export default function ClipEditor({
       liveui: false,
       bigPlayButton: false,
       userActions: { click: false, doubleClick: false, hotkeys: false },
-      sources: [
-        recordingUrl
-          ? { src: recordingUrl, type: 'video/mp4' }
-          : { src: urlFor(), type: HLS_TYPE }
-      ]
+      sources: recordingUrl
+        ? [{ src: recordingUrl, type: 'video/mp4' }]
+        : rewind && reach
+          ? []
+          : [{ src: urlFor(), type: HLS_TYPE }]
     });
     playerRef.current = p;
     videoRef.current = p.el().querySelector('video');
@@ -300,26 +308,28 @@ export default function ClipEditor({
     };
     const land = () => {
       const held = heldRange(p);
-      if (!landRef.current || !held) return;
-      const pending =
-        typeof landRef.current === 'function'
-          ? landRef.current()
-          : landRef.current;
+      const pending = landRef.current;
+      if (!pending || !held) return;
       landRef.current = undefined;
       const { start, end } = held;
-      const t = clamp(end - pending.time, start, end);
+      const offset = recording
+        ? recording.startedAt
+        : (snapshotRef.current?.endsAt ?? Date.now() / 1000) - end;
+      // A hair short of the end of a finished stream, where there is still a
+      // picture to show.
+      const t = clamp(pending.time - offset, start, Math.max(start, end - 0.1));
       p.currentTime(t);
       setTime(t);
       setStream({ start, end });
-      setClockOffset(recording ? recording.startedAt : Date.now() / 1000 - end);
+      setClockOffset(offset);
       if (!pending.sel) {
         return setSel({ start: Math.max(start, t - FIRST_CLIP_S), end: t });
       }
       // Kept to what the stream holds, and to a clip's bounds: one marked
       // too long keeps its start, one too short grows past its end.
-      const from = clamp(end - pending.sel.start, start, end);
+      const from = clamp(pending.sel.start - offset, start, end);
       const to = clamp(
-        end - pending.sel.end,
+        Math.min(pending.sel.end - offset, end),
         Math.min(from + CLIP_MIN_S, end),
         from + CLIP_MAX_S
       );
@@ -368,10 +378,15 @@ export default function ClipEditor({
       setTime(t);
     }, TICK_MS);
 
+    if (rewind && reach) void load();
+
     return () => {
       window.clearInterval(tick);
+      loadingRef.current?.abort();
       p.dispose();
       if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+      if (snapshotRef.current) URL.revokeObjectURL(snapshotRef.current.url);
+      snapshotRef.current = undefined;
       playerRef.current = undefined;
       videoRef.current = null;
     };
@@ -513,18 +528,70 @@ export default function ClipEditor({
     }
   };
 
-  const changeReach = (r: number) => {
+  /**
+   * Loads the stream reaching `r` seconds back: a snapshot of it up to live
+   * where it rewinds, or else the stream itself.
+   */
+  async function load(r = reach) {
     const p = playerRef.current;
-    if (!p || r === reach || !stream) return;
-    const end = stream.end;
+    if (!p) return;
+    loadingRef.current?.abort();
+    const loading = new AbortController();
+    loadingRef.current = loading;
+    let snapshot: HlsSnapshot | undefined;
+    if (rewind && r && src) {
+      try {
+        snapshot = await snapshotToLive(urlFor(r), src, loading.signal);
+      } catch (error) {
+        // Played as it is, the stream lags live, but plays.
+        if (!loading.signal.aborted) console.warn(error);
+      }
+    }
+    if (loading.signal.aborted || p.isDisposed()) {
+      if (snapshot) URL.revokeObjectURL(snapshot.url);
+      return;
+    }
+    const previous = snapshotRef.current;
+    snapshotRef.current = snapshot;
+    setSnapshotted(!!snapshot);
+    setLead(0);
+    p.src([{ src: snapshot?.url ?? urlFor(r), type: HLS_TYPE }]);
+    if (previous) URL.revokeObjectURL(previous.url);
+  }
+
+  /** Loads the stream anew, keeping the playhead and the clip where they are. */
+  const reload = (r = reach) => {
+    if (!stream) return;
     landRef.current = {
-      time: end - time,
-      sel: sel && { start: end - sel.start, end: end - sel.end }
+      time: toClock(time),
+      sel: sel && { start: toClock(sel.start), end: toClock(sel.end) }
     };
     setReach(r);
     setStream(undefined);
-    p.src([{ src: urlFor(r), type: HLS_TYPE }]);
+    void load(r);
   };
+  const changeReach = (r: number) => {
+    if (r !== reach) reload(r);
+  };
+
+  // Live moving on past the snapshot, to catch up to.
+  useEffect(() => {
+    if (!snapshotted) return;
+    const ask = new AbortController();
+    const check = () => {
+      const snapshot = snapshotRef.current;
+      if (!snapshot) return;
+      liveLead(snapshot, ask.signal).then(
+        s => snapshotRef.current === snapshot && setLead(s),
+        () => {}
+      );
+    };
+    const timer = window.setInterval(check, LEAD_MS);
+    return () => {
+      window.clearInterval(timer);
+      ask.abort();
+    };
+  }, [snapshotted]);
 
   const changeRegion = (i: number, change: Partial<Region>) =>
     setRegions(rs => rs.map((r, j) => (j === i ? { ...r, ...change } : r)));
@@ -644,6 +711,8 @@ export default function ClipEditor({
     setJob({ state: 'idle' });
   };
 
+  const timelineRef = useRef<TimelineControls | null>(null);
+
   // The editor has the keyboard to itself: nothing reaches the monitor
   // underneath, or E, G, the numbers and the arrows would act on it too.
   const keysRef = useRef<(e: KeyboardEvent) => boolean>(() => false);
@@ -683,6 +752,16 @@ export default function ClipEditor({
         return true;
       case 'home':
         if (sel) seek(sel.start);
+        return true;
+      case '+':
+      case '=':
+        timelineRef.current?.zoom('detail', ZOOM_STEP);
+        return true;
+      case '-':
+        timelineRef.current?.zoom('detail', 1 / ZOOM_STEP);
+        return true;
+      case 'r':
+        if (snapshotted && jobRef.current.state !== 'exporting') reload();
         return true;
       case 'end':
         if (sel) seek(sel.end);
@@ -826,6 +905,29 @@ export default function ClipEditor({
             </div>
           </div>
         )}
+        {snapshotted && (
+          <button
+            type="button"
+            onClick={() => reload()}
+            disabled={exporting || !stream}
+            className={`flex shrink-0 items-center gap-1.5 rounded border px-2 py-1 text-xs whitespace-nowrap tabular-nums disabled:opacity-50 ${
+              lead > 0
+                ? 'border-amber-400/60 text-amber-300 hover:bg-amber-400/10'
+                : 'border-white/15 text-white/60 hover:bg-white/10'
+            }`}
+            title="Traer lo último de la señal (R)"
+          >
+            <RefreshCw size={13} className={stream ? '' : 'animate-spin'} />
+            {lead > 0 ? (
+              <>
+                <span className="hidden sm:inline">Actualizar</span> +
+                {Math.round(lead)} s
+              </>
+            ) : (
+              'Al día'
+            )}
+          </button>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -941,18 +1043,27 @@ export default function ClipEditor({
                   setMarking(false);
                   applySel(next, edge);
                 }}
+                controlsRef={timelineRef}
               />
             ) : (
-              <div className="h-[6.75rem] animate-pulse rounded bg-white/5 pointer-coarse:h-[7.25rem]" />
+              <div className="h-[8rem] animate-pulse rounded bg-white/5 pointer-coarse:h-[9.25rem]" />
             )}
             <p className="text-[11px] text-white/40">
               Arrastra sobre la barra de arriba para elegir los minutos; ajusta
-              los extremos en la de abajo.{' '}
+              los extremos en la de abajo. Acerca o aleja cada una con sus
+              lupas o Ctrl y la rueda.{' '}
               {/* No keyboard to speak of on a touch screen. */}
               <span className="pointer-coarse:hidden">
                 <Kbd>Espacio</Kbd> reproducir · <Kbd>← →</Kbd> 1 s (⇧ 5 s) ·{' '}
                 <Kbd>J L</Kbd> 10 s · <Kbd>, .</Kbd> cuadro · <Kbd>I O</Kbd>{' '}
-                inicio y fin · <Kbd>Esc</Kbd> cerrar
+                inicio y fin · <Kbd>+ −</Kbd> zoom
+                {snapshotted && (
+                  <>
+                    {' '}
+                    · <Kbd>R</Kbd> traer lo último
+                  </>
+                )}{' '}
+                · <Kbd>Esc</Kbd> cerrar
               </span>
             </p>
           </div>

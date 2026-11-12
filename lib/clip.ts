@@ -79,14 +79,14 @@ export const canExportClips = async () =>
 
 // Tags that describe the whole playlist; any other tag belongs to the segment
 // that follows it.
-const PLAYLIST_TAGS = [
+export const PLAYLIST_TAGS = [
   '#EXT-X-VERSION',
   '#EXT-X-TARGETDURATION',
   '#EXT-X-INDEPENDENT-SEGMENTS',
   '#EXT-X-ALLOW-CACHE',
   '#EXT-X-START'
 ];
-const DROPPED_TAGS = [
+export const DROPPED_TAGS = [
   '#EXTM3U',
   '#EXT-X-MEDIA-SEQUENCE',
   '#EXT-X-DISCONTINUITY-SEQUENCE',
