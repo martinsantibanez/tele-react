@@ -34,50 +34,62 @@ const canalesNacionales = (): SourceNode[] => [
 ];
 const vistaGeneral = (): SourceNode[] => [
   {
-    sourceSlug: 'custom_zapping_52',
+    // TVN
+    sourceSlug: 'custom_zapping_5',
     uuid: '49572de6-f374-429a-9847-27b27b29a73d'
   },
   {
-    sourceSlug: 'custom_zapping_2391',
+    // Chilevisión
+    sourceSlug: 'custom_zapping_6',
     uuid: '7f5f691f-c30d-4dcc-b3c8-a7ad454258de'
   },
   {
-    sourceSlug: 'custom_zapping_2551',
+    // Canal 13
+    sourceSlug: 'custom_zapping_3',
     uuid: '7a2e6b7d-835d-45b4-b648-2c6e37e79994'
   },
   {
-    sourceSlug: 'custom_zapping_6821',
+    // 24 Horas
+    sourceSlug: 'custom_zapping_52',
     uuid: 'bdfc4299-af90-4a2e-838e-3f3d6a8de7f5'
   },
   {
-    sourceSlug: 'custom_zapping_5',
+    // CHV Noticias
+    sourceSlug: 'custom_zapping_2391',
     uuid: 'e4e0f24d-f8b7-48f6-9ed9-1957d6dd40f3'
   },
   {
-    sourceSlug: 'custom_zapping_6',
+    // T13
+    sourceSlug: 'custom_zapping_6821',
     uuid: '134cc3a7-6b84-4738-aa40-285e2f4a7a9c'
   },
   {
+    // Mega
     sourceSlug: 'custom_zapping_4',
     uuid: 'b0657757-32d3-475c-ae18-c3f992520152'
   },
   {
-    sourceSlug: 'custom_zapping_3',
+    // Meganoticias
+    sourceSlug: 'custom_zapping_2551',
     uuid: '0f176d7a-8826-4432-a84a-7a156783ab58'
   },
   {
+    // CNN Chile
     sourceSlug: 'custom_zapping_142',
     uuid: '52ae39e9-7d24-43cc-bda9-cd4c1ce4742e'
   },
   {
+    // Bio Bio TV
     sourceSlug: 'custom_zapping_202',
     uuid: '758768dd-c03b-4848-970c-df389218cf2a'
   },
   {
+    // Puranoticia
     sourceSlug: 'custom_zapping_5361',
     uuid: '571538dd-478d-4ae9-b4bf-958854cb9a89'
   },
   {
+    // RT Español
     sourceSlug: 'custom_zapping_163',
     uuid: '487a7eac-7286-4ee8-a07d-9328f5f40bce'
   }
@@ -155,7 +167,7 @@ export const zappingPresetScreens: SavedScreen[] = [
       config: {
         mode: DisplayMode.Grid,
         layout: initialLayout,
-        grid: { size: 4, count: 12 }
+        grid: { size: 3, count: 9 }
       },
       sources: vistaGeneral()
     }
@@ -163,9 +175,9 @@ export const zappingPresetScreens: SavedScreen[] = [
 ];
 
 /**
- * Presets a TV no longer gets, by name. `Vista general` is twelve 720p streams
+ * Presets a TV no longer gets, by name. `Vista general` is nine 720p streams
  * at once, and a box that already drops frames decoding two has no hope with
- * twelve — a wall that stutters in every tile is no overview of anything.
+ * nine — a wall that stutters in every tile is no overview of anything.
  *
  * Named here rather than just left out of the set below because the seeding
  * upserts by name and never deletes: a box that was set up before would keep

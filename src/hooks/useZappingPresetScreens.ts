@@ -20,9 +20,9 @@ import { useZappingLoginToken } from './useZappingConfig';
  * Bumping this replays the seeding over the screens it already wrote, so an
  * edit to the presets reaches the people who were set up under the old ones.
  * Their own screens are left alone either way — only the preset names are
- * rewritten.
+ * rewritten. 2 brings `Vista general` down to a 3×3 grid.
  */
-const PRESET_SCREENS_VERSION = 1;
+const PRESET_SCREENS_VERSION = 2;
 
 /**
  * The TV's own count, so a change to its set replays the seeding on the boxes
