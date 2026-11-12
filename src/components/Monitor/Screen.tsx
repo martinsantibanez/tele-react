@@ -2,7 +2,7 @@
 import { GridDisplay } from '../GridDisplay/GridDisplay';
 import { Layout } from '../Layout/Layout';
 import { useTeleContext } from '../../context/TeleContext';
-import { useOffAir } from '../../hooks/useOffAir';
+import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { ChannelReel } from './ChannelReel';
@@ -56,7 +56,7 @@ export function Screen({
 }: Props) {
   const isMobile = useIsMobile();
   const isOffAir = useOffAir();
-  const { isEditing } = useTeleContext();
+  const { showOffAir } = useTeleContext();
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Zapping) {
     // The screen keeps exactly one channel — whatever is on air — and the reel
@@ -123,13 +123,11 @@ export function Screen({
   if (config.mode === DisplayMode.Grid) {
     const cols = gridColumns || config.grid.size;
     const shown = visibleSources(config, sources ?? []);
-    // A live-only tile off air is not drawn, and takes its row with it. With
-    // the picker open it is, as a placeholder, so it can still be picked and
-    // changed — the wall it is being edited from is the whole screen.
-    const hidden = isEditing
-      ? undefined
-      : new Set(shown.flatMap((node, idx) => (isOffAir(node) ? [idx] : [])));
-    const drawn = shown.length - (hidden?.size ?? 0);
+    // A live-only tile off air is not drawn, and takes its row with it, unless
+    // it is being shown to be managed. Nor are the regular channels kept past
+    // the grid's end, between it and the extras.
+    const hidden = hiddenTiles(config, shown, isOffAir, showOffAir);
+    const drawn = shown.length - hidden.size;
     const rows = Math.ceil(drawn / cols) || 1;
     return (
       <div

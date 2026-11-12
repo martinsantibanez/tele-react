@@ -30,7 +30,7 @@ import {
   useKeyNames,
   useOkKey
 } from '../../hooks/useRemoteKeys';
-import { canBeOffAir, useOffAir } from '../../hooks/useOffAir';
+import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
 import { TileRect, useStreamDeck } from '../../hooks/useStreamDeck';
 import { useAudioBlocked } from '../../hooks/useAudioBlocked';
@@ -53,7 +53,12 @@ import {
 import { uuid } from '../../utils/uuid';
 import { defaultGrid } from '../GridDisplay/initialGrid';
 import { SourceSlider } from '../SelectSource/SourceSlider';
-import { useRevealSource } from '../SelectSource/sourceCategories';
+import {
+  useActiveCategory,
+  useRevealSource
+} from '../SelectSource/sourceCategories';
+import { PLACEHOLDER_SOURCE_SLUG } from '../../sources/placeholder';
+import { LiveOnlyBar } from './LiveOnlyBar';
 import { ControlBar } from './ControlBar';
 import { screenLabel } from './SavedScreensBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
@@ -94,13 +99,16 @@ export const Monitor = () => {
     swapSourceIdx,
     setSwapSourceIdx,
     isMuted,
-    toggleMute
+    toggleMute,
+    showOffAir,
+    setShowOffAir
   } = useTeleContext();
   const { isMobile, isLandscape, isMobileLandscape } = useViewport();
   const isTv = useIsTv();
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const revealSource = useRevealSource();
+  const [, setActiveCategory] = useActiveCategory();
   const resolveSource = useResolveSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [savedScreens] = useSavedScreens();
@@ -164,11 +172,28 @@ export const Monitor = () => {
     return displayConfig.grid.size;
   }, [isMobileLandscape, isGrid, displayConfig.grid.size]);
 
+  const visibleScreenCount = slotCount(displayConfig, activeSources);
+
+  // Tiles that keep their place and number but are not on the wall: the
+  // live-only ones off air, and regular channels kept past the grid's end. Not
+  // tiles to be on either — nothing to see or hear, and no neighbours for the
+  // arrows to find from them.
+  const isOffAir = useOffAir();
+  const hidden = useMemo(
+    () =>
+      isLiveMode
+        ? new Set<number>()
+        : hiddenTiles(displayConfig, activeSources, isOffAir, showOffAir),
+    [isLiveMode, displayConfig, activeSources, isOffAir, showOffAir]
+  );
+  const isHiddenTile = (idx: number) => hidden.has(idx);
+
   const monitorRatio = useMemo(() => {
     if (!isMobile || !isGrid) return 16 / 9;
-    const rows = Math.ceil((activeSources?.length ?? 0) / gridColumns) || 1;
+    const drawn = visibleScreenCount - hidden.size;
+    const rows = Math.ceil(drawn / gridColumns) || 1;
     return (16 * gridColumns) / (9 * rows);
-  }, [isMobile, isGrid, gridColumns, activeSources]);
+  }, [isMobile, isGrid, gridColumns, visibleScreenCount, hidden]);
 
   const selectedSourceSlug = useMemo(
     () => selectedSources[editingSourceIdx]?.sourceSlug,
@@ -180,28 +205,18 @@ export const Monitor = () => {
     [editingSourceIdx, selectedSources]
   );
 
-  const visibleScreenCount = slotCount(displayConfig, activeSources);
-
-  // A live-only tile off air is not on the wall while the picker is away, so
-  // it is not a tile to be on either: nothing to see or hear, and no
-  // neighbours for the arrows to find from it.
-  const isOffAir = useOffAir();
-  const isHiddenTile = (idx: number) =>
-    isGrid && !isLiveMode && !isEditing && isOffAir(activeSources[idx]);
   const selectedTileHidden = isHiddenTile(editingSourceIdx);
   useEffect(() => {
     if (!selectedTileHidden) return;
-    const first = activeSources.findIndex(
-      (node, idx) => idx < visibleScreenCount && !isOffAir(node)
-    );
-    if (first >= 0) setEditingSourceIdx(first);
-  }, [
-    selectedTileHidden,
-    activeSources,
-    visibleScreenCount,
-    isOffAir,
-    setEditingSourceIdx
-  ]);
+    for (let idx = 0; idx < visibleScreenCount; idx++)
+      if (!hidden.has(idx)) return setEditingSourceIdx(idx);
+  }, [selectedTileHidden, hidden, visibleScreenCount, setEditingSourceIdx]);
+
+  // The off-air tiles are shown to be managed, from the picker; closing it
+  // puts the wall back to what is on.
+  useEffect(() => {
+    if (!isEditing) setShowOffAir(false);
+  }, [isEditing, setShowOffAir]);
 
   useEffect(() => {
     if (!visibleScreenCount) return;
@@ -316,10 +331,7 @@ export const Monitor = () => {
             ...src,
             sourceSlug: source.slug,
             source: embeddedSource(source),
-            activeSignal: undefined,
-            // Kept from one favourite to the next, so the extra tile can be
-            // pointed elsewhere; a channel that is always on cannot be it.
-            liveOnly: (src.liveOnly && canBeOffAir(source.slug)) || undefined
+            activeSignal: undefined
           };
         else return src;
       });
@@ -358,12 +370,31 @@ export const Monitor = () => {
   const selectScreenRef = useRef(selectScreen);
   selectScreenRef.current = selectScreen;
 
-  const toggleLiveOnly = (idx: number) =>
+  const toggleLiveOnly = (idx: number) => {
+    // Set while off air, the tile would vanish from under the click.
+    if (!selectedSources[idx]?.liveOnly) setShowOffAir(true);
     setSelectedSources(sources =>
       sources.map((src, i) =>
         i === idx ? { ...src, liveOnly: !src.liveOnly || undefined } : src
       )
     );
+  };
+
+  // A new extra goes at the very end, past everything kept out of sight, and
+  // is selected, so the next channel picked lands on it; the favourites are
+  // where the channels it is for are listed, live or not.
+  const addLiveOnlyTile = () => {
+    const idx = selectedSources.length;
+    setSelectedSources(sources => [
+      ...sources,
+      { sourceSlug: PLACEHOLDER_SOURCE_SLUG, uuid: uuid(), liveOnly: true }
+    ]);
+    setShowOffAir(true);
+    setEditingSourceIdx(idx);
+    if (!isTv) setActiveCategory('favourites');
+  };
+
+  const liveOnlyTiles = activeSources.filter(node => node.liveOnly);
 
   const handleSwitch: OnSwitchCb = (left: number, right: number) => {
     setSelectedSources(sources => {
@@ -624,6 +655,15 @@ export const Monitor = () => {
         />
       </div>
 
+      {isGrid && !isLiveMode && (
+        <LiveOnlyBar
+          total={liveOnlyTiles.length}
+          onAir={liveOnlyTiles.filter(node => !isOffAir(node)).length}
+          showOffAir={showOffAir}
+          onToggleShowOffAir={() => setShowOffAir(show => !show)}
+          onAdd={addLiveOnlyTile}
+        />
+      )}
       {/* The full list folds away behind F1; only what the current state
           changes is always written out: a swap halfway done. */}
       {!isMobile && !isTv && (

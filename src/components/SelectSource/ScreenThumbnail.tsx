@@ -1,7 +1,7 @@
 'use client';
 import { Flame, YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import { useOffAir } from '../../hooks/useOffAir';
+import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
@@ -58,7 +58,8 @@ export function ScreenThumbnail({
         <GridPreview
           // As the wall itself is: a favourite on air shows up here too.
           sources={visibleSources(config, sources).filter(
-            node => !isOffAir(node)
+            (_, idx, shown) =>
+              !hiddenTiles(config, shown, isOffAir, false).has(idx)
           )}
           size={config.grid.size}
           resolve={resolve}

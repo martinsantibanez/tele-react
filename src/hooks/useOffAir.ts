@@ -1,5 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { SourceNode } from '../types/Monitor';
+import {
+  isPastGrid,
+  slotCount
+} from '../components/Monitor/predefinedLayouts';
+import { DisplayConfig, DisplayMode, SourceNode } from '../types/Monitor';
 import { useYoutubeLiveSources, YOUTUBE_LIVE_SLUG_PREFIX } from './useYoutubeLiveSubs';
 
 /**
@@ -26,4 +30,24 @@ export function useOffAir() {
       !onAir.has(node.sourceSlug!),
     [onAir]
   );
+}
+
+/**
+ * The grid tiles that keep their place and number but are not drawn: regular
+ * channels past the grid's end, and live-only ones off air — unless those are
+ * being shown to be managed (`showOffAir`).
+ */
+export function hiddenTiles(
+  config: DisplayConfig,
+  sources: SourceNode[],
+  isOffAir: (node?: SourceNode) => boolean,
+  showOffAir: boolean
+) {
+  const hidden = new Set<number>();
+  if (config.mode !== DisplayMode.Grid) return hidden;
+  sources.slice(0, slotCount(config, sources)).forEach((node, idx) => {
+    if (isPastGrid(config, node, idx) || (!showOffAir && isOffAir(node)))
+      hidden.add(idx);
+  });
+  return hidden;
 }

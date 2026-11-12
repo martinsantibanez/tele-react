@@ -95,20 +95,31 @@ export const slotCount = (config: DisplayConfig, sources: SourceNode[]) => {
 };
 
 /**
- * A grid's count is of the tiles that are always there. The `liveOnly` ones
- * ride along on top of it — however many sit before the last of them, and any
- * straight after it — so setting one never pushes a regular channel off the
- * end. Short of the count, it is topped up with empty slots (`fillSlots`).
+ * A grid's count is its own tiles, the first ones of the screen. The
+ * `liveOnly` tiles past them are extras that ride along on top — the grid
+ * reaches as far as the last of them — while the regular channels kept past
+ * the count stay out of sight in between (see `isPastGrid`). Adding an extra,
+ * or setting one, so never moves anything that is already on the wall.
  */
 const gridSlotCount = (count: number, sources: SourceNode[]) => {
-  let always = 0;
-  for (let idx = 0; idx < sources.length; idx++) {
-    if (sources[idx].liveOnly) continue;
-    if (always === count) return idx;
-    always++;
-  }
-  return sources.length + (count - always);
+  for (let idx = sources.length - 1; idx >= count; idx--)
+    if (sources[idx].liveOnly) return idx + 1;
+  return count;
 };
+
+/**
+ * A regular channel kept past the end of a grid that reaches further, for the
+ * live-only extras after it: within the screen's slots, never drawn.
+ */
+export const isPastGrid = (
+  config: DisplayConfig,
+  node: SourceNode | undefined,
+  idx: number
+) =>
+  config.mode === DisplayMode.Grid &&
+  config.grid.count !== undefined &&
+  idx >= config.grid.count &&
+  !node?.liveOnly;
 
 /** The channels a screen shows: the ones past its slots are kept, unseen. */
 export const visibleSources = (config: DisplayConfig, sources: SourceNode[]) =>

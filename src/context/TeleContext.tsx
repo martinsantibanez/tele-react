@@ -14,6 +14,11 @@ function useValue() {
    */
   const [isMuted, setIsMuted] = useState(false);
   const toggleMute = () => setIsMuted(m => !m);
+  /**
+   * Draws the live-only tiles that are off air, as placeholders, so they can be
+   * picked and changed. Only while the picker is open (see the Monitor).
+   */
+  const [showOffAir, setShowOffAir] = useState(false);
 
   return {
     isEditing,
@@ -25,7 +30,9 @@ function useValue() {
     setSwapSourceIdx,
     isMuted,
     setIsMuted,
-    toggleMute
+    toggleMute,
+    showOffAir,
+    setShowOffAir
   };
 }
 
