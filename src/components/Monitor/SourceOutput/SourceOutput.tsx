@@ -70,6 +70,7 @@ function SignalOutput({
   } else if (type === 'youtube' && input.youtubeVideoId) {
     return (
       <YoutubeSource
+        title={source.name}
         videoId={input.youtubeVideoId}
         muted={muted}
         interactive={fullscreen}
@@ -80,6 +81,7 @@ function SignalOutput({
   } else if (type === 'youtubeChannel' && input.youtubeChannelId) {
     return (
       <YoutubeSource
+        title={source.name}
         channelId={input.youtubeChannelId}
         muted={muted}
         interactive={fullscreen}
@@ -147,6 +149,7 @@ export function SourceOutput({
   } else if (source.youtubeVideoId) {
     return (
       <YoutubeSource
+        title={source.name}
         videoId={source.youtubeVideoId}
         muted={muted}
         interactive={fullscreen}

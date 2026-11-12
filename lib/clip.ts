@@ -1,9 +1,14 @@
 import {
   ALL_FORMATS,
+  BlobSource,
   BufferTarget,
   canEncodeVideo,
   Conversion,
+  getFirstEncodableAudioCodec,
   Input,
+  type InputAudioTrack,
+  MediaStreamAudioTrackSource,
+  MediaStreamVideoTrackSource,
   Mp4OutputFormat,
   Output,
   QUALITY_HIGH,
@@ -147,19 +152,23 @@ export const slicePlaylist = (text: string, first: number, last: number) => {
   };
 };
 
-type ExportOptions = {
-  /** The media playlist of the rendition to cut from. */
-  playlistUrl: string;
-  /** The stream's segments, on the timeline `start` and `end` are on. */
-  segments: ClipSegment[];
-  start: number;
-  end: number;
+/** What a clip comes out as, whatever it is cut from. */
+type CutOptions = {
   /** One pane for the whole frame, or several stacked. */
   panes: ClipPane[];
   width: number;
   height: number;
   onProgress?: (progress: number) => void;
   signal: AbortSignal;
+};
+
+type ExportOptions = CutOptions & {
+  /** The media playlist of the rendition to cut from. */
+  playlistUrl: string;
+  /** The stream's segments, on the timeline `start` and `end` are on. */
+  segments: ClipSegment[];
+  start: number;
+  end: number;
 };
 
 /**
@@ -203,7 +212,8 @@ const requestUrl = (input: RequestInfo | URL) =>
       : input.url;
 
 /**
- * Cuts `start`–`end` out of a stream into an MP4 (H.264 and AAC) of `width` ×
+ * Cuts `start`–`end` out of a stream into an MP4 (H.264 and AAC, see
+ * `clipAudioCodec`) of `width` ×
  * `height`, each of its panes filled with a crop of the picture.
  *
  * Only the segments the clip covers are downloaded: the stream's playlist is
@@ -255,6 +265,32 @@ export async function exportClip({
     // Times from the first segment, not the wall clock, to match `segments`.
     formatOptions: { hls: { offsetTimestampsByDateTime: false } }
   });
+  return cut(
+    input,
+    { start: start - first.start, end: end - first.start },
+    { panes, width, height, onProgress, signal }
+  );
+}
+
+/**
+ * AAC, copied as it is when the source has it. Where it has to be encoded
+ * and the browser can't (Chrome on Linux, say), Opus: else the audio would be
+ * left out of the clip without a word.
+ */
+const clipAudioCodec = async (track: InputAudioTrack) =>
+  (await track.getCodec()) === 'aac'
+    ? 'aac'
+    : ((await getFirstEncodableAudioCodec(['aac', 'opus'])) ?? 'aac');
+
+/**
+ * `trim` of `input` into an MP4 (H.264 and AAC) of `width` × `height`, each
+ * of its panes filled with a crop of the picture. Disposes of `input`.
+ */
+async function cut(
+  input: Input,
+  trim: { start: number; end: number },
+  { panes, width, height, onProgress, signal }: CutOptions
+): Promise<Blob> {
   const target = new BufferTarget();
   const output = new Output({
     format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
@@ -265,7 +301,7 @@ export async function exportClip({
     const conversion = await Conversion.init({
       input,
       output,
-      trim: { start: start - first.start, end: end - first.start },
+      trim,
       video: async track => {
         const common = {
           codec: 'avc' as const,
@@ -291,7 +327,9 @@ export async function exportClip({
           fit: 'fill'
         };
       },
-      audio: { codec: 'aac' },
+      audio: async track => ({
+        codec: await clipAudioCodec(track)
+      }),
       showWarnings: false
     });
     if (!conversion.isValid) {
@@ -310,4 +348,133 @@ export async function exportClip({
   }
   if (!target.buffer) throw new Error('El clip salió vacío');
   return new Blob([target.buffer], { type: 'video/mp4' });
+}
+
+/** A stretch of a tile, recorded off the screen to cut clips from. */
+export type ClipRecording = {
+  /** An MP4 whose time 0 is when it started. */
+  blob: Blob;
+  /** When it started, in unix seconds. */
+  startedAt: number;
+};
+
+/** Cuts `start`–`end` (seconds into it) out of a recording: see `cut`. */
+export const exportRecordingClip = ({
+  recording,
+  start,
+  end,
+  ...options
+}: CutOptions & { recording: ClipRecording; start: number; end: number }) =>
+  cut(
+    new Input({ source: new BlobSource(recording.blob), formats: ALL_FORMATS }),
+    { start, end },
+    options
+  );
+
+/**
+ * How big a recording gets. Past it, the picture is scaled down to fit: as
+ * sharp as a clip at 1080p can use, and still light enough to encode live.
+ */
+const RECORD_LONG_SIDE = 1920;
+const RECORD_SHORT_SIDE = 1080;
+
+/** A recording under way. */
+export type Recorder = {
+  startedAt: number;
+  /** Rejects when the recording fails partway. Never resolves. */
+  failed: Promise<never>;
+  /** Ends it, and the capture with it. */
+  stop: () => Promise<ClipRecording>;
+  /** Ends it, keeping nothing. */
+  cancel: () => void;
+};
+
+/**
+ * Records a capture of the screen to an MP4 in memory, as it plays: H.264 at
+ * `size` (scaled down to fit, as the encoder takes it, even) and the audio
+ * when there is any. It is cut again on export, so it is kept seekable, with
+ * frequent key frames, rather than small.
+ *
+ * Should the picture change size partway, a tile leaving the full screen,
+ * each frame is fitted to the first one's size.
+ */
+export async function recordStream(
+  stream: MediaStream,
+  size: { width: number; height: number }
+): Promise<Recorder> {
+  const [videoTrack] = stream.getVideoTracks();
+  const [audioTrack] = stream.getAudioTracks();
+  const stopTracks = () => stream.getTracks().forEach(track => track.stop());
+  if (!videoTrack) {
+    stopTracks();
+    throw new Error('La captura llegó sin imagen');
+  }
+
+  const scale = Math.min(
+    1,
+    RECORD_LONG_SIDE / Math.max(size.width, size.height),
+    RECORD_SHORT_SIDE / Math.min(size.width, size.height)
+  );
+  const even = (n: number) => Math.max(2, Math.round((n * scale) / 2) * 2);
+
+  const target = new BufferTarget();
+  const output = new Output({
+    format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
+    target
+  });
+  const video = new MediaStreamVideoTrackSource(
+    videoTrack as MediaStreamVideoTrack,
+    {
+      codec: 'avc',
+      quality: QUALITY_HIGH,
+      keyFrameInterval: 1,
+      sizeChangeBehavior: 'contain',
+      transform: { width: even(size.width), height: even(size.height) }
+    }
+  );
+  output.addVideoTrack(video);
+  // AAC as the clips have it; where the browser can't encode it, Opus.
+  const audioCodec =
+    audioTrack && (await getFirstEncodableAudioCodec(['aac', 'opus']));
+  const audio =
+    audioTrack && audioCodec
+      ? new MediaStreamAudioTrackSource(
+          audioTrack as MediaStreamAudioTrack,
+          { codec: audioCodec, quality: QUALITY_HIGH }
+        )
+      : undefined;
+  if (audio) output.addAudioTrack(audio);
+
+  try {
+    await output.start();
+  } catch (error) {
+    stopTracks();
+    throw error;
+  }
+  const startedAt = Date.now() / 1000;
+  const failed = Promise.race([
+    video.errorPromise,
+    audio?.errorPromise ?? new Promise<void>(() => {})
+  ]) as Promise<never>;
+
+  return {
+    startedAt,
+    failed,
+    stop: async () => {
+      try {
+        await output.finalize();
+      } finally {
+        stopTracks();
+      }
+      if (!target.buffer) throw new Error('La grabación salió vacía');
+      return {
+        blob: new Blob([target.buffer], { type: 'video/mp4' }),
+        startedAt
+      };
+    },
+    cancel: () => {
+      stopTracks();
+      void output.cancel();
+    }
+  };
 }

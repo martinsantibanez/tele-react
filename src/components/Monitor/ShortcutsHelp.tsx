@@ -22,6 +22,10 @@ const sections: { title: string; keys: [string, string][] }[] = [
     ]
   },
   {
+    title: 'Pantalla completa (YouTube)',
+    keys: [['C', 'Grabar un clip / terminar y editarlo (también ✂ arriba)']]
+  },
+  {
     title: 'Editor de clips',
     keys: [
       ['Espacio', 'Reproducir / pausar'],

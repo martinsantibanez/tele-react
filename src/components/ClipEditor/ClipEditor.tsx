@@ -24,9 +24,11 @@ import {
   clipBands,
   ClipCrop,
   ClipPane,
+  ClipRecording,
   ClipSegment,
   clipSize,
-  exportClip
+  exportClip,
+  exportRecordingClip
 } from '@/lib/clip';
 import { heldRange, topPlaylist, vhsOf } from '@/lib/vhs';
 import {
@@ -39,14 +41,30 @@ import { Box, CropFrame, Frame, MAX_ZOOM } from './CropFrame';
 
 type Props = {
   title: string;
-  /** The stream at live. */
-  src: string;
-  /** For a stream that keeps its past: see `VideoJS`. */
-  rewind?: { src: (startTime: number) => string; limitS: number };
-  /** How far behind live the tile was; the clip starts out ending there. */
-  behind: number;
   onClose: () => void;
-};
+} & (
+  | {
+      /** The stream at live. */
+      src: string;
+      /** For a stream that keeps its past: see `VideoJS`. */
+      rewind?: { src: (startTime: number) => string; limitS: number };
+      /** How far behind live the tile was; the clip starts out ending there. */
+      behind: number;
+      recording?: never;
+    }
+  | {
+      /**
+       * Or what was recorded off a tile whose stream can't be read (see
+       * `useTileClipper`). The clip starts out as all of it.
+       */
+      recording: ClipRecording;
+      src?: never;
+      rewind?: never;
+      behind?: never;
+    }
+);
+
+const HLS_TYPE = 'application/vnd.apple.mpegurl';
 
 /** How far back the editor can be asked to reach, for a stream that rewinds. */
 const REACHES_S = [1, 2, 4, 6].map(h => h * 60 * 60);
@@ -139,7 +157,8 @@ export default function ClipEditor({
   title,
   src,
   rewind,
-  behind,
+  behind = 0,
+  recording,
   onClose
 }: Props) {
   const holderRef = useRef<HTMLDivElement>(null);
@@ -154,7 +173,7 @@ export default function ClipEditor({
       reaches.find(r => r >= behind + 10 * 60) ?? reaches[reaches.length - 1]
   );
   const urlFor = (r = reach) =>
-    rewind && r ? rewind.src(Math.floor(Date.now() / 1000 - r)) : src;
+    rewind && r ? rewind.src(Math.floor(Date.now() / 1000 - r)) : src!;
 
   const [stream, setStream] = useState<Range>();
   // Wall-clock seconds at player time 0, taken from the stream's end being
@@ -216,9 +235,12 @@ export default function ClipEditor({
   panesRef.current = { panes, height: size.height };
   // Where to put the playhead and the selection once the stream loads, as
   // seconds behind its live edge.
-  const landRef = useRef<{ time: number; sel?: Range } | undefined>({
-    time: behind
-  });
+  // A recording is played from its start, and the clip is all of it.
+  const landRef = useRef<{ time: number; sel?: Range } | undefined>(
+    recording
+      ? { time: Infinity, sel: { start: Infinity, end: 0 } }
+      : { time: behind }
+  );
 
   useEffect(() => {
     canExportClips().then(setSupported, () => setSupported(false));
@@ -229,6 +251,7 @@ export default function ClipEditor({
     const el = document.createElement('video-js');
     el.classList.add('vjs-fill');
     holderRef.current.appendChild(el);
+    const recordingUrl = recording && URL.createObjectURL(recording.blob);
     const p = videojs(el, {
       autoplay: true,
       preload: 'auto',
@@ -237,7 +260,11 @@ export default function ClipEditor({
       liveui: false,
       bigPlayButton: false,
       userActions: { click: false, doubleClick: false, hotkeys: false },
-      sources: [{ src: urlFor(), type: 'application/vnd.apple.mpegurl' }]
+      sources: [
+        recordingUrl
+          ? { src: recordingUrl, type: 'video/mp4' }
+          : { src: urlFor(), type: HLS_TYPE }
+      ]
     });
     playerRef.current = p;
     videoRef.current = p.el().querySelector('video');
@@ -257,7 +284,9 @@ export default function ClipEditor({
       p.currentTime(t);
       setTime(t);
       setStream({ start, end });
-      setClockOffset(Date.now() / 1000 - end);
+      setClockOffset(
+        recording ? recording.startedAt : Date.now() / 1000 - end
+      );
       setSel(
         pending.sel
           ? {
@@ -310,6 +339,7 @@ export default function ClipEditor({
     return () => {
       window.clearInterval(tick);
       p.dispose();
+      if (recordingUrl) URL.revokeObjectURL(recordingUrl);
       playerRef.current = undefined;
       videoRef.current = null;
     };
@@ -461,7 +491,7 @@ export default function ClipEditor({
     };
     setReach(r);
     setStream(undefined);
-    p.src([{ src: urlFor(r), type: 'application/vnd.apple.mpegurl' }]);
+    p.src([{ src: urlFor(r), type: HLS_TYPE }]);
   };
 
   const changeRegion = (i: number, change: Partial<Region>) =>
@@ -513,15 +543,15 @@ export default function ClipEditor({
 
   const toClock = (t: number) => t + clockOffset;
 
-  const startExport = async () => {
+  /** The stream's playlist and segments as the player has them, to cut. */
+  const hlsCut = () => {
     const p = playerRef.current;
     const vhs = p && vhsOf(p);
     const media = vhs?.playlists?.media?.();
     const seekable = p?.seekable();
-    if (!p || !vhs || !media?.segments || !sel || !seekable?.length) return;
+    if (!p || !vhs || !media?.segments || !seekable?.length) return;
     const playlistUrl = (topPlaylist(vhs) ?? media).resolvedUri;
     if (!playlistUrl) return;
-    p.pause();
 
     // Laid out the way VHS lays them out: back to back from where what has
     // slid off the playlist ends, the start of what can be sought.
@@ -535,26 +565,34 @@ export default function ClipEditor({
       at = placed.end;
       return placed;
     });
+    return { playlistUrl, segments };
+  };
+
+  const startExport = async () => {
+    const p = playerRef.current;
+    if (!p || !sel) return;
+    const hls = recording ? undefined : hlsCut();
+    if (!recording && !hls) return;
+    p.pause();
 
     const abort = new AbortController();
     const name = fileName(title, toClock(sel.start));
     setJob({ state: 'exporting', progress: 0, abort });
+    const options = {
+      start: sel.start,
+      end: sel.end,
+      panes,
+      ...size,
+      signal: abort.signal,
+      onProgress: (progress: number) =>
+        setJob(j =>
+          j.state === 'exporting' && j.abort === abort ? { ...j, progress } : j
+        )
+    };
     try {
-      const blob = await exportClip({
-        playlistUrl,
-        segments,
-        start: sel.start,
-        end: sel.end,
-        panes,
-        ...size,
-        signal: abort.signal,
-        onProgress: progress =>
-          setJob(j =>
-            j.state === 'exporting' && j.abort === abort
-              ? { ...j, progress }
-              : j
-          )
-      });
+      const blob = recording
+        ? await exportRecordingClip({ recording, ...options })
+        : await exportClip({ ...hls!, ...options });
       if (abort.signal.aborted) return;
       const url = URL.createObjectURL(blob);
       setJob({ state: 'done', url, name, bytes: blob.size });

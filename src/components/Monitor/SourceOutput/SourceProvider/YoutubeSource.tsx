@@ -1,14 +1,19 @@
 'use client';
 import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
+import { useTileClipper } from '../../../ClipEditor/useTileClipper';
 
 type Props = {
   videoId?: string;
   channelId?: string;
+  /** What is playing, for the clips cut from it. */
+  title?: string;
   muted?: boolean;
   /**
    * Whether the embed itself answers to the pointer. Off by default: a click on
    * a YouTube player is a play/pause toggle, so picking a tile on the wall
    * would stop the very stream it was picking. See `shield` below.
+   *
+   * It is also the tile clips can be recorded from (see `useTileClipper`).
    */
   interactive?: boolean;
 };
@@ -81,12 +86,24 @@ function scaleToHd(box: Box | null): CSSProperties {
 export function YoutubeSource({
   videoId,
   channelId,
-  muted = true,
+  title = 'clip',
+  muted: mutedProp = true,
   interactive = false
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [box, setBox] = useState<Box | null>(null);
+
+  // The player's frames are YouTube's, out of the page's reach, so a clip is
+  // recorded off the screen: the frame's box, with what the tab plays.
+  const clipper = useTileClipper({
+    targetRef: containerRef,
+    title,
+    enabled: interactive
+  });
+  // Heard while recording, for the clip to have its sound; quiet while the
+  // editor plays the recording.
+  const muted = clipper.editing || (mutedProp && !clipper.recording);
 
   // Always start muted: browsers only allow autoplay while muted. We unmute
   // afterwards via the API when requested.
@@ -240,17 +257,25 @@ export function YoutubeSource({
     ...(interactive ? {} : { pointerEvents: 'none' as const })
   };
 
+  // Isolated, a stacking context of its own, for Element Capture to record
+  // it and nothing laid over it: the clipper's buttons sit beside it.
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
-      <iframe
-        ref={iframeRef}
-        src={src}
-        className="absolute left-0 top-0"
-        style={style}
-        frameBorder="0"
-        allow="autoplay; encrypted-media"
-        onLoad={handleLoad}
-      />
+    <div className="relative w-full h-full">
+      <div
+        ref={containerRef}
+        className="relative isolate w-full h-full overflow-hidden"
+      >
+        <iframe
+          ref={iframeRef}
+          src={src}
+          className="absolute left-0 top-0"
+          style={style}
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          onLoad={handleLoad}
+        />
+      </div>
+      {clipper.ui}
     </div>
   );
 }
