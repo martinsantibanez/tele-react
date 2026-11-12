@@ -47,6 +47,11 @@ type Props = {
   onToggleLiveOnly?: () => void;
   /** Takes the tile off the grid, from the same pill. */
   onRemove?: () => void;
+  /**
+   * Written in the corner, as on the tile's Stream Deck key: a preview on
+   * the focus wall is a picture too small to tell apart by its logo alone.
+   */
+  number?: number;
 };
 
 /** The picker sidebar's width, in pixels, on a desktop or a TV. */
@@ -67,7 +72,8 @@ export function MonitorSource({
   offAir,
   liveOnly,
   onToggleLiveOnly,
-  onRemove
+  onRemove,
+  number
 }: Props) {
   const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
     useTeleContext();
@@ -247,6 +253,11 @@ export function MonitorSource({
 
             It is also the tile's own handle: a thumb has no number keys, and
             the player underneath swallows any tap meant for the tile itself. */}
+        {number !== undefined && !showTileChrome && (
+          <span className="pointer-events-none absolute top-1 left-1 z-[2] rounded bg-black/70 px-1.5 text-xs leading-5 font-bold text-white tabular-nums">
+            {number}
+          </span>
+        )}
         {showTileChrome && (
           <button
             type="button"

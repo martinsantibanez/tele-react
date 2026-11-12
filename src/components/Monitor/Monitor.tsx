@@ -626,9 +626,10 @@ export const Monitor = () => {
   // while it is open, and so does the reel while a tile is fullscreen.
   const gridArrows = !isEditing && !isFullscreen && hasGridLevel;
   const moveSelection = (direction: 'up' | 'down' | 'left' | 'right') => {
-    // On the focus wall each step brings the next tile in, so where the tiles
-    // sit keeps changing under the arrows: they go by the tiles' order
-    // instead, the previews' own, round and round.
+    // On the focus wall each step brings the next tile in. The one being
+    // watched is not in its own cell but filling the corner, so there is no
+    // place to step from: the arrows go by the tiles' order instead, the
+    // order their cells run in, round and round.
     if (focusActive) {
       const at = drawnTiles.indexOf(editingSourceIdx);
       const step = direction === 'left' || direction === 'up' ? -1 : 1;
