@@ -17,7 +17,7 @@ import {
   useState
 } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useTeleContext } from '../../context/TeleContext';
+import { nextLiveOnlyView, useTeleContext } from '../../context/TeleContext';
 import {
   MOBILE_GRID_SIZE,
   MOBILE_LANDSCAPE_GRID_COLUMNS,
@@ -102,8 +102,8 @@ export const Monitor = () => {
     setSwapSourceIdx,
     isMuted,
     toggleMute,
-    showOffAir,
-    setShowOffAir
+    liveOnlyView,
+    setLiveOnlyView
   } = useTeleContext();
   const { isMobile, isLandscape, isMobileLandscape } = useViewport();
   const isTv = useIsTv();
@@ -180,8 +180,8 @@ export const Monitor = () => {
     () =>
       isLiveMode
         ? new Set<number>()
-        : hiddenTiles(displayConfig, activeSources, isOffAir, showOffAir),
-    [isLiveMode, displayConfig, activeSources, isOffAir, showOffAir]
+        : hiddenTiles(displayConfig, activeSources, isOffAir, liveOnlyView),
+    [isLiveMode, displayConfig, activeSources, isOffAir, liveOnlyView]
   );
   const isHiddenTile = (idx: number) => hidden.has(idx);
   /** The tiles on the wall, by their place in the screen. */
@@ -239,10 +239,10 @@ export const Monitor = () => {
   }, [selectedTileHidden, hidden, visibleScreenCount, setEditingSourceIdx]);
 
   // The off-air tiles are shown to be managed, from the picker; closing it
-  // puts the wall back to what is on.
+  // puts the wall back to what is on. Hidden ones stay hidden.
   useEffect(() => {
-    if (!isEditing) setShowOffAir(false);
-  }, [isEditing, setShowOffAir]);
+    if (!isEditing) setLiveOnlyView(view => (view === 'all' ? 'live' : view));
+  }, [isEditing, setLiveOnlyView]);
 
   useEffect(() => {
     if (!visibleScreenCount) return;
@@ -397,8 +397,9 @@ export const Monitor = () => {
   selectScreenRef.current = selectScreen;
 
   const toggleLiveOnly = (idx: number) => {
-    // Set while off air, the tile would vanish from under the click.
-    if (!selectedSources[idx]?.liveOnly) setShowOffAir(true);
+    // Set while off air, or while they are hidden, the tile would vanish from
+    // under the click.
+    if (!selectedSources[idx]?.liveOnly) setLiveOnlyView('all');
     setSelectedSources(sources =>
       sources.map((src, i) =>
         i === idx ? { ...src, liveOnly: !src.liveOnly || undefined } : src
@@ -415,7 +416,7 @@ export const Monitor = () => {
       ...sources,
       { sourceSlug: PLACEHOLDER_SOURCE_SLUG, uuid: uuid(), liveOnly: true }
     ]);
-    setShowOffAir(true);
+    setLiveOnlyView('all');
     setEditingSourceIdx(idx);
     setActiveCategory('youtube');
   };
@@ -729,8 +730,8 @@ export const Monitor = () => {
         <LiveOnlyBar
           total={liveOnlyTiles.length}
           onAir={liveOnlyTiles.filter(node => !isOffAir(node)).length}
-          showOffAir={showOffAir}
-          onToggleShowOffAir={() => setShowOffAir(show => !show)}
+          view={liveOnlyView}
+          onCycleView={() => setLiveOnlyView(nextLiveOnlyView)}
           onAdd={addLiveOnlyTile}
         />
       )}

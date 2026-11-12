@@ -3,6 +3,7 @@ import {
   isPastGrid,
   slotCount
 } from '../components/Monitor/predefinedLayouts';
+import { LiveOnlyView } from '../context/TeleContext';
 import { DisplayConfig, DisplayMode, SourceNode } from '../types/Monitor';
 import { useYoutubeLiveSources, YOUTUBE_LIVE_SLUG_PREFIX } from './useYoutubeLiveSubs';
 
@@ -34,19 +35,21 @@ export function useOffAir() {
 
 /**
  * The grid tiles that keep their place and number but are not drawn: regular
- * channels past the grid's end, and live-only ones off air — unless those are
- * being shown to be managed (`showOffAir`).
+ * channels past the grid's end, and the live-only ones as `view` says — off
+ * air ones for `live`, every one of them for `hide`, none for `all`.
  */
 export function hiddenTiles(
   config: DisplayConfig,
   sources: SourceNode[],
   isOffAir: (node?: SourceNode) => boolean,
-  showOffAir: boolean
+  view: LiveOnlyView
 ) {
   const hidden = new Set<number>();
   if (config.mode !== DisplayMode.Grid) return hidden;
+  const isHiddenLiveOnly = (node?: SourceNode) =>
+    view === 'hide' ? !!node?.liveOnly : view === 'live' && isOffAir(node);
   sources.slice(0, slotCount(config, sources)).forEach((node, idx) => {
-    if (isPastGrid(config, node, idx) || (!showOffAir && isOffAir(node)))
+    if (isPastGrid(config, node, idx) || isHiddenLiveOnly(node))
       hidden.add(idx);
   });
   return hidden;

@@ -1,6 +1,7 @@
 'use client';
 import { Flame, YoutubeIcon } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTeleContext } from '../../context/TeleContext';
 import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
@@ -30,12 +31,18 @@ export function ScreenThumbnail({
 }: Props) {
   const resolveSource = useResolveSource();
   const isOffAir = useOffAir();
+  const { liveOnlyView } = useTeleContext();
   const { config, sources = [] } = screen;
 
   // As the wall itself is drawn: a live extra on air shows up here too, and
-  // widens the grid the way it does there.
+  // widens the grid the way it does there — unless they are all hidden.
   const shown = visibleSources(config, sources);
-  const hidden = hiddenTiles(config, shown, isOffAir, false);
+  const hidden = hiddenTiles(
+    config,
+    shown,
+    isOffAir,
+    liveOnlyView === 'hide' ? 'hide' : 'live'
+  );
   const drawn = shown.filter((_, idx) => !hidden.has(idx));
 
   const resolve: SlotResolver = node =>

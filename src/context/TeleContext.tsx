@@ -1,5 +1,16 @@
 'use client';
 import React, { PropsWithChildren, useState } from 'react';
+import useLocalStorageState from 'use-local-storage-state';
+
+/**
+ * How the grid treats its live-only tiles: `all` draws them all, the ones off
+ * air as placeholders, so they can be picked and changed; `live` draws the
+ * ones on air; `hide` draws none of them, on air or not.
+ */
+export type LiveOnlyView = 'all' | 'live' | 'hide';
+
+export const nextLiveOnlyView = (view: LiveOnlyView): LiveOnlyView =>
+  view === 'all' ? 'live' : view === 'live' ? 'hide' : 'all';
 
 function useValue() {
   const [isEditing, setIsEditing] = useState(true);
@@ -15,10 +26,14 @@ function useValue() {
   const [isMuted, setIsMuted] = useState(false);
   const toggleMute = () => setIsMuted(m => !m);
   /**
-   * Draws the live-only tiles that are off air, as placeholders, so they can be
-   * picked and changed. Only while the picker is open (see the Monitor).
+   * Which live-only tiles the grid draws. Kept across visits, so hiding them
+   * stays put; `all` is only for the picker, and closing it goes back to
+   * `live` (see the Monitor).
    */
-  const [showOffAir, setShowOffAir] = useState(false);
+  const [liveOnlyView, setLiveOnlyView] = useLocalStorageState<LiveOnlyView>(
+    'liveOnlyView',
+    { defaultValue: 'live' }
+  );
 
   return {
     isEditing,
@@ -31,8 +46,8 @@ function useValue() {
     isMuted,
     setIsMuted,
     toggleMute,
-    showOffAir,
-    setShowOffAir
+    liveOnlyView,
+    setLiveOnlyView
   };
 }
 

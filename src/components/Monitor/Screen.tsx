@@ -59,7 +59,7 @@ export function Screen({
 }: Props) {
   const isMobile = useIsMobile();
   const isOffAir = useOffAir();
-  const { showOffAir } = useTeleContext();
+  const { liveOnlyView } = useTeleContext();
   const { config, sources } = screen;
   if (config.mode === DisplayMode.Zapping) {
     // The screen keeps exactly one channel — whatever is on air — and the reel
@@ -127,9 +127,10 @@ export function Screen({
     const cols = gridColumns || config.grid.size;
     const shown = visibleSources(config, sources ?? []);
     // A live-only tile off air is not drawn, and takes its row with it, unless
-    // it is being shown to be managed. Nor are the regular channels kept past
-    // the grid's end, between it and the extras.
-    const hidden = hiddenTiles(config, shown, isOffAir, showOffAir);
+    // it is being shown to be managed — nor any of them while they are hidden.
+    // Nor are the regular channels kept past the grid's end, between it and
+    // the extras.
+    const hidden = hiddenTiles(config, shown, isOffAir, liveOnlyView);
     const drawn = shown.length - hidden.size;
     const rows = Math.ceil(drawn / cols) || 1;
     return (
