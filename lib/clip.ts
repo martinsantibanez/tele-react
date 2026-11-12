@@ -7,7 +7,8 @@ import {
   Mp4OutputFormat,
   Output,
   QUALITY_HIGH,
-  UrlSource
+  UrlSource,
+  type VideoSample
 } from 'mediabunny';
 
 /** A segment of the stream, placed on the timeline of the player showing it. */
@@ -21,6 +22,12 @@ export type ClipSegment = {
 
 /** The part of the frame a clip keeps, as fractions of its width and height. */
 export type ClipCrop = { x: number; y: number; width: number; height: number };
+
+/**
+ * A band across the clip's frame, `top` pixels down and `height` tall, filled
+ * with `crop` of the picture.
+ */
+export type ClipPane = { crop: ClipCrop; top: number; height: number };
 
 /** A clip's shape: original, vertical for social media, square or portrait. */
 export type ClipAspect = { label: string; ratio: number | 'source' };
@@ -45,6 +52,19 @@ export const clipSize = (ratio: number, shortSide: number) => {
   return ratio >= 1
     ? { width: even(shortSide * ratio), height: shortSide }
     : { width: shortSide, height: even(shortSide / ratio) };
+};
+
+/**
+ * The bands of a frame `height` tall cut across at `at`, a fraction of it
+ * from the top: as one, or as two stacked. Even, as H.264 asks.
+ */
+export const clipBands = (height: number, at?: number) => {
+  if (at === undefined) return [{ top: 0, height }];
+  const top = Math.round((height * at) / 2) * 2;
+  return [
+    { top: 0, height: top },
+    { top, height: height - top }
+  ];
 };
 
 /** Whether this browser can encode the clips: WebCodecs and H.264. */
@@ -134,11 +154,45 @@ type ExportOptions = {
   segments: ClipSegment[];
   start: number;
   end: number;
-  crop: ClipCrop;
+  /** One pane for the whole frame, or several stacked. */
+  panes: ClipPane[];
   width: number;
   height: number;
   onProgress?: (progress: number) => void;
   signal: AbortSignal;
+};
+
+/**
+ * Each frame drawn pane by pane onto a canvas of the clip's size, which the
+ * encoder takes a copy of.
+ */
+const stacked = (panes: ClipPane[], width: number, height: number) => {
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Este navegador no puede componer el clip');
+  context.imageSmoothingQuality = 'high';
+  return {
+    process: (sample: VideoSample) => {
+      const w = sample.displayWidth;
+      const h = sample.displayHeight;
+      for (const { crop, top, height: paneHeight } of panes) {
+        sample.draw(
+          context,
+          crop.x * w,
+          crop.y * h,
+          crop.width * w,
+          crop.height * h,
+          0,
+          top,
+          width,
+          paneHeight
+        );
+      }
+      return canvas;
+    },
+    processedWidth: width,
+    processedHeight: height
+  };
 };
 
 const requestUrl = (input: RequestInfo | URL) =>
@@ -149,8 +203,8 @@ const requestUrl = (input: RequestInfo | URL) =>
       : input.url;
 
 /**
- * Cuts `start`–`end` out of a stream into an MP4 (H.264 and AAC), cropped to
- * `crop` and scaled to `width` × `height`.
+ * Cuts `start`–`end` out of a stream into an MP4 (H.264 and AAC) of `width` ×
+ * `height`, each of its panes filled with a crop of the picture.
  *
  * Only the segments the clip covers are downloaded: the stream's playlist is
  * served to Mediabunny cut down to them, so the clip's time starts at the
@@ -162,7 +216,7 @@ export async function exportClip({
   segments,
   start,
   end,
-  crop,
+  panes,
   width,
   height,
   onProgress,
@@ -213,9 +267,19 @@ export async function exportClip({
       output,
       trim: { start: start - first.start, end: end - first.start },
       video: async track => {
+        const common = {
+          codec: 'avc' as const,
+          quality: QUALITY_HIGH,
+          forceTranscode: true
+        };
+        if (panes.length > 1) {
+          return { ...common, ...stacked(panes, width, height) };
+        }
         const frameW = await track.getDisplayWidth();
         const frameH = await track.getDisplayHeight();
+        const { crop } = panes[0];
         return {
+          ...common,
           crop: {
             left: Math.round(crop.x * frameW),
             top: Math.round(crop.y * frameH),
@@ -224,10 +288,7 @@ export async function exportClip({
           },
           width,
           height,
-          fit: 'fill',
-          codec: 'avc',
-          quality: QUALITY_HIGH,
-          forceTranscode: true
+          fit: 'fill'
         };
       },
       audio: { codec: 'aac' },

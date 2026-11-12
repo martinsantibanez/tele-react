@@ -3,6 +3,7 @@ import {
   ChevronFirst,
   ChevronLast,
   Download,
+  GripHorizontal,
   Loader2,
   Pause,
   Play,
@@ -20,7 +21,9 @@ import {
   CLIP_ASPECTS,
   CLIP_MAX_S,
   CLIP_MIN_S,
+  clipBands,
   ClipCrop,
+  ClipPane,
   ClipSegment,
   clipSize,
   exportClip
@@ -32,7 +35,7 @@ import {
   formatDuration,
   Range
 } from './ClipTimeline';
-import { Box, CropFrame, MAX_ZOOM } from './CropFrame';
+import { Box, CropFrame, Frame, MAX_ZOOM } from './CropFrame';
 
 type Props = {
   title: string;
@@ -51,6 +54,24 @@ const FIRST_CLIP_S = 30;
 const FRAME_S = 1 / 30;
 const QUALITIES = [720, 1080];
 const TICK_MS = 60;
+
+/** A part of the picture to frame: how far in, and about where. */
+type Region = { zoom: number; centre: { x: number; y: number } };
+type Layout = 'single' | 'split';
+/**
+ * Split, a portrait clip stacks two regions of the picture, the top one
+ * (say, the streamer's camera) over the bottom one (the game). On its own, it
+ * shows the bottom one, `MAIN`: what was framed carries over either way.
+ */
+const MAIN = 1;
+const FIRST_REGIONS: Region[] = [
+  { zoom: 2, centre: { x: 0.15, y: 0.2 } },
+  { zoom: 1, centre: { x: 0.5, y: 0.5 } }
+];
+/** The colours the regions are told apart by, split: pink, cyan. */
+const REGION_COLORS = ['#f472b6', '#22d3ee'];
+/** How short a pane can get, as a fraction of the frame. */
+const PANE_MIN = 0.2;
 
 type Job =
   | { state: 'idle' }
@@ -153,8 +174,14 @@ export default function ClipEditor({
   const [shortSide, setShortSide] = useLocalStorageState('clipShortSide', {
     defaultValue: 1080
   });
-  const [zoom, setZoom] = useState(1);
-  const [centre, setCentre] = useState({ x: 0.5, y: 0.5 });
+  const [layout, setLayout] = useLocalStorageState<Layout>('clipLayout', {
+    defaultValue: 'single'
+  });
+  const [splitAt, setSplitAt] = useLocalStorageState('clipSplitAt', {
+    defaultValue: 0.5
+  });
+  const [regions, setRegions] = useState(FIRST_REGIONS);
+  const [chosen, setChosen] = useState(MAIN);
   const [stage, setStage] = useState({ width: 0, height: 0 });
   const [job, setJob] = useState<Job>({ state: 'idle' });
   const [supported, setSupported] = useState<boolean>();
@@ -162,16 +189,31 @@ export default function ClipEditor({
   const aspect = CLIP_ASPECTS[aspectIdx] ?? CLIP_ASPECTS[0];
   const ratio =
     aspect.ratio === 'source' ? picture.width / picture.height : aspect.ratio;
-  const crop = cropOf(ratio, picture, zoom, centre.x, centre.y);
   const size = clipSize(ratio, shortSide);
+  const portrait = ratio < 1;
+  const split = portrait && layout === 'split';
+  // The region in each pane, top to bottom.
+  const shown = split ? [0, 1] : [MAIN];
+  const panes: ClipPane[] = clipBands(
+    size.height,
+    split ? splitAt : undefined
+  ).map((band, b) => {
+    const { zoom, centre } = regions[shown[b]];
+    return {
+      ...band,
+      crop: cropOf(size.width / band.height, picture, zoom, centre.x, centre.y)
+    };
+  });
+  const active = split ? chosen : MAIN;
+  const zoom = regions[active].zoom;
 
   // Read by the player's handlers, set up once.
   const selRef = useRef(sel);
   selRef.current = sel;
   const loopRef = useRef(loop);
   loopRef.current = loop && !marking;
-  const cropRef = useRef(crop);
-  cropRef.current = crop;
+  const panesRef = useRef({ panes, height: size.height });
+  panesRef.current = { panes, height: size.height };
   // Where to put the playhead and the selection once the stream loads, as
   // seconds behind its live edge.
   const landRef = useRef<{ time: number; sel?: Range } | undefined>({
@@ -280,21 +322,23 @@ export default function ClipEditor({
     const draw = () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      if (video && canvas && video.readyState >= 2 && video.videoWidth) {
-        const c = cropRef.current;
-        canvas
-          .getContext('2d')
-          ?.drawImage(
+      const context = canvas?.getContext('2d');
+      if (video && canvas && context && video.readyState >= 2) {
+        const { panes, height } = panesRef.current;
+        const scale = canvas.height / height;
+        for (const { crop: c, top, height: paneHeight } of panes) {
+          context.drawImage(
             video,
             c.x * video.videoWidth,
             c.y * video.videoHeight,
             c.width * video.videoWidth,
             c.height * video.videoHeight,
             0,
-            0,
+            top * scale,
             canvas.width,
-            canvas.height
+            paneHeight * scale
           );
+        }
       }
       frame = requestAnimationFrame(draw);
     };
@@ -420,12 +464,50 @@ export default function ClipEditor({
     p.src([{ src: urlFor(r), type: 'application/vnd.apple.mpegurl' }]);
   };
 
-  const moveCentre = (x: number, y: number) =>
-    setCentre({
-      x: clamp(x, crop.width / 2, 1 - crop.width / 2),
-      y: clamp(y, crop.height / 2, 1 - crop.height / 2)
+  const changeRegion = (i: number, change: Partial<Region>) =>
+    setRegions(rs => rs.map((r, j) => (j === i ? { ...r, ...change } : r)));
+  // By pane, as the frames over the picture are.
+  const moveCentre = (b: number, x: number, y: number) => {
+    const { crop } = panes[b];
+    changeRegion(shown[b], {
+      centre: {
+        x: clamp(x, crop.width / 2, 1 - crop.width / 2),
+        y: clamp(y, crop.height / 2, 1 - crop.height / 2)
+      }
     });
-  const changeZoom = (z: number) => setZoom(clamp(z, 1, MAX_ZOOM));
+  };
+  const zoomPane = (b: number, z: number) =>
+    changeRegion(shown[b], { zoom: clamp(z, 1, MAX_ZOOM) });
+  const changeZoom = (z: number) => zoomPane(shown.indexOf(active), z);
+  const frames: Frame[] = panes.map(({ crop }, b) => ({
+    crop,
+    zoom: regions[shown[b]].zoom,
+    color: split ? REGION_COLORS[b] : 'white'
+  }));
+
+  const changeLayout = (next: Layout) => {
+    setLayout(next);
+    // The region that has just appeared is the one to frame.
+    if (next === 'split') setChosen(0);
+  };
+
+  // The divider between the panes, dragged up and down the preview.
+  const dragSplit = (e: React.PointerEvent<HTMLElement>) => {
+    e.preventDefault();
+    const rect = e.currentTarget.parentElement!.getBoundingClientRect();
+    const y0 = e.clientY;
+    const at0 = splitAt;
+    const move = (ev: PointerEvent) =>
+      setSplitAt(
+        clamp(at0 + (ev.clientY - y0) / rect.height, PANE_MIN, 1 - PANE_MIN)
+      );
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
 
   const toClock = (t: number) => t + clockOffset;
 
@@ -461,7 +543,7 @@ export default function ClipEditor({
         segments,
         start: sel.start,
         end: sel.end,
-        crop,
+        panes,
         ...size,
         signal: abort.signal,
         onProgress: progress =>
@@ -632,10 +714,11 @@ export default function ClipEditor({
             {stage.width > 0 && (
               <CropFrame
                 box={box}
-                crop={crop}
-                zoom={zoom}
+                frames={frames}
+                active={shown.indexOf(active)}
+                onActivate={b => setChosen(shown[b])}
                 onMove={moveCentre}
-                onZoom={changeZoom}
+                onZoom={zoomPane}
               />
             )}
             {!stream && (
@@ -745,7 +828,7 @@ export default function ClipEditor({
                     type="button"
                     onClick={() => {
                       setAspectIdx(i);
-                      setZoom(1);
+                      changeRegion(MAIN, { zoom: 1 });
                     }}
                     disabled={exporting}
                     className={`flex items-center gap-2 rounded border px-2 py-1.5 text-left text-xs ${
@@ -773,6 +856,12 @@ export default function ClipEditor({
 
           <Section title="Encuadre">
             <div className="flex items-center gap-2 text-xs text-white/70">
+              {split && (
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: REGION_COLORS[active] }}
+                />
+              )}
               <span>Zoom</span>
               <input
                 type="range"
@@ -788,18 +877,18 @@ export default function ClipEditor({
               </span>
               <button
                 type="button"
-                onClick={() => {
-                  setZoom(1);
-                  setCentre({ x: 0.5, y: 0.5 });
-                }}
+                onClick={() =>
+                  changeRegion(active, { zoom: 1, centre: { x: 0.5, y: 0.5 } })
+                }
                 className="rounded px-1.5 py-0.5 hover:bg-white/10"
               >
                 Centrar
               </button>
             </div>
             <p className="text-[11px] text-white/40">
-              Arrastra el recuadro sobre la imagen; la rueda o sus esquinas
-              acercan.
+              {split
+                ? 'Arrastra cada recuadro sobre la imagen; la rueda o sus esquinas acercan. La división de la vista previa reparte el alto.'
+                : 'Arrastra el recuadro sobre la imagen; la rueda o sus esquinas acercan.'}
             </p>
           </Section>
 
@@ -814,15 +903,63 @@ export default function ClipEditor({
                   className="max-h-[340px] max-w-full"
                 />
               ) : (
-                <canvas
-                  ref={canvasRef}
-                  width={previewSize.width}
-                  height={previewSize.height}
-                  className="max-h-[340px] max-w-full bg-neutral-900"
-                  style={{ aspectRatio: `${size.width} / ${size.height}` }}
-                />
+                <div className="relative max-w-full">
+                  <canvas
+                    ref={canvasRef}
+                    width={previewSize.width}
+                    height={previewSize.height}
+                    className="block max-h-[340px] max-w-full bg-neutral-900"
+                    style={{ aspectRatio: `${size.width} / ${size.height}` }}
+                  />
+                  {split && (
+                    <div className="absolute inset-0">
+                      {panes.map(({ top, height }, b) => (
+                        <div
+                          key={b}
+                          onPointerDown={() => setChosen(shown[b])}
+                          className="absolute inset-x-0 border-2"
+                          style={{
+                            top: `${(top / size.height) * 100}%`,
+                            height: `${(height / size.height) * 100}%`,
+                            borderColor: REGION_COLORS[b]
+                          }}
+                        />
+                      ))}
+                      <div
+                        onPointerDown={dragSplit}
+                        role="separator"
+                        aria-label="División entre las dos imágenes"
+                        className="absolute inset-x-0 flex h-6 -translate-y-1/2 cursor-row-resize touch-none items-center justify-center"
+                        style={{
+                          top: `${(panes[1].top / size.height) * 100}%`
+                        }}
+                      >
+                        <span className="flex h-4 w-12 items-center justify-center rounded-full border border-black/30 bg-white text-black/60 shadow">
+                          <GripHorizontal size={14} />
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
+            {portrait && (
+              <div className="flex items-center justify-center gap-2">
+                <LayoutButton
+                  onClick={() => changeLayout('single')}
+                  label="Una imagen"
+                  active={!split}
+                  disabled={exporting}
+                />
+                <LayoutButton
+                  onClick={() => changeLayout('split')}
+                  label="Dos imágenes, una sobre otra"
+                  active={split}
+                  disabled={exporting}
+                  split
+                />
+              </div>
+            )}
           </Section>
 
           <Section title="Calidad">
@@ -960,6 +1097,43 @@ function TransportButton({
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+/** A portrait frame, whole or cut across, as the layout it picks. */
+function LayoutButton({
+  onClick,
+  label,
+  active,
+  disabled,
+  split
+}: {
+  onClick: () => void;
+  label: string;
+  active: boolean;
+  disabled: boolean;
+  split?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      aria-pressed={active}
+      className={`flex size-9 items-center justify-center rounded-full disabled:opacity-40 ${
+        active
+          ? 'bg-white/10 text-white ring-2 ring-white'
+          : 'bg-white/5 text-white/60 hover:bg-white/10'
+      }`}
+    >
+      <span className="relative block h-[18px] w-3 rounded-[3px] border-[1.5px] border-current">
+        {split && (
+          <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-[1.5px] border-current" />
+        )}
+      </span>
     </button>
   );
 }
