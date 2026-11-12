@@ -226,6 +226,12 @@ export const Monitor = () => {
   );
 
   const selectedTileHidden = isHiddenTile(editingSourceIdx);
+  // Watched fullscreen when it went off air, the picture goes with it — before
+  // the effect below moves the selection on. Left on, fullscreen would follow
+  // the selection onto that tile: its reel wakes up there, finds the channel
+  // foreign to the band being zapped, and puts the band's own on air — over a
+  // tile nobody touched.
+  if (selectedTileHidden && isFullscreen) setIsFullscreen(false);
   useEffect(() => {
     if (!selectedTileHidden) return;
     for (let idx = 0; idx < visibleScreenCount; idx++)
