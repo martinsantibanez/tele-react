@@ -12,6 +12,7 @@ import {
   reportDecodeTrouble,
   useDecodeSlot
 } from '../../../../hooks/useDecodeSlot';
+import { markAudioBlocked } from '../../../../hooks/useAudioBlocked';
 import { isTvDevice } from '../../../../hooks/useIsTv';
 
 // Mediabunny and the editor only load once a clip is asked for.
@@ -371,7 +372,22 @@ const LivePlayer = ({
         liveTracker.seekToLiveEdge();
       }
       const playPromise = p.play();
-      if (playPromise?.catch) playPromise.catch(() => {});
+      if (playPromise?.catch)
+        playPromise.catch((error: unknown) => {
+          // Unmuted with no click or key press on the page yet — a tile picked
+          // from a Stream Deck — the browser will not play it with sound. It
+          // plays muted until the next one, which the unlock below waits for.
+          if (
+            (error as DOMException)?.name !== 'NotAllowedError' ||
+            p.isDisposed() ||
+            p.muted()
+          )
+            return;
+          p.muted(true);
+          markAudioBlocked();
+          const retry = p.play();
+          if (retry?.catch) retry.catch(() => {});
+        });
     };
 
     // Back at live, reaching the usual hour.

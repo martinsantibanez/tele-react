@@ -1,0 +1,48 @@
+{
+  "Name": "Tele",
+  "Description": "Maneja Tele desde el Stream Deck: las pantallas del monitor, las pantallas guardadas y el audio.",
+  "Author": "Martin Santibanez",
+  "Version": "0.2.0.0",
+  "SDKVersion": 2,
+  "UUID": "cl.tele.remote",
+  "Icon": "imgs/plugin",
+  "Category": "Tele",
+  "CategoryIcon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "Nodejs": {
+    "Version": "20"
+  },
+  "OS": [
+    {
+      "Platform": "linux"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.15"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "Actions": [
+    {
+      "UUID": "cl.tele.remote.deck",
+      "Name": "Tele",
+      "Tooltip": "Ponla en todas las teclas: cada una muestra lo que le toca según dónde está",
+      "Icon": "imgs/plugin",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "States": [
+        {
+          "Image": "imgs/plugin"
+        }
+      ]
+    }
+  ]
+}

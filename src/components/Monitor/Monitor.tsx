@@ -32,6 +32,8 @@ import {
 } from '../../hooks/useRemoteKeys';
 import { canBeOffAir, useOffAir } from '../../hooks/useOffAir';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { TileRect, useStreamDeck } from '../../hooks/useStreamDeck';
+import { useAudioBlocked } from '../../hooks/useAudioBlocked';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import {
   useActiveScreenIndex,
@@ -53,6 +55,7 @@ import { defaultGrid } from '../GridDisplay/initialGrid';
 import { SourceSlider } from '../SelectSource/SourceSlider';
 import { useRevealSource } from '../SelectSource/sourceCategories';
 import { ControlBar } from './ControlBar';
+import { screenLabel } from './SavedScreensBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
 import { fillSlots, slotCount } from './predefinedLayouts';
 import { Screen } from './Screen';
@@ -543,6 +546,64 @@ export const Monitor = () => {
     },
     !isFullscreen
   );
+  const audioBlocked = useAudioBlocked();
+  // A Stream Deck copies the monitor onto its keys: the tiles where they are
+  // on screen, with the saved screens and mute beside them. See `streamdeck/`.
+  useStreamDeck({
+    state: {
+      screens: savedScreens.map((saved, idx) => ({
+        name: screenLabel(saved.name, idx)
+      })),
+      activeScreen: activeScreenIndex,
+      tiles: activeSources.slice(0, visibleScreenCount).map(node => {
+        const source = resolveSource(node.sourceSlug, node.source);
+        return {
+          name: source?.name ?? node.sourceSlug ?? '',
+          logo: source?.logoUrl ?? source?.imageUrl
+        };
+      }),
+      selectedTile: editingSourceIdx,
+      fullscreen: isFullscreen,
+      muted: isMuted,
+      audioBlocked
+    },
+    measureTiles: () => {
+      // The reel is one channel filling the monitor.
+      if (isZappingMode) return [[0, 0, 1, 1]];
+      const area = screenAreaRef.current;
+      const box = area?.getBoundingClientRect();
+      if (!area || !box?.width || !box.height) return [];
+      const rects: TileRect[] = [];
+      const fraction = (value: number) => Math.round(value * 1000) / 1000;
+      area.querySelectorAll<HTMLElement>('[data-screen-idx]').forEach(el => {
+        const idx = Number(el.dataset.screenIdx);
+        if (Number.isNaN(idx) || rects[idx]) return;
+        // The tile's cell, not the tile: a fullscreen tile leaves its cell
+        // behind in the arrangement.
+        const cell = (el.parentElement ?? el).getBoundingClientRect();
+        rects[idx] = [
+          fraction((cell.left - box.left) / box.width),
+          fraction((cell.top - box.top) / box.height),
+          fraction((cell.right - box.left) / box.width),
+          fraction((cell.bottom - box.top) / box.height)
+        ];
+      });
+      return rects;
+    },
+    layoutKey: `${JSON.stringify(displayConfig)}|${gridColumns}`,
+    onCommand: command => {
+      if (command.type === 'screen') {
+        if (command.index < savedScreens.length)
+          setActiveScreenIndex(command.index);
+      } else if (command.type === 'tile') {
+        // Pressing the tile that is heard again takes it fullscreen (or back),
+        // like OK on it.
+        if (command.index === editingSourceIdx) {
+          if (isFullscreen || hasGridLevel) toggleFullscreen();
+        } else selectScreen(command.index);
+      } else toggleMute();
+    }
+  });
   useHotkeys('m', () => toggleMute(), [toggleMute]);
   // Unfolds every shortcut under the picker. Browsers open their own help on
   // F1, so it is taken from them.
