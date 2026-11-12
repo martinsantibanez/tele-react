@@ -1,5 +1,5 @@
 'use client';
-import { Radio, Replace } from 'lucide-react';
+import { Radio, Replace, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
 import { DecodeSlotContext, useParkedScreens } from '../../hooks/useDecodeSlot';
@@ -45,6 +45,8 @@ type Props = {
   liveOnly?: boolean;
   /** Offered in the tile's pill, beside Cambiar, when set. */
   onToggleLiveOnly?: () => void;
+  /** Takes the tile off the grid, from the same pill. */
+  onRemove?: () => void;
 };
 
 /** The picker sidebar's width, in pixels, on a desktop or a TV. */
@@ -64,7 +66,8 @@ export function MonitorSource({
   idx,
   offAir,
   liveOnly,
-  onToggleLiveOnly
+  onToggleLiveOnly,
+  onRemove
 }: Props) {
   const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
     useTeleContext();
@@ -298,6 +301,16 @@ export function MonitorSource({
                   >
                     <Radio size={12} />
                     Solo en vivo
+                  </button>
+                )}
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={onRemove}
+                    className="flex h-full items-center gap-1 border-l border-white/20 px-2 text-[11px] font-medium transition-colors hover:bg-red-600"
+                  >
+                    <X size={12} />
+                    Quitar
                   </button>
                 )}
               </div>

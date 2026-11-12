@@ -19,6 +19,7 @@ type Props = {
   hidden?: Set<number>;
   isOffAir?: (node: SourceNode) => boolean;
   onToggleLiveOnly?: (idx: number) => void;
+  onRemove?: (idx: number) => void;
 };
 
 export function GridDisplay({
@@ -31,7 +32,8 @@ export function GridDisplay({
   onFullscreenSourceChange,
   hidden,
   isOffAir,
-  onToggleLiveOnly
+  onToggleLiveOnly,
+  onRemove
 }: Props) {
   // With tiles parked the grid gives way: each tile is placed by hand instead,
   // inside the same wrapper, so no player is torn down by the switch.
@@ -76,6 +78,7 @@ export function GridDisplay({
                   ? () => onToggleLiveOnly(idx)
                   : undefined
               }
+              onRemove={onRemove ? () => onRemove(idx) : undefined}
             />
           </div>
         );

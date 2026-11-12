@@ -51,6 +51,21 @@ export const possibleLayouts: PossibleLayout[] = [
   { name: '4 × 3', config: grid(4, 12) }
 ];
 
+/**
+ * How many columns a grid is drawn with when it holds `drawn` tiles: its own
+ * width, or that of the smallest arrangement on offer that holds them, if that
+ * is wider — so a 3 × 3 with a live extra or two (or a tile added by hand)
+ * becomes a 4 × 3, and grows rows of 4 past that. Fewer tiles keep the width
+ * and only lose rows.
+ */
+export const gridColumnsFor = (size: number, drawn: number) => {
+  const fit = possibleLayouts.find(
+    ({ config }) =>
+      config.mode === DisplayMode.Grid && (config.grid.count ?? 0) >= drawn
+  );
+  return Math.max(size, fit?.config.grid.size ?? 4);
+};
+
 /** How many screens an arrangement shows. */
 export const layoutScreenCount = ({ mode, layout, grid }: DisplayConfig) =>
   mode === DisplayMode.Layout ? layout.length : (grid.count ?? 0);

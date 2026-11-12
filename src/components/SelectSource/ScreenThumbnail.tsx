@@ -6,6 +6,7 @@ import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
 import { visibleSources } from '../Monitor/predefinedLayouts';
+import { gridColumnsFor } from './layoutOptions';
 import { SourceImage } from '../SourceImage';
 
 type Props = {
@@ -30,6 +31,12 @@ export function ScreenThumbnail({
   const resolveSource = useResolveSource();
   const isOffAir = useOffAir();
   const { config, sources = [] } = screen;
+
+  // As the wall itself is drawn: a live extra on air shows up here too, and
+  // widens the grid the way it does there.
+  const shown = visibleSources(config, sources);
+  const hidden = hiddenTiles(config, shown, isOffAir, false);
+  const drawn = shown.filter((_, idx) => !hidden.has(idx));
 
   const resolve: SlotResolver = node =>
     resolveSource(node.sourceSlug, node.source);
@@ -56,12 +63,8 @@ export function ScreenThumbnail({
         <ZappingPreview node={sources[0]} resolve={resolve} />
       ) : config.mode === DisplayMode.Grid ? (
         <GridPreview
-          // As the wall itself is: a favourite on air shows up here too.
-          sources={visibleSources(config, sources).filter(
-            (_, idx, shown) =>
-              !hiddenTiles(config, shown, isOffAir, false).has(idx)
-          )}
-          size={config.grid.size}
+          sources={drawn}
+          size={gridColumnsFor(config.grid.size, drawn.length)}
           resolve={resolve}
         />
       ) : (

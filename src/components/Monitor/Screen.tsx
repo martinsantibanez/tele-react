@@ -40,6 +40,8 @@ type Props = {
   onFullscreenSourceChange?: (source: SourceType) => void;
   /** Flips a grid tile between always there and only there while live. */
   onToggleLiveOnly?: (idx: number) => void;
+  /** Takes a tile off the grid. */
+  onRemove?: (idx: number) => void;
 };
 
 export function Screen({
@@ -52,7 +54,8 @@ export function Screen({
   gridColumns,
   onSourceChange,
   onFullscreenSourceChange,
-  onToggleLiveOnly
+  onToggleLiveOnly,
+  onRemove
 }: Props) {
   const isMobile = useIsMobile();
   const isOffAir = useOffAir();
@@ -148,6 +151,7 @@ export function Screen({
           hidden={hidden}
           isOffAir={isOffAir}
           onToggleLiveOnly={onToggleLiveOnly}
+          onRemove={onRemove}
         />
       </div>
     );

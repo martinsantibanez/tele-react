@@ -3,6 +3,7 @@ import {
   Maximize2,
   Minimize2,
   Pencil,
+  Plus,
   Volume2,
   VolumeX,
   X
@@ -59,6 +60,7 @@ import {
 } from '../SelectSource/sourceCategories';
 import { PLACEHOLDER_SOURCE_SLUG } from '../../sources/placeholder';
 import { LiveOnlyBar } from './LiveOnlyBar';
+import { gridColumnsFor } from '../SelectSource/layoutOptions';
 import { ControlBar } from './ControlBar';
 import { screenLabel } from './SavedScreensBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
@@ -167,11 +169,6 @@ export const Monitor = () => {
 
   const isZappingMode = displayConfig.mode === DisplayMode.Zapping;
 
-  const gridColumns = useMemo(() => {
-    if (isMobileLandscape && isGrid) return MOBILE_LANDSCAPE_GRID_COLUMNS;
-    return displayConfig.grid.size;
-  }, [isMobileLandscape, isGrid, displayConfig.grid.size]);
-
   const visibleScreenCount = slotCount(displayConfig, activeSources);
 
   // Tiles that keep their place and number but are not on the wall: the
@@ -187,6 +184,29 @@ export const Monitor = () => {
     [isLiveMode, displayConfig, activeSources, isOffAir, showOffAir]
   );
   const isHiddenTile = (idx: number) => hidden.has(idx);
+  /** The tiles on the wall, by their place in the screen. */
+  const drawnTiles = useMemo(
+    () =>
+      Array.from({ length: visibleScreenCount }, (_, idx) => idx).filter(
+        idx => !hidden.has(idx)
+      ),
+    [visibleScreenCount, hidden]
+  );
+
+  // A phone lays its grid out its own way. Elsewhere a grid holding more than
+  // its arrangement does — live extras on air, a tile added by hand — widens
+  // to the next one on offer (see `gridColumnsFor`).
+  const gridColumns = useMemo(() => {
+    if (isMobileLandscape && isGrid) return MOBILE_LANDSCAPE_GRID_COLUMNS;
+    if (isMobile || !isGrid) return displayConfig.grid.size;
+    return gridColumnsFor(displayConfig.grid.size, drawnTiles.length);
+  }, [
+    isMobileLandscape,
+    isMobile,
+    isGrid,
+    displayConfig.grid.size,
+    drawnTiles.length
+  ]);
 
   const monitorRatio = useMemo(() => {
     if (!isMobile || !isGrid) return 16 / 9;
@@ -391,7 +411,45 @@ export const Monitor = () => {
     ]);
     setShowOffAir(true);
     setEditingSourceIdx(idx);
-    if (!isTv) setActiveCategory('favourites');
+    setActiveCategory('youtube');
+  };
+
+  // A grid's tiles can be added and taken away again by hand, from a
+  // computer: a phone sets its own count, and a TV has no pointer for it.
+  const canEditTiles = isGrid && !isLiveMode && !isMobile && !isTv;
+  const gridCount = displayConfig.grid.count ?? selectedSources.length;
+
+  // A new tile joins the grid's own, after the last of them: before the
+  // channels kept out of sight and the live extras. Selected, so the next
+  // channel picked lands on it.
+  const addTile = () => {
+    const at = gridCount;
+    setSelectedSources(sources => [
+      ...sources.slice(0, at),
+      { sourceSlug: PLACEHOLDER_SOURCE_SLUG, uuid: uuid() },
+      ...sources.slice(at)
+    ]);
+    setDisplayConfig(cfg => ({
+      ...cfg,
+      grid: { ...cfg.grid, count: gridCount + 1 }
+    }));
+    setEditingSourceIdx(at);
+  };
+
+  // A grid tile takes its place with it, so the grid is one smaller rather
+  // than the next channel kept out of sight taking it over. A live extra is
+  // not one of the grid's, and only goes.
+  const removeTile = (idx: number) => {
+    const isExtra = !!selectedSources[idx]?.liveOnly && idx >= gridCount;
+    if (!isExtra && gridCount <= 1) return;
+    setSwapSourceIdx(undefined);
+    setIsFullscreen(false);
+    setSelectedSources(sources => sources.filter((_, i) => i !== idx));
+    if (!isExtra && idx < gridCount)
+      setDisplayConfig(cfg => ({
+        ...cfg,
+        grid: { ...cfg.grid, count: gridCount - 1 }
+      }));
   };
 
   const liveOnlyTiles = activeSources.filter(node => node.liveOnly);
@@ -586,14 +644,18 @@ export const Monitor = () => {
         name: screenLabel(saved.name, idx)
       })),
       activeScreen: activeScreenIndex,
-      tiles: activeSources.slice(0, visibleScreenCount).map(node => {
-        const source = resolveSource(node.sourceSlug, node.source);
+      // Only what is on the wall: a tile kept out of sight has no place for a
+      // key, and one without a place throws the deck off its arrangement. The
+      // deck numbers them in this order, so its presses are mapped back.
+      tiles: drawnTiles.map(idx => {
+        const node = activeSources[idx];
+        const source = resolveSource(node?.sourceSlug, node?.source);
         return {
-          name: source?.name ?? node.sourceSlug ?? '',
+          name: source?.name ?? node?.sourceSlug ?? '',
           logo: source?.logoUrl ?? source?.imageUrl
         };
       }),
-      selectedTile: editingSourceIdx,
+      selectedTile: drawnTiles.indexOf(editingSourceIdx),
       fullscreen: isFullscreen,
       muted: isMuted,
       audioBlocked
@@ -619,19 +681,21 @@ export const Monitor = () => {
           fraction((cell.bottom - box.top) / box.height)
         ];
       });
-      return rects;
+      return drawnTiles.map(idx => rects[idx]);
     },
-    layoutKey: `${JSON.stringify(displayConfig)}|${gridColumns}`,
+    layoutKey: `${JSON.stringify(displayConfig)}|${gridColumns}|${drawnTiles}`,
     onCommand: command => {
       if (command.type === 'screen') {
         if (command.index < savedScreens.length)
           setActiveScreenIndex(command.index);
       } else if (command.type === 'tile') {
+        const idx = drawnTiles[command.index];
+        if (idx === undefined) return;
         // Pressing the tile that is heard again takes it fullscreen (or back),
         // like OK on it.
-        if (command.index === editingSourceIdx) {
+        if (idx === editingSourceIdx) {
           if (isFullscreen || hasGridLevel) toggleFullscreen();
-        } else selectScreen(command.index);
+        } else selectScreen(idx);
       } else toggleMute();
     }
   });
@@ -743,6 +807,11 @@ export const Monitor = () => {
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
       </FloatingButton>
+      {isEditing && canEditTiles && (
+        <FloatingButton onClick={addTile} label="Agregar pantalla">
+          <Plus size={20} />
+        </FloatingButton>
+      )}
       <FloatingButton
         onClick={togglePicker}
         label={isEditing ? 'Salir de edición (E)' : 'Editar canales (E)'}
@@ -788,6 +857,7 @@ export const Monitor = () => {
               isLiveMode ? undefined : handleSourceChange
             }
             onToggleLiveOnly={isLiveMode ? undefined : toggleLiveOnly}
+            onRemove={canEditTiles ? removeTile : undefined}
           />
         </div>
         {/* Pointer controls: a remote has OK, Back and the picker for all of
