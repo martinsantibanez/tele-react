@@ -18,6 +18,11 @@ type Props = {
   editingSourceIdx?: number;
   swapSourceIdx?: number;
   fullscreenIdx?: number;
+  /**
+   * The tile enlarged with the others as previews around it, on a grid or a
+   * live wall. See `focusWallRects`.
+   */
+  focusIdx?: number;
   onSwitch?: OnSwitchCb;
   /**
    * How wide to lay the grid out, when that is not the screen's own setting: a
@@ -51,6 +56,7 @@ export function Screen({
   editingSourceIdx,
   swapSourceIdx,
   fullscreenIdx,
+  focusIdx,
   gridColumns,
   onSourceChange,
   onFullscreenSourceChange,
@@ -118,6 +124,7 @@ export function Screen({
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
+          focusIdx={focusIdx}
           onFullscreenSourceChange={onFullscreenSourceChange}
         />
       </div>
@@ -148,6 +155,7 @@ export function Screen({
           editingSourceIdx={editingSourceIdx}
           swapSourceIdx={swapSourceIdx}
           fullscreenIdx={fullscreenIdx}
+          focusIdx={focusIdx}
           onFullscreenSourceChange={onFullscreenSourceChange}
           hidden={hidden}
           isOffAir={isOffAir}
