@@ -211,6 +211,28 @@ export async function fetchZappingChannels(
   return channels;
 }
 
+/**
+ * Whether Zapping keeps a channel's past to rewind into: its own player's rule
+ * (`canRewind`). The live playlist only lists the last ~30s either way; the
+ * past is a separate playlist, see `zappingRewindUrl`, which those channels
+ * are played from.
+ */
+export const zappingCanRewind = (channel: ZappingChannel) =>
+  channel.reverse_epg > 0 || channel.start_over;
+
+/**
+ * How far back a rewindable channel's stream reaches. Six hours answers on the
+ * channels tried; twelve fails.
+ */
+export const ZAPPING_REWIND_LIMIT_S = 6 * 60 * 60;
+
+/**
+ * A channel's stream from `startTime` (unix **seconds**) on, still running to
+ * live — how Zapping's own player rewinds. Takes the playable url, token
+ * included.
+ */
+export const zappingRewindUrl = (playUrl: string, startTime: number) =>
+  `${playUrl}&startTime=${startTime}`;
 /** Logo for a channel's `image` slug, at one of Zapping's rendered sizes. */
 export const zappingLogoUrl = (image: string, size = 62) =>
   `https://davinci.zappingtv.com/gato/media/${size}/canales/white/${image}.png`;

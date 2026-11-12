@@ -1,6 +1,7 @@
 'use client';
 import qualitySelector from 'videojs-hls-quality-selector';
 import { useContext, useEffect, useRef } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import {
@@ -18,10 +19,32 @@ type Props = {
    * picks the stream back up at the live edge rather than where it stopped.
    */
   paused?: boolean;
+  /**
+   * Takes ← → (5 s) and J L (10 s) to move through the stream's rewind
+   * window. Only for a stream that keeps one, on the tile filling the screen.
+   */
+  seekKeys?: boolean;
+  /**
+   * For a stream that keeps more behind it than its live playlist lists. It is
+   * played from `src(startTime)` (unix seconds) instead, reaching an hour
+   * back; rewinding further reaches further, up to `limitS` seconds.
+   */
+  rewind?: { src: (startTime: number) => string; limitS: number };
 };
 let hlsQualitySelectorRegistered = false;
 
 const STALL_TIMEOUT_MS = 12000;
+
+/** How far the arrows and J L move through the stream, in seconds. */
+const ARROW_SEEK_S = 5;
+const JL_SEEK_S = 10;
+/**
+ * How far back a rewindable stream reaches, and how much more a rewind past
+ * it asks for. Every playlist refresh lists all of it.
+ */
+const REWIND_WINDOW_S = 60 * 60;
+/** Within this many seconds of the live edge, a player is watching live. */
+const LIVE_SLACK_S = 10;
 const WATCHDOG_INTERVAL_MS = 3000;
 
 /** How often a TV player checks it is keeping up, and over what window. */
@@ -151,11 +174,31 @@ const LivePlayer = ({
   src,
   muted = true,
   paused = false,
+  seekKeys = false,
+  rewind,
   slotId
 }: Props & { slotId: string }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<any>(undefined);
   const currentSrcRef = useRef<string>(src);
+  const rewindRef = useRef(rewind);
+  rewindRef.current = rewind;
+  // Where the rewindable stream loaded starts (unix seconds). And, while a
+  // reach further back loads, where to land in it: seconds behind live.
+  const rewindStartRef = useRef<number | undefined>(undefined);
+  const pendingBehindRef = useRef<number | undefined>(undefined);
+  // What is loaded: the url to play and whether it is played rewindable.
+  const loadedRef = useRef(`${src}|${!!rewind}`);
+  // The url to load, reaching `reach` seconds back when it can.
+  const playSrc = (reach = REWIND_WINDOW_S) => {
+    const rewind = rewindRef.current;
+    if (!rewind) {
+      rewindStartRef.current = undefined;
+      return currentSrcRef.current;
+    }
+    rewindStartRef.current = Math.floor(Date.now() / 1000 - reach);
+    return rewind.src(rewindStartRef.current);
+  };
   // Read by the handlers below, which are set up once with the player: held,
   // everything that keeps the stream running has to stand down, or the first
   // pause would be undone by the very `pause` event it fires.
@@ -202,6 +245,11 @@ const LivePlayer = ({
       },
       responsive: true,
       fill: true,
+      // A seek bar over what the stream keeps behind live, and a button back
+      // to it. Tracked however short the window: a live playlist can list as
+      // little as ~12s, under video.js's default 20s floor.
+      liveui: true,
+      liveTracker: { trackingThreshold: 0 },
       controlBar: {
         volumePanel: {
           inline: true
@@ -210,7 +258,7 @@ const LivePlayer = ({
       poster: '/imagenes/SinSenal.png',
       sources: [
         {
-          src: src,
+          src: playSrc(),
           type: 'application/vnd.apple.mpegurl'
           // type: "application/x-mpegURL",
         }
@@ -234,11 +282,11 @@ const LivePlayer = ({
       if (playPromise?.catch) playPromise.catch(() => {});
     };
 
+    // Back at live, reaching the usual hour.
     const reload = () => {
       if (p.isDisposed() || pausedRef.current) return;
-      p.src([
-        { src: currentSrcRef.current, type: 'application/vnd.apple.mpegurl' }
-      ]);
+      pendingBehindRef.current = undefined;
+      p.src([{ src: playSrc(), type: 'application/vnd.apple.mpegurl' }]);
       p.load();
       resume();
     };
@@ -257,8 +305,37 @@ const LivePlayer = ({
         (lockTopRef.current && topPlaylist(vhs)) || standard();
     };
 
+    // A rewindable playlist keeps its start and grows by a segment every few
+    // seconds, all of it listed on every refresh. Sliding its start along
+    // instead would drop discontinuities off its front, and with no
+    // DISCONTINUITY-SEQUENCE to count them by VHS loses its timeline. So a
+    // tile at live that has grown to twice the hour starts it over: one short
+    // reload, at most once an hour. One rewound is left reaching back.
+    const startOver = () => {
+      const start = rewindStartRef.current;
+      if (start === undefined || pendingBehindRef.current !== undefined) return;
+      if (Date.now() / 1000 - start < 2 * REWIND_WINDOW_S) return;
+      const seekable = p.seekable();
+      if (!seekable?.length) return;
+      const behind = seekable.end(seekable.length - 1) - p.currentTime();
+      if (behind > LIVE_SLACK_S) return;
+      p.src([{ src: playSrc(), type: 'application/vnd.apple.mpegurl' }]);
+    };
+
+    // A reach further back starts out at its live edge like any live stream;
+    // the seek that asked for it lands once it knows what it holds.
+    const landRewind = () => {
+      const behind = pendingBehindRef.current;
+      const seekable = p.seekable();
+      if (behind === undefined || !seekable?.length) return;
+      pendingBehindRef.current = undefined;
+      const end = seekable.end(seekable.length - 1);
+      p.currentTime(Math.max(end - behind, seekable.start(0)));
+    };
+
     resumeRef.current = resume;
     p.on('loadedmetadata', steerRenditions);
+    p.on(['loadedmetadata', 'canplay'], landRewind);
     p.on('pause', resume);
     p.on('ended', reload);
     p.on('error', reload);
@@ -271,6 +348,7 @@ const LivePlayer = ({
       if (time !== lastTime) {
         lastTime = time;
         lastProgressAt = Date.now();
+        startOver();
         return;
       }
       if (p.paused()) {
@@ -301,6 +379,7 @@ const LivePlayer = ({
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (playerRef.current && !playerRef.current.isDisposed()) {
         playerRef.current.off('loadedmetadata', steerRenditions);
+        playerRef.current.off(['loadedmetadata', 'canplay'], landRewind);
         playerRef.current.off('pause', resume);
         playerRef.current.off('ended', reload);
         playerRef.current.off('error', reload);
@@ -311,11 +390,20 @@ const LivePlayer = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A channel found out to be rewindable (the catalogue arriving after the
+  // tile) is loaded again as one, too.
+  const canRewind = !!rewind;
   useEffect(() => {
-    if (!playerRef.current || currentSrcRef.current === src) return;
+    const loaded = `${src}|${canRewind}`;
+    if (!playerRef.current || loadedRef.current === loaded) return;
+    loadedRef.current = loaded;
     currentSrcRef.current = src;
-    playerRef.current.src([{ src, type: 'application/vnd.apple.mpegurl' }]);
-  }, [src]);
+    pendingBehindRef.current = undefined;
+    playerRef.current.src([
+      { src: playSrc(), type: 'application/vnd.apple.mpegurl' }
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src, canRewind]);
 
   useEffect(() => {
     playerRef.current?.muted(muted);
@@ -330,6 +418,48 @@ const LivePlayer = ({
     if (paused) player.pause();
     else resumeRef.current();
   }, [paused]);
+
+  // Loads the stream again reaching `behind` seconds back from live, with an
+  // hour more before it. False when it can't, or already reaches as far back
+  // as the stream keeps.
+  const reachBack = (behind: number) => {
+    const player = playerRef.current;
+    const rewind = rewindRef.current;
+    const start = rewindStartRef.current;
+    if (!rewind || start === undefined) return false;
+    const reach = Math.min(behind + REWIND_WINDOW_S, rewind.limitS);
+    if (Date.now() / 1000 - reach >= start) return false;
+    pendingBehindRef.current = Math.min(behind, reach);
+    player.src([
+      { src: playSrc(reach), type: 'application/vnd.apple.mpegurl' }
+    ]);
+    return true;
+  };
+
+  // Kept inside what the stream still holds: before its start there is
+  // nothing, unless it can reach further, and past its end is the future, so
+  // going forward from close to it lands back on the live edge.
+  const seekBy = (seconds: number) => {
+    const player = playerRef.current;
+    if (!player || player.isDisposed()) return;
+    // A reach further back still loading: the presses add up until it lands.
+    if (pendingBehindRef.current !== undefined) {
+      pendingBehindRef.current = Math.max(0, pendingBehindRef.current - seconds);
+      return;
+    }
+    const seekable = player.seekable();
+    if (!seekable?.length) return;
+    const start = seekable.start(0);
+    const end = seekable.end(seekable.length - 1);
+    const target = player.currentTime() + seconds;
+    if (target < start && reachBack(end - target)) return;
+    player.currentTime(Math.min(Math.max(target, start), end));
+  };
+  const seekOptions = { enabled: seekKeys, preventDefault: true };
+  useHotkeys('left', () => seekBy(-ARROW_SEEK_S), seekOptions);
+  useHotkeys('right', () => seekBy(ARROW_SEEK_S), seekOptions);
+  useHotkeys('j', () => seekBy(-JL_SEEK_S), seekOptions);
+  useHotkeys('l', () => seekBy(JL_SEEK_S), seekOptions);
 
   useEffect(() => {
     if (muted) return;

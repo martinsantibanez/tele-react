@@ -14,6 +14,13 @@ const sections: { title: string; keys: [string, string][] }[] = [
     ]
   },
   {
+    title: 'Pantalla completa (Zapping)',
+    keys: [
+      ['← →', 'Retroceder / adelantar 5 s'],
+      ['J / L', 'Retroceder / adelantar 10 s']
+    ]
+  },
+  {
     title: 'Selector',
     keys: [
       ['← →', 'Cambiar categoría'],

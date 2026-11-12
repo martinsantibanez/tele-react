@@ -31,6 +31,7 @@ import {
   useOkKey
 } from '../../hooks/useRemoteKeys';
 import { useSavedGrid } from '../../hooks/useSavedGrid';
+import { useResolveSource } from '../../hooks/useSourceCatalog';
 import {
   useActiveScreenIndex,
   useSavedScreens
@@ -96,6 +97,7 @@ export const Monitor = () => {
   const [selectedSources, setSelectedSources] = useSavedGrid();
   const [displayConfig, setDisplayConfig] = useDisplayConfig();
   const revealSource = useRevealSource();
+  const resolveSource = useResolveSource();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [savedScreens] = useSavedScreens();
   const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
@@ -238,6 +240,15 @@ export const Monitor = () => {
   // A phone has no room beside the picture, and a YouTube tile is not one the
   // picker points, so there the picker still leaves fullscreen.
   const pickerBesideFullscreen = !isMobile && !isLiveMode;
+  // A Zapping channel takes ← → to rewind instead (see `ZappingSource`); E
+  // still opens the picker beside it.
+  const fullscreenNode = isFullscreen
+    ? activeSources[editingSourceIdx]
+    : undefined;
+  const fullscreenRewinds = !!resolveSource(
+    fullscreenNode?.sourceSlug,
+    fullscreenNode?.source
+  )?.zappingChannel;
   // Coming back out of fullscreen opens the picker again if it was open going
   // in, so a look at the picture does not end the editing.
   const pickerBeforeFullscreen = useRef(false);
@@ -462,7 +473,11 @@ export const Monitor = () => {
       setIsEditing(true);
     },
     {
-      enabled: isFullscreen && !isEditing && pickerBesideFullscreen,
+      enabled:
+        isFullscreen &&
+        !isEditing &&
+        pickerBesideFullscreen &&
+        !fullscreenRewinds,
       preventDefault: true
     },
     [editingSourceIdx, selectedSources, revealSource]

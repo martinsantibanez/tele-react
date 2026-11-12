@@ -146,8 +146,10 @@ export function SourceOutput({
     return (
       <ZappingSource
         channelId={source.zappingChannel}
+        rewindable={source.zappingRewind}
         muted={muted}
         paused={paused}
+        fullscreen={fullscreen}
       />
     );
   } else if (source.spotifyUri) {

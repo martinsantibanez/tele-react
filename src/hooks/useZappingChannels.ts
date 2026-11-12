@@ -3,6 +3,7 @@ import useLocalStorageState from 'use-local-storage-state';
 import {
   fetchZappingChannels,
   ZAPPING_QUALITY,
+  zappingCanRewind,
   zappingLogoUrl,
   ZappingChannel
 } from '@/lib/zapping';
@@ -91,6 +92,7 @@ export function useZappingSources(): SourceType[] {
       channels.map(canal => ({
         slug: zappingSlug(canal),
         zappingChannel: canal.url,
+        zappingRewind: zappingCanRewind(canal),
         name: canal.name,
         imageUrl: zappingLogoUrl(canal.image)
       })),

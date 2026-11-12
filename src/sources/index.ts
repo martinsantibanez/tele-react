@@ -31,6 +31,8 @@ export interface SourceInput {
   twitterAcount?: string;
   twitchAccount?: string;
   zappingChannel?: string;
+  /** Whether Zapping keeps the channel's past to rewind into. */
+  zappingRewind?: boolean;
   /** Canonical `spotify:type:id`; see `parseSpotifyRef` in `lib/spotify`. */
   spotifyUri?: string;
 }
