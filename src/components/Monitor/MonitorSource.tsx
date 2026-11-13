@@ -48,8 +48,9 @@ type Props = {
   /** Takes the tile off the grid, from the same pill. */
   onRemove?: () => void;
   /**
-   * Written in the corner, as on the tile's Stream Deck key: a preview on
-   * the focus wall is a picture too small to tell apart by its logo alone.
+   * Written in the corner, as on the tile's Stream Deck key, so a tile can be
+   * told apart and picked without opening the picker — a preview on the focus
+   * wall is a picture too small to tell apart by its logo alone.
    */
   number?: number;
 };

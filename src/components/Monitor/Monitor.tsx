@@ -354,6 +354,18 @@ export const Monitor = () => {
     setIsEditing(false);
     setIsFullscreen(true);
   };
+  /**
+   * Steps the view a level in — the grid to the focus wall, then fullscreen —
+   * and from fullscreen goes all the way back to the grid. Where there is no
+   * focus wall it is fullscreen on and off.
+   */
+  const cycleView = () => {
+    if (isFullscreen) {
+      setIsFocused(false);
+      leaveFullscreen();
+    } else if (canFocus && !focusActive) setIsFocused(true);
+    else toggleFullscreen();
+  };
 
   const togglePicker = () => {
     if (!isEditing && !pickerBesideFullscreen) setIsFullscreen(false);
@@ -580,7 +592,10 @@ export const Monitor = () => {
       revealSource
     ]
   );
-  useHotkeys('g', () => toggleFullscreen(), [
+  useHotkeys('g', () => cycleView(), [
+    canFocus,
+    focusActive,
+    activeScreenIndex,
     isLiveMode,
     isFullscreen,
     isEditing,
@@ -772,14 +787,10 @@ export const Monitor = () => {
         const idx = drawnTiles[command.index];
         if (idx === undefined) return;
         if (idx !== editingSourceIdx) return pickScreen(idx);
-        // Pressing the tile that is heard again steps it up a level: the grid
-        // to the focus wall, then fullscreen. From fullscreen it goes all the
-        // way back to the grid, as the deck has no Back key of its own.
-        if (isFullscreen) {
-          setIsFocused(false);
-          leaveFullscreen();
-        } else if (canFocus && !focusActive) setIsFocused(true);
-        else if (hasGridLevel) toggleFullscreen();
+        // Pressing the tile that is heard again steps it up a level, and from
+        // fullscreen all the way back to the grid, as the deck has no Back
+        // key of its own.
+        if (hasGridLevel || isFullscreen) cycleView();
       } else toggleMute();
     }
   });
@@ -886,7 +897,9 @@ export const Monitor = () => {
         label={
           isFullscreen
             ? 'Salir de pantalla completa (G)'
-            : 'Pantalla completa (G)'
+            : canFocus && !focusActive
+              ? 'Pantalla completa'
+              : 'Pantalla completa (G)'
         }
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
@@ -897,7 +910,7 @@ export const Monitor = () => {
           label={
             focusActive
               ? 'Volver a la grilla (Esc)'
-              : 'Destacar pantalla (Enter)'
+              : 'Destacar pantalla (Enter / G)'
           }
         >
           {focusActive ? <LayoutGrid size={20} /> : <PanelsTopLeft size={20} />}

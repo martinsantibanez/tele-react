@@ -9,7 +9,7 @@ const sections: { title: string; keys: [string, string][] }[] = [
       ['Enter', 'Destacar / pantalla completa / cerrar selector'],
       ['Mantener Enter', 'Marcar para intercambiar'],
       ['Esc', 'Volver a la grilla / abrir o cerrar el selector'],
-      ['G', 'Pantalla completa'],
+      ['G', 'Grilla → destacada → pantalla completa'],
       ['M', 'Silenciar']
     ]
   },

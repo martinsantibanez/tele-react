@@ -102,8 +102,12 @@ export function GridDisplay({
                   : undefined
               }
               onRemove={onRemove ? () => onRemove(idx) : undefined}
+              // Every tile on the wall but the one in the middle of it, which
+              // has its own cell saying so, and the one gone fullscreen.
               number={
-                focus && idx !== focusIdx ? drawn.indexOf(idx) + 1 : undefined
+                idx === focusIdx || idx === fullscreenIdx
+                  ? undefined
+                  : drawn.indexOf(idx) + 1
               }
             />
           </div>
