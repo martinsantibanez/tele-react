@@ -67,7 +67,7 @@ import { ControlBar } from './ControlBar';
 import { screenLabel } from './SavedScreensBar';
 import { OnSwitchCb, PICKER_WIDTH } from './MonitorSource';
 import { FOCUS_MIN_TILES } from './focusWall';
-import { fillSlots, slotCount } from './predefinedLayouts';
+import { fillSlots, slotCount } from './screenSlots';
 import { Screen } from './Screen';
 import { ShortcutsHelp } from './ShortcutsHelp';
 
@@ -223,8 +223,7 @@ export const Monitor = () => {
   // enlarged, the others still playing as previews around it (see
   // `focusWallRects`). Picking a tile takes the grid there; the selected tile
   // is always the enlarged one, so picking another brings it in. Laid out for
-  // a 16:9 monitor, so not on a phone, and for the walls of tiles — a layout
-  // has its own big screen already.
+  // a 16:9 monitor, so not on a phone, and for the walls of tiles.
   //
   // Kept as the saved screen it was turned on for: another one is other
   // channels, and opens on its grid.

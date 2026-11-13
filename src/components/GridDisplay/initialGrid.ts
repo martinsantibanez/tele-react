@@ -1,3 +1,4 @@
+import { CLOCK_SOURCE_SLUG } from '../../sources/relojes';
 import { SourceNode } from '../../types/Monitor';
 
 export const defaultGrid: SourceNode[] = [
@@ -21,12 +22,29 @@ export const defaultGrid: SourceNode[] = [
     activeSignal: 'm3u8'
   },
   {
-    sourceSlug: 'custom_cnn-cl',
+    sourceSlug: 'custom_mediabanco-cl',
     uuid: '35376c19-bdf9-4f58-9656-d2dd38eb9207',
+    source: {
+      slug: 'custom_mediabanco-cl',
+      name: 'Mediabanco Chile',
+      imageUrl:
+        'https://www.mediabanco.com/wp-content/uploads/2021/11/senal-logo2-1.png',
+      iframeSrc:
+        'https://directorcloud.grupoz.cl/storage/players/9/sheduler_d3a8114f4939915baety698ytfeernbk.html',
+      m3u8Url:
+        'https://scl.edge.grupoz.cl/mediabanco_prueba/live/playlist.m3u8',
+      inputs: [
+        {
+          iframeSrc: 'https://live.grupoz.cl/b45b976a3814f9ac1b41dd6c3a1fe273'
+        },
+        { iframeSrc: 'https://rudo.video/live/mediabanco' },
+        { iframeSrc: 'https://rudo.video/live/mediabanco2' }
+      ]
+    },
     activeSignal: 'm3u8'
   },
   {
-    sourceSlug: 'RELOJ_CHILE',
+    sourceSlug: CLOCK_SOURCE_SLUG,
     uuid: '75749ac2-129d-4b14-9f77-492593ba1fc4'
   }
 ];

@@ -1,13 +1,12 @@
 'use client';
 import { GridDisplay } from '../GridDisplay/GridDisplay';
-import { Layout } from '../Layout/Layout';
 import { useTeleContext } from '../../context/TeleContext';
 import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useIsMobile } from '../../hooks/useViewport';
 import { SourceType } from '../../sources';
 import { ChannelReel } from './ChannelReel';
 import { MonitorSource, OnSwitchCb } from './MonitorSource';
-import { visibleSources } from './predefinedLayouts';
+import { visibleSources } from './screenSlots';
 import { DisplayMode, ScreenType } from '../../types/Monitor';
 
 type Props = {
@@ -38,7 +37,7 @@ type Props = {
    */
   onSourceChange?: (source: SourceType) => void;
   /**
-   * Hands the fullscreened tile to the zapping reel, in Grid and Layout mode:
+   * Hands the fullscreened tile to the zapping reel, on a grid or a live wall:
    * unlike `onSourceChange`, which puts the whole screen under the reel's
    * control, this is scoped to whichever one tile is currently fullscreened.
    */
@@ -172,18 +171,6 @@ export function Screen({
         />
       </div>
     );
-  } else if (config.mode === DisplayMode.Layout)
-    return (
-      <Layout
-        layout={config.layout}
-        sources={sources}
-        onSelect={onSelect}
-        onEdit={onEdit}
-        editingSourceIdx={editingSourceIdx}
-        swapSourceIdx={swapSourceIdx}
-        fullscreenIdx={fullscreenIdx}
-        onFullscreenSourceChange={onFullscreenSourceChange}
-      />
-    );
+  }
   return null;
 }

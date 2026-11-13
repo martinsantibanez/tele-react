@@ -1,12 +1,14 @@
-import { SourcesMap } from ".";
-import { BsClockFill } from "react-icons/bs";
+import { SourcesMap } from '.';
+import { BsClockFill } from 'react-icons/bs';
+import { WallClock } from '../components/Monitor/WallClock';
+
+export const CLOCK_SOURCE_SLUG = 'RELOJ';
 
 export const relojesSources: SourcesMap = {
-  RELOJ_CHILE: {
-    slug: "RELOJ_CHILE",
-    name: "RELOJ CHILE",
+  [CLOCK_SOURCE_SLUG]: {
+    slug: CLOCK_SOURCE_SLUG,
+    name: 'Reloj',
     titleIcons: [<BsClockFill key="clock" />],
-    iframeSrc:
-      "https://reloj-alarma.es/embed/hora/Santiago_CL/CHILE+CONTINENTAL/#theme=1&color=4&ampm=0&showdate=0",
-  },
+    component: () => <WallClock />
+  }
 };

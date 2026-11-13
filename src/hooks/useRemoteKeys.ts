@@ -118,8 +118,8 @@ export function useKeyNames(
 
 /**
  * The tile an arrow lands on from `fromIdx`, judged by where the tiles sit on
- * the page rather than by their order: a layout's big screen has neighbours
- * on two sides that are nowhere near it in the list.
+ * the page rather than by their order: the focus wall's big tile has
+ * neighbours on two sides that are nowhere near it in the list.
  */
 export function neighbourScreen(
   container: HTMLElement,
@@ -128,7 +128,7 @@ export function neighbourScreen(
 ): number | undefined {
   const rects = new Map<number, DOMRect>();
   // The reel marks its on-air player too, inside the tile; the tile comes
-  // first in document order, and it is the one that sits in the layout.
+  // first in document order, and it is the one that sits on the wall.
   container.querySelectorAll<HTMLElement>('[data-screen-idx]').forEach(el => {
     const idx = Number(el.dataset.screenIdx);
     if (!Number.isNaN(idx) && !rects.has(idx))

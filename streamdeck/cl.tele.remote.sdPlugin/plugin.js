@@ -225,8 +225,8 @@ const ALIGNED = 0.02;
 
 /**
  * Where each tile goes on an area of keys: the smallest key grid its tiles
- * line up on, so a 2×2 is four keys and the big tile of "1 big + 5" takes 2×2
- * of a 3×3. A layout that lines up on none (say thirds over halves) gets the
+ * line up on, so a 2×2 is four keys and the focus wall's big tile takes a
+ * block of them. A wall that lines up on none (say thirds over halves) gets the
  * closest fit, and one with more tiles than keys, or no shapes at all, one key
  * per tile in reading order.
  *

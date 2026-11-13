@@ -24,8 +24,9 @@ const readClock = () => {
 };
 
 /**
- * The time, for a cell of the wall with no tile in it. Sized to the cell, so
- * it reads the same in a small grid and a big one. Empty on the server, whose
+ * The time, for a cell of the wall with no tile in it and as a channel of its
+ * own (see `relojesSources`). Sized to the cell, so it reads the same in a
+ * small grid and a big one. Empty on the server, whose
  * time need not match the browser's.
  */
 export function WallClock() {

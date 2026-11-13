@@ -1,8 +1,5 @@
 import { defaultGrid } from '../components/GridDisplay/initialGrid';
-import {
-  initialLayout,
-  twoSideBySideLayout
-} from '../components/Monitor/predefinedLayouts';
+import { gridConfig } from '../components/SelectSource/layoutOptions';
 import {
   DisplayConfig,
   DisplayMode,
@@ -11,21 +8,14 @@ import {
 } from '../types/Monitor';
 import type { SavedScreen } from './useSavedScreens';
 
-export const DEFAULT_GRID_SIZE = 3;
-
-export const defaultDisplayConfig: DisplayConfig = {
-  mode: DisplayMode.Layout,
-  layout: initialLayout,
-  grid: { size: DEFAULT_GRID_SIZE }
-};
-
+/** What a computer starts on: the six channels of the default grid, 3 × 2. */
 export const defaultScreen: ScreenType = {
-  config: defaultDisplayConfig,
+  config: gridConfig(3, defaultGrid.length),
   sources: defaultGrid
 };
 
 /**
- * What a phone starts on. The six-way layout is a wall of postage stamps on a
+ * What a phone starts on. The six-way grid is a wall of postage stamps on a
  * hand-held, so it opens on a single column — the first three channels of the
  * usual screen, stacked, each one wide enough to actually watch.
  */
@@ -38,7 +28,6 @@ export const MOBILE_LANDSCAPE_GRID_COLUMNS = 3;
 
 export const mobileDisplayConfig: DisplayConfig = {
   mode: DisplayMode.Grid,
-  layout: initialLayout,
   grid: { size: MOBILE_GRID_SIZE }
 };
 
@@ -69,22 +58,14 @@ export const tvSavedScreens: SavedScreen[] = [
   {
     name: '',
     screen: {
-      config: {
-        mode: DisplayMode.Layout,
-        layout: twoSideBySideLayout,
-        grid: { size: 1 }
-      },
+      config: gridConfig(2, 2),
       sources: defaultGrid.slice(0, 2)
     }
   },
   {
     name: '',
     screen: {
-      config: {
-        mode: DisplayMode.Grid,
-        layout: initialLayout,
-        grid: { size: 2, count: 4 }
-      },
+      config: gridConfig(2, 4),
       sources: defaultGrid.slice(0, 4)
     }
   }
@@ -103,7 +84,6 @@ const screenShape = ({ config, sources }: ScreenType) =>
     mode: config.mode,
     grid: config.grid.size,
     count: config.grid.count,
-    layout: config.mode === DisplayMode.Layout ? config.layout : undefined,
     sources: sources.map(node => [node.sourceSlug, node.activeSignal])
   });
 

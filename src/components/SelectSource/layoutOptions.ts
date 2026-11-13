@@ -1,10 +1,4 @@
-import { defaultDisplayConfig } from '../../hooks/defaultScreen';
 import { DisplayConfig, DisplayMode, GridSize } from '../../types/Monitor';
-import {
-  initialLayout,
-  twoBigLayout,
-  twoSideBySideLayout
-} from '../Monitor/predefinedLayouts';
 
 export type PossibleLayout = {
   name: string;
@@ -12,12 +6,12 @@ export type PossibleLayout = {
 };
 
 /**
- * A grid that fills its rows exactly. Only counts that tile the 16:9 monitor
- * without leaving a gap or squashing the pictures are offered.
+ * A grid that fills its rows exactly, so no arrangement leaves a gap. Most
+ * tile the 16:9 monitor with 16:9 pictures; side by side and 3 × 2 trade some
+ * of the picture for fewer, bigger screens.
  */
-const grid = (size: GridSize, count: number): DisplayConfig => ({
+export const gridConfig = (size: GridSize, count: number): DisplayConfig => ({
   mode: DisplayMode.Grid,
-  layout: initialLayout,
   grid: { size, count }
 });
 
@@ -27,28 +21,13 @@ const grid = (size: GridSize, count: number): DisplayConfig => ({
  * them (see `fillSlots`).
  */
 export const possibleLayouts: PossibleLayout[] = [
-  { name: 'Una pantalla', config: grid(1, 1) },
-  {
-    // Two pictures are what a TV box can play smoothly at once.
-    name: 'Lado a lado',
-    config: {
-      mode: DisplayMode.Layout,
-      layout: twoSideBySideLayout,
-      grid: { size: 1 }
-    }
-  },
-  { name: '2 × 2', config: grid(2, 4) },
-  {
-    name: 'Dos destacadas',
-    config: {
-      mode: DisplayMode.Layout,
-      layout: twoBigLayout,
-      grid: { size: 1 }
-    }
-  },
-  { name: 'Una destacada', config: defaultDisplayConfig },
-  { name: '3 × 3', config: grid(3, 9) },
-  { name: '4 × 3', config: grid(4, 12) }
+  { name: 'Una pantalla', config: gridConfig(1, 1) },
+  // Two pictures are what a TV box can play smoothly at once.
+  { name: 'Lado a lado', config: gridConfig(2, 2) },
+  { name: '2 × 2', config: gridConfig(2, 4) },
+  { name: '3 × 2', config: gridConfig(3, 6) },
+  { name: '3 × 3', config: gridConfig(3, 9) },
+  { name: '4 × 3', config: gridConfig(4, 12) }
 ];
 
 /**
@@ -60,26 +39,23 @@ export const possibleLayouts: PossibleLayout[] = [
  */
 export const gridColumnsFor = (size: number, drawn: number) => {
   const fit = possibleLayouts.find(
-    ({ config }) =>
-      config.mode === DisplayMode.Grid && (config.grid.count ?? 0) >= drawn
+    ({ config }) => (config.grid.count ?? 0) >= drawn
   );
   return Math.max(size, fit?.config.grid.size ?? 4);
 };
 
 /** How many screens an arrangement shows. */
-export const layoutScreenCount = ({ mode, layout, grid }: DisplayConfig) =>
-  mode === DisplayMode.Layout ? layout.length : (grid.count ?? 0);
+export const layoutScreenCount = ({ grid }: DisplayConfig) => grid.count ?? 0;
 
 /**
  * The dynamic YouTube layout closes the YouTube category rather than sitting in
  * this list — its tiles come from the live channels, not a fixed arrangement.
- * `grid` and `layout` are placeholders the mode never reads.
+ * `grid` is a placeholder the mode never reads.
  */
 export const YOUTUBE_LAYOUT_NAME = 'YouTube en vivo';
 export const youtubeLayoutConfig: DisplayConfig = {
   mode: DisplayMode.Youtube,
-  grid: { size: 1 },
-  layout: initialLayout
+  grid: { size: 1 }
 };
 
 /**
@@ -89,16 +65,13 @@ export const youtubeLayoutConfig: DisplayConfig = {
 export const ZAPPING_TOP_NAME = 'Lo más visto';
 export const zappingTopConfig = (isTv: boolean): DisplayConfig => ({
   mode: DisplayMode.ZappingTop,
-  layout: initialLayout,
   grid: isTv ? { size: 2, count: 4 } : { size: 3, count: 9 }
 });
 
-export const findLayoutIndex = (config: DisplayConfig) =>
-  possibleLayouts.findIndex(layout =>
-    layout.config.mode !== config.mode
-      ? false
-      : config.mode === DisplayMode.Grid
-        ? layout.config.grid.size === config.grid.size &&
-          layout.config.grid.count === config.grid.count
-        : JSON.stringify(layout.config.layout) === JSON.stringify(config.layout)
+export const findLayoutIndex = ({ mode, grid }: DisplayConfig) =>
+  possibleLayouts.findIndex(
+    layout =>
+      mode === DisplayMode.Grid &&
+      layout.config.grid.size === grid.size &&
+      layout.config.grid.count === grid.count
   );

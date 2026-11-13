@@ -1,8 +1,12 @@
 import { Dispatch, SetStateAction, useCallback, useRef } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
-import { ScreenType } from '../types/Monitor';
+import { fillSlots } from '../components/Monitor/screenSlots';
+import { possibleLayouts } from '../components/SelectSource/layoutOptions';
+import { CLOCK_SOURCE_SLUG } from '../sources/relojes';
+import { DisplayConfig, ScreenType, SourceNode } from '../types/Monitor';
 import {
   defaultSavedScreens,
+  defaultScreen,
   mobileSavedScreens,
   tvSavedScreens
 } from './defaultScreen';
@@ -40,6 +44,92 @@ function dropRetiredKeys() {
 }
 
 dropRetiredKeys();
+
+/** A screen as an older version may have stored it. */
+type StoredScreen = {
+  config: Omit<DisplayConfig, 'mode'> & {
+    mode: DisplayConfig['mode'] | 'Layout';
+    layout?: unknown[];
+  };
+  sources?: SourceNode[];
+};
+
+/** The clock before the app drew its own: a third-party page in a frame. */
+const RETIRED_CLOCK_SLUG = 'RELOJ_CHILE';
+
+/**
+ * The desktop starter as it was, a big screen and five small ones, by channel
+ * and signal. Untouched, it is still the app's placeholder rather than the
+ * user's screen, and becomes the starter as it is now.
+ */
+const RETIRED_DESKTOP_STARTER = [
+  'custom_24-horas|m3u8',
+  'custom_t13|m3u8',
+  'custom_chilevision|',
+  'custom_meganoticias|m3u8',
+  'custom_cnn-cl|m3u8',
+  `${RETIRED_CLOCK_SLUG}|`
+].join(',');
+
+const channelsOf = (sources: SourceNode[]) =>
+  sources
+    .map(node => `${node.sourceSlug ?? ''}|${node.activeSignal ?? ''}`)
+    .join(',');
+
+/**
+ * Brings a stored screen up to date. Screens from when an arrangement could
+ * also be a fixed layout — a big screen with small ones around it, two side by
+ * side — come back as the grid with as many screens: two side by side are
+ * still that, the five and six way ones a 3 × 2. The big screen is what the
+ * focus wall is for now. The layout they carried goes, so what is stored is
+ * what is drawn. The old clock becomes the app's own.
+ */
+const migrateScreen = ({ config, sources = [] }: StoredScreen): ScreenType => {
+  if (
+    config.mode === 'Layout' &&
+    channelsOf(sources) === RETIRED_DESKTOP_STARTER
+  )
+    return defaultScreen;
+  const { layout, ...rest } = config;
+  const nodes = sources.map(node =>
+    node.sourceSlug === RETIRED_CLOCK_SLUG
+      ? { ...node, sourceSlug: CLOCK_SOURCE_SLUG }
+      : node
+  );
+  if (rest.mode !== 'Layout')
+    return { config: rest as DisplayConfig, sources: nodes };
+  const slots = layout?.length ?? 0;
+  const fit =
+    possibleLayouts.find(option => (option.config.grid.count ?? 0) >= slots) ??
+    possibleLayouts[possibleLayouts.length - 1];
+  // A five way layout lands on a six screen grid: the slot it lacked is an
+  // empty one, as picking the grid by hand would give it.
+  return {
+    config: fit.config,
+    sources: fillSlots(nodes, fit.config.grid.count ?? 0)
+  };
+};
+
+/** Rewrites the stored screens once, at import time, if any is out of date. */
+function migrateSavedScreens() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.localStorage.getItem(SAVED_SCREENS_KEY);
+    if (!raw) return;
+    const stored: { name: string; screen: StoredScreen }[] = JSON.parse(raw);
+    if (!Array.isArray(stored)) return;
+    const migrated: SavedScreen[] = stored.map(entry => ({
+      ...entry,
+      screen: migrateScreen(entry.screen)
+    }));
+    const next = JSON.stringify(migrated);
+    if (next !== raw) window.localStorage.setItem(SAVED_SCREENS_KEY, next);
+  } catch {
+    // Unreadable or off: the hook falls back to the defaults on its own.
+  }
+}
+
+migrateSavedScreens();
 
 /**
  * Gives a phone (or a TV) the screens meant for it the first time the app is

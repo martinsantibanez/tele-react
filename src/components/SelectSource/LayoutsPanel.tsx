@@ -29,7 +29,7 @@ import {
   tvZappingPresetScreens,
   zappingPresetScreens
 } from '../GridDisplay/zappingPresetScreens';
-import { fillSlots } from '../Monitor/predefinedLayouts';
+import { fillSlots } from '../Monitor/screenSlots';
 import {
   findLayoutIndex,
   layoutScreenCount,

@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react';
-import {
-  isPastGrid,
-  slotCount
-} from '../components/Monitor/predefinedLayouts';
+import { isPastGrid, slotCount } from '../components/Monitor/screenSlots';
 import { LiveOnlyView } from '../context/TeleContext';
 import { DisplayConfig, DisplayMode, SourceNode } from '../types/Monitor';
-import { useYoutubeLiveSources, YOUTUBE_LIVE_SLUG_PREFIX } from './useYoutubeLiveSubs';
+import {
+  useYoutubeLiveSources,
+  YOUTUBE_LIVE_SLUG_PREFIX
+} from './useYoutubeLiveSubs';
 
 /**
  * Whether a channel is one that can go off air — and so one a tile can be set

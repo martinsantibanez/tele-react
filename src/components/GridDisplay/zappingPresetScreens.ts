@@ -1,9 +1,6 @@
 import type { SavedScreen } from '../../hooks/useSavedScreens';
-import { DisplayMode, SourceNode } from '../../types/Monitor';
-import {
-  initialLayout,
-  twoSideBySideLayout
-} from '../Monitor/predefinedLayouts';
+import { SourceNode } from '../../types/Monitor';
+import { gridConfig } from '../SelectSource/layoutOptions';
 
 /**
  * The four broadcast channels, as fresh nodes on every call: `Nacionales` and
@@ -103,19 +100,12 @@ const vistaGeneral = (): SourceNode[] => [
  *
  * The name is what the seeding upserts on, so renaming one here leaves the old
  * screen behind and adds a second one rather than replacing it.
- *
- * The grid-mode screens carry a layout as well, so switching one of them over
- * to Layout lands on the arrangement it was built for rather than a stray one.
  */
 export const zappingPresetScreens: SavedScreen[] = [
   {
     name: 'Noticias',
     screen: {
-      config: {
-        mode: DisplayMode.Layout,
-        layout: initialLayout,
-        grid: { size: 3 }
-      },
+      config: gridConfig(3, 6),
       sources: [
         {
           // 24 Horas
@@ -153,22 +143,14 @@ export const zappingPresetScreens: SavedScreen[] = [
   {
     name: 'Nacionales',
     screen: {
-      config: {
-        mode: DisplayMode.Grid,
-        layout: initialLayout,
-        grid: { size: 2, count: 4 }
-      },
+      config: gridConfig(2, 4),
       sources: canalesNacionales()
     }
   },
   {
     name: 'Vista general',
     screen: {
-      config: {
-        mode: DisplayMode.Grid,
-        layout: initialLayout,
-        grid: { size: 3, count: 9 }
-      },
+      config: gridConfig(3, 9),
       sources: vistaGeneral()
     }
   }
@@ -195,11 +177,7 @@ export const tvZappingPresetScreens: SavedScreen[] = [
   {
     name: 'Dos pantallas',
     screen: {
-      config: {
-        mode: DisplayMode.Layout,
-        layout: twoSideBySideLayout,
-        grid: { size: 1 }
-      },
+      config: gridConfig(2, 2),
       sources: [
         {
           // 24 Horas

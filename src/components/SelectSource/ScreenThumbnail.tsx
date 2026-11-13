@@ -6,7 +6,7 @@ import { hiddenTiles, useOffAir } from '../../hooks/useOffAir';
 import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { SourceType } from '../../sources';
 import { DisplayMode, ScreenType, SourceNode } from '../../types/Monitor';
-import { visibleSources } from '../Monitor/predefinedLayouts';
+import { visibleSources } from '../Monitor/screenSlots';
 import { gridColumnsFor } from './layoutOptions';
 import { SourceImage } from '../SourceImage';
 
@@ -18,10 +18,10 @@ type Props = {
 };
 
 /**
- * Miniature preview of a saved screen: it reproduces the layout geometry (the
- * same 12x9 grid the real Layout uses, or the NxN grid) and drops each source's
- * logo into its slot, so the thumbnail reflects both the arrangement and which
- * channels sit where — instead of a static picture of an empty layout.
+ * Miniature preview of a saved screen: it reproduces the grid the wall is
+ * drawn with and drops each source's logo into its slot, so the thumbnail
+ * reflects both the arrangement and which channels sit where — instead of a
+ * static picture of an empty grid.
  */
 export function ScreenThumbnail({
   screen,
@@ -55,7 +55,7 @@ export function ScreenThumbnail({
     >
       {config.mode === DisplayMode.Youtube ? (
         // The tiles are derived live at render time, so a saved snapshot has no
-        // meaningful arrangement to preview — show what the layout is instead.
+        // meaningful arrangement to preview — show what the wall is instead.
         <div className="flex h-full w-full items-center justify-center bg-gray-900">
           <YoutubeIcon size={40} className="text-red-500" />
         </div>
@@ -68,16 +68,10 @@ export function ScreenThumbnail({
         // One channel with a sliver of the band above and below it: the shape
         // of the reel, and the channel it was left on.
         <ZappingPreview node={sources[0]} resolve={resolve} />
-      ) : config.mode === DisplayMode.Grid ? (
+      ) : (
         <GridPreview
           sources={drawn}
           size={gridColumnsFor(config.grid.size, drawn.length)}
-          resolve={resolve}
-        />
-      ) : (
-        <LayoutPreview
-          layout={config.layout}
-          sources={sources}
           resolve={resolve}
         />
       )}
@@ -129,36 +123,6 @@ function GridPreview({
       {sources.map((node, idx) => (
         <Slot key={idx} source={resolve(node)} />
       ))}
-    </div>
-  );
-}
-
-function LayoutPreview({
-  layout,
-  sources,
-  resolve
-}: {
-  layout: ScreenType['config']['layout'];
-  sources: SourceNode[];
-  resolve: SlotResolver;
-}) {
-  return (
-    <div className="grid h-full w-full grid-cols-12 grid-rows-9 gap-px">
-      {layout.map((col, idx) => {
-        const node = sources[idx];
-        if (!node) return null;
-        return (
-          <div
-            key={idx}
-            style={{
-              gridColumn: col.cols ? `span ${col.cols}` : undefined,
-              gridRow: col.rows ? `span ${col.rows}` : undefined
-            }}
-          >
-            <Slot source={resolve(node)} />
-          </div>
-        );
-      })}
     </div>
   );
 }

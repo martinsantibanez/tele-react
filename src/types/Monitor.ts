@@ -22,26 +22,7 @@ export type SourceNode = {
   liveOnly?: boolean;
 };
 
-export type ColType = {
-  size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-  rows?: RowType[];
-  node?: { idx: number };
-};
-
-export type RowType = { cols?: ColType[] };
-
-export type ColValues =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
-export type RowValues = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-
-export type LayoutType = {
-  cols?: ColValues;
-  rows?: RowValues;
-  colStart?: ColValues;
-}[];
-
 export enum DisplayMode {
-  Layout = 'Layout',
   Grid = 'Grid',
   // Auto-tiles every currently-live YouTube subscription; the tiles are derived
   // from the live channels, not from the saved grid, and the count follows how
@@ -75,7 +56,6 @@ export type GridType = {
 export type DisplayConfig = {
   mode: DisplayMode;
   grid: GridType;
-  layout: LayoutType;
 };
 
 export type ScreenType = {
