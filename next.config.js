@@ -1,14 +1,6 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js'
-      }
-    }
-  },
   // The OAuth consent screen's homepage: a static file, so its source carries
   // the app's description and the privacy link (see public/about.html).
   async rewrites() {
