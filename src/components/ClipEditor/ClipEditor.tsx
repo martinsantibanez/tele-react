@@ -31,6 +31,7 @@ import {
   exportClip,
   exportRecordingClip
 } from '@/lib/clip';
+import { DragArea, useDrag } from '@/src/hooks/useDrag';
 import { HlsSnapshot, liveLead, snapshotToLive } from '@/lib/hlsSnapshot';
 import { heldRange, topPlaylist, vhsOf } from '@/lib/vhs';
 import {
@@ -171,7 +172,15 @@ const download = (url: string, name: string) => {
  * It plays the stream in a player of its own; the tile stays as it was.
  * While open it takes the keyboard to itself.
  */
-export default function ClipEditor({
+export default function ClipEditor(props: Props) {
+  return (
+    <DragArea>
+      <Editor {...props} />
+    </DragArea>
+  );
+}
+
+function Editor({
   title,
   src,
   rewind,
@@ -618,26 +627,6 @@ export default function ClipEditor({
     setLayout(next);
     // The region that has just appeared is the one to frame.
     if (next === 'split') setChosen(0);
-  };
-
-  // The divider between the panes, dragged up and down the preview.
-  const dragSplit = (e: React.PointerEvent<HTMLElement>) => {
-    e.preventDefault();
-    const rect = e.currentTarget.parentElement!.getBoundingClientRect();
-    const y0 = e.clientY;
-    const at0 = splitAt;
-    const move = (ev: PointerEvent) =>
-      setSplitAt(
-        clamp(at0 + (ev.clientY - y0) / rect.height, PANE_MIN, 1 - PANE_MIN)
-      );
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      window.removeEventListener('pointercancel', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
   };
 
   const toClock = (t: number) => t + clockOffset;
@@ -1180,19 +1169,11 @@ export default function ClipEditor({
                           }}
                         />
                       ))}
-                      <div
-                        onPointerDown={dragSplit}
-                        role="separator"
-                        aria-label="División entre las dos imágenes"
-                        className="absolute inset-x-0 flex h-6 -translate-y-1/2 cursor-row-resize touch-none items-center justify-center"
-                        style={{
-                          top: `${(panes[1].top / size.height) * 100}%`
-                        }}
-                      >
-                        <span className="flex h-4 w-12 items-center justify-center rounded-full border border-black/30 bg-white text-black/60 shadow">
-                          <GripHorizontal size={14} />
-                        </span>
-                      </div>
+                      <SplitHandle
+                        at={splitAt}
+                        top={`${(panes[1].top / size.height) * 100}%`}
+                        onChange={setSplitAt}
+                      />
                     </div>
                   )}
                 </div>
@@ -1249,6 +1230,47 @@ export default function ClipEditor({
       <footer className="flex flex-col gap-2 border-t border-white/10 bg-neutral-950 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 lg:hidden">
         {exportPanel}
       </footer>
+    </div>
+  );
+}
+
+/** The divider between the panes, dragged up and down the preview. */
+function SplitHandle({
+  at,
+  top,
+  onChange
+}: {
+  /** Where the panes divide, as a fraction of the preview's height. */
+  at: number;
+  /** Where that is drawn, as a CSS length. */
+  top: string;
+  onChange: (at: number) => void;
+}) {
+  const node = useRef<HTMLDivElement>(null);
+  const drag = useDrag(() => {
+    const rect = node.current?.parentElement?.getBoundingClientRect();
+    if (!rect) return;
+    const at0 = at;
+    return {
+      move: ({ dy }) =>
+        onChange(clamp(at0 + dy / rect.height, PANE_MIN, 1 - PANE_MIN))
+    };
+  });
+  return (
+    <div
+      ref={el => {
+        node.current = el;
+        drag.ref(el);
+      }}
+      onPointerDown={drag.onPointerDown}
+      role="separator"
+      aria-label="División entre las dos imágenes"
+      className="absolute inset-x-0 flex h-6 -translate-y-1/2 cursor-row-resize touch-none items-center justify-center"
+      style={{ top }}
+    >
+      <span className="flex h-4 w-12 items-center justify-center rounded-full border border-black/30 bg-white text-black/60 shadow">
+        <GripHorizontal size={14} />
+      </span>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   useRef,
   useState
 } from 'react';
+import { Follow, Press, useDrag } from '@/src/hooks/useDrag';
 
 export type Range = { start: number; end: number };
 
@@ -93,38 +94,32 @@ export const formatDuration = (s: number) => {
 };
 
 /**
- * Follows a press on `el` until it is let go, as times across `view`.
- * Returns the time pressed.
+ * Follows a press on `el` until it is let go, as times across `view`. `from`
+ * is the time pressed; a press that never went further than a few pixels ends
+ * unmoved, a click.
  */
 const followPress = (
-  e: React.PointerEvent,
   el: HTMLElement,
   view: Range,
+  press: Press,
   onMove: (t: number) => void,
   onEnd?: (t: number, moved: boolean) => void
-) => {
-  e.preventDefault();
-  e.stopPropagation();
+): { from: number; follow: Follow } => {
   const rect = el.getBoundingClientRect();
   const toTime = (x: number) =>
     view.start +
     clamp((x - rect.left) / rect.width, 0, 1) * (view.end - view.start);
-  const startX = e.clientX;
   let moved = false;
-  const move = (ev: PointerEvent) => {
-    if (Math.abs(ev.clientX - startX) > 3) moved = true;
-    if (moved) onMove(toTime(ev.clientX));
+  return {
+    from: toTime(press.x),
+    follow: {
+      move: ({ x, dx }) => {
+        if (Math.abs(dx) > 3) moved = true;
+        if (moved) onMove(toTime(x));
+      },
+      end: ({ x }) => onEnd?.(toTime(x), moved)
+    }
   };
-  const up = (ev: PointerEvent) => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', up);
-    window.removeEventListener('pointercancel', up);
-    onEnd?.(toTime(ev.clientX), moved);
-  };
-  window.addEventListener('pointermove', move);
-  window.addEventListener('pointerup', up);
-  window.addEventListener('pointercancel', up);
-  return toTime(e.clientX);
 };
 
 /** Tick marks on the wall clock, about `count` of them across `view`. */
@@ -303,12 +298,12 @@ export function ClipTimeline({
     return () => offs.forEach(off => off());
   }, []);
 
-  const pressOverview = (e: React.PointerEvent) => {
+  const overviewDrag = useDrag(press => {
     if (!overviewRef.current) return;
-    const from = followPress(
-      e,
+    const { from, follow } = followPress(
       overviewRef.current,
       overview,
+      press,
       t => setDragging({ start: Math.min(from, t), end: Math.max(from, t) }),
       (t, moved) => {
         setDragging(undefined);
@@ -318,55 +313,69 @@ export function ClipTimeline({
         onSeek(picked.start);
       }
     );
-  };
+    return follow;
+  });
 
-  const pressSelection = (e: React.PointerEvent) => {
-    if (!overviewRef.current) return;
-    const length = sel.end - sel.start;
-    const startSel = sel;
-    const from = followPress(
-      e,
-      overviewRef.current,
-      overview,
-      t => {
-        const start = clamp(
-          startSel.start + t - from,
-          stream.start,
-          stream.end - length
-        );
-        onSel({ start, end: start + length });
-      },
-      (_, moved) => {
-        if (!moved) onSeek(startSel.start);
-      }
-    );
-  };
+  // Not while a new one is being picked over it: that drag is the overview's.
+  const selectionDrag = useDrag(
+    press => {
+      if (!overviewRef.current) return;
+      const length = sel.end - sel.start;
+      const startSel = sel;
+      const { from, follow } = followPress(
+        overviewRef.current,
+        overview,
+        press,
+        t => {
+          const start = clamp(
+            startSel.start + t - from,
+            stream.start,
+            stream.end - length
+          );
+          onSel({ start, end: start + length });
+        },
+        (_, moved) => {
+          if (!moved) onSeek(startSel.start);
+        }
+      );
+      return follow;
+    },
+    { disabled: !!dragging }
+  );
 
-  const pressDetail = (e: React.PointerEvent) => {
+  const detailDrag = useDrag(press => {
     if (!detailRef.current) return;
     const view = detail;
     setHeld(view);
-    onSeek(
-      followPress(e, detailRef.current, view, onSeek, () => setHeld(undefined))
-    );
-  };
-
-  const pressEdge = (edge: 'start' | 'end', e: React.PointerEvent) => {
-    if (!detailRef.current) return;
-    const view = detail;
-    setHeld(view);
-    const startSel = sel;
-    followPress(
-      e,
+    const { from, follow } = followPress(
       detailRef.current,
       view,
+      press,
+      onSeek,
+      () => setHeld(undefined)
+    );
+    onSeek(from);
+    return follow;
+  });
+
+  const pressEdge = (edge: 'start' | 'end', press: Press) => {
+    if (!detailRef.current) return;
+    const view = detail;
+    setHeld(view);
+    const startSel = sel;
+    return followPress(
+      detailRef.current,
+      view,
+      press,
       t => {
         onSel({ ...startSel, [edge]: t }, edge);
         onSeek(t);
       },
       () => setHeld(undefined)
-    );
+    ).follow;
   };
+  const startDrag = useDrag(press => pressEdge('start', press));
+  const endDrag = useDrag(press => pressEdge('end', press));
 
   const shown = dragging ?? sel;
   const playheadInDetail = time >= detail.start && time <= detail.end;
@@ -395,15 +404,18 @@ export function ClipTimeline({
       <div className="flex items-start gap-1.5">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div
-            ref={overviewRef}
-            onPointerDown={pressOverview}
+            ref={el => {
+              overviewRef.current = el;
+              overviewDrag.ref(el);
+            }}
+            onPointerDown={overviewDrag.onPointerDown}
             className="relative h-9 cursor-crosshair touch-none overflow-hidden rounded bg-white/5 pointer-coarse:h-11"
             title="Arrastra para elegir los minutos del clip"
           >
             <Ticks view={overview} toClock={toClock} count={8} />
             {shown.end >= overview.start && shown.start <= overview.end && (
               <div
-                onPointerDown={dragging ? undefined : pressSelection}
+                {...selectionDrag}
                 className={`absolute top-0 bottom-0 min-w-1.5 border-x-2 border-amber-400 bg-amber-400/35 ${
                   dragging ? '' : 'cursor-grab active:cursor-grabbing'
                 }`}
@@ -432,8 +444,11 @@ export function ClipTimeline({
       <div className="flex items-start gap-1.5">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div
-            ref={detailRef}
-            onPointerDown={pressDetail}
+            ref={el => {
+              detailRef.current = el;
+              detailDrag.ref(el);
+            }}
+            onPointerDown={detailDrag.onPointerDown}
             className="relative h-16 cursor-text touch-none rounded bg-white/5"
           >
             <div className="absolute inset-0 overflow-hidden rounded">
@@ -448,13 +463,10 @@ export function ClipTimeline({
                 }}
               >
                 {startShown && (
-                  <Handle
-                    side="start"
-                    onPointerDown={e => pressEdge('start', e)}
-                  />
+                  <Handle side="start" drag={startDrag} />
                 )}
                 {endShown && (
-                  <Handle side="end" onPointerDown={e => pressEdge('end', e)} />
+                  <Handle side="end" drag={endDrag} />
                 )}
               </div>
             )}
@@ -502,23 +514,34 @@ function ViewBar({
   const ref = useRef<HTMLDivElement>(null);
   const zoomedIn = narrower(view, bounds);
 
-  const press = (e: React.PointerEvent) => {
-    if (!ref.current || !zoomedIn) return;
-    const span = spanOf(view);
-    let base = view.start;
-    let from = 0;
-    from = followPress(e, ref.current, bounds, t => onPan(base + t - from));
-    // Pressed off the part in view, it is brought there first.
-    if (from < view.start || from > view.end) {
-      base = from - span / 2;
-      onPan(base);
-    }
-  };
+  const drag = useDrag(
+    press => {
+      if (!ref.current) return;
+      const span = spanOf(view);
+      let base = view.start;
+      const { from, follow } = followPress(
+        ref.current,
+        bounds,
+        press,
+        t => onPan(base + t - from)
+      );
+      // Pressed off the part in view, it is brought there first.
+      if (from < view.start || from > view.end) {
+        base = from - span / 2;
+        onPan(base);
+      }
+      return follow;
+    },
+    { disabled: !zoomedIn }
+  );
 
   return (
     <div
-      ref={ref}
-      onPointerDown={press}
+      ref={el => {
+        ref.current = el;
+        drag.ref(el);
+      }}
+      onPointerDown={drag.onPointerDown}
       className={`relative h-1.5 touch-none overflow-hidden rounded-full bg-white/10 pointer-coarse:h-3 ${
         zoomedIn ? 'cursor-pointer' : 'invisible'
       }`}
@@ -615,14 +638,14 @@ function ZoomButton({
 
 function Handle({
   side,
-  onPointerDown
+  drag
 }: {
   side: 'start' | 'end';
-  onPointerDown: (e: React.PointerEvent) => void;
+  drag: ReturnType<typeof useDrag>;
 }) {
   return (
     <div
-      onPointerDown={onPointerDown}
+      {...drag}
       className={`absolute -top-0.5 -bottom-0.5 flex w-3.5 cursor-ew-resize items-center justify-center bg-amber-400 before:absolute before:inset-y-0 before:-inset-x-2 before:content-[''] ${
         side === 'start' ? '-left-3.5 rounded-l-md' : '-right-3.5 rounded-r-md'
       }`}
