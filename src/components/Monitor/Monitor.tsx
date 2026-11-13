@@ -115,9 +115,17 @@ export const Monitor = () => {
   const revealSource = useRevealSource();
   const [, setActiveCategory] = useActiveCategory();
   const resolveSource = useResolveSource();
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [savedScreens] = useSavedScreens();
   const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
+  // Kept as the saved screen it was turned on for, like the focus wall below.
+  // Another screen is other channels: switching to one from fullscreen — the
+  // deck's screen keys, the Pantallas tab beside the picture — would otherwise
+  // fullscreen whatever tile sits at the same place there, and wake its reel
+  // on a tile nobody asked to watch or zap with.
+  const [fullscreenScreen, setFullscreenScreen] = useState<number>();
+  const isFullscreen = fullscreenScreen === activeScreenIndex;
+  const setIsFullscreen = (on: boolean) =>
+    setFullscreenScreen(on ? activeScreenIndex : undefined);
   const screenAreaRef = useRef<HTMLDivElement>(null);
   useYoutubeLoginScreen();
 
@@ -373,13 +381,11 @@ export const Monitor = () => {
   };
 
   const handleSourceChange = (source: SourceType) => {
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      if (sources.length < editingSourceIdx + 1) {
-        for (let i = sources.length; i <= editingSourceIdx; i++) {
-          sources[i] = { uuid: uuid() };
-        }
-      }
+    setSelectedSources(current => {
+      if (!current) return current;
+      // Topped up to reach the tile on a copy: the stored list is state, and
+      // writing into it would change the screen behind React's back.
+      const sources = fillSlots(current, editingSourceIdx + 1);
       return sources.map((src, idx) => {
         // A signal key only means something for the source it came from, so a
         // new channel starts on its own default.
@@ -475,6 +481,8 @@ export const Monitor = () => {
   // channel picked lands on it.
   const addTile = () => {
     const at = gridCount;
+    // Everything after it moves along one, the tile marked for a swap too.
+    setSwapSourceIdx(undefined);
     setSelectedSources(sources => [
       ...sources.slice(0, at),
       { sourceSlug: PLACEHOLDER_SOURCE_SLUG, uuid: uuid() },
@@ -496,6 +504,10 @@ export const Monitor = () => {
     setSwapSourceIdx(undefined);
     setIsFullscreen(false);
     setSelectedSources(sources => sources.filter((_, i) => i !== idx));
+    // The tiles after it move back one, and the selection goes with its own
+    // channel: left where it was, it would land on the next one along, and
+    // the next channel picked would replace that one.
+    if (idx < editingSourceIdx) setEditingSourceIdx(editingSourceIdx - 1);
     if (!isExtra && idx < gridCount)
       setDisplayConfig(cfg => ({
         ...cfg,

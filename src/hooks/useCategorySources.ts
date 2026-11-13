@@ -14,7 +14,6 @@ import { useShowTvCatalog } from './useSetupWizard';
 import { useSourceCatalog } from './useSourceCatalog';
 import { useSpotifyTabSections } from './useSpotifyLibrary';
 import { useTwitchFollowedSources } from './useTwitchFollowedSources';
-import { useYoutubeAuth } from './useYoutubeAuth';
 import { useYoutubeLiveSources } from './useYoutubeLiveSubs';
 import { zappingSlug, useZappingSources } from './useZappingChannels';
 import { useZappingToken } from './useZappingConfig';
@@ -63,7 +62,6 @@ export function useAllCategorySources(): CategorySources {
   const { topChannels } = useZappingNowPlaying();
   const [zappingToken] = useZappingToken();
   const youtubeSources = useYoutubeLiveSources();
-  const { isConnected: youtubeConnected } = useYoutubeAuth();
   const spotifySections = useSpotifyTabSections();
   const { sources: twitchSources } = useTwitchFollowedSources();
   const { favourites } = useFavourites();
@@ -106,7 +104,8 @@ export function useAllCategorySources(): CategorySources {
     () => ({
       tv: showTv ? tv : [],
       zapping,
-      youtube: youtubeConnected ? youtubeSources : [],
+      // Already empty while signed out (see `useYoutubeLiveSubs`).
+      youtube: youtubeSources,
       spotify,
       twitch: twitchSources,
       favourites: favouriteSources,
@@ -119,7 +118,6 @@ export function useAllCategorySources(): CategorySources {
       tv,
       showTv,
       zapping,
-      youtubeConnected,
       youtubeSources,
       spotify,
       twitchSources,
