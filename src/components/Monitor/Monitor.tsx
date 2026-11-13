@@ -115,9 +115,17 @@ export const Monitor = () => {
   const revealSource = useRevealSource();
   const [, setActiveCategory] = useActiveCategory();
   const resolveSource = useResolveSource();
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [savedScreens] = useSavedScreens();
   const [activeScreenIndex, setActiveScreenIndex] = useActiveScreenIndex();
+  // Kept as the saved screen it was turned on for, like the focus wall below.
+  // Another screen is other channels: switching to one from fullscreen — the
+  // deck's screen keys, the Pantallas tab beside the picture — would otherwise
+  // fullscreen whatever tile sits at the same place there, and wake its reel
+  // on a tile nobody asked to watch or zap with.
+  const [fullscreenScreen, setFullscreenScreen] = useState<number>();
+  const isFullscreen = fullscreenScreen === activeScreenIndex;
+  const setIsFullscreen = (on: boolean) =>
+    setFullscreenScreen(on ? activeScreenIndex : undefined);
   const screenAreaRef = useRef<HTMLDivElement>(null);
   useYoutubeLoginScreen();
 
@@ -354,6 +362,18 @@ export const Monitor = () => {
     setIsEditing(false);
     setIsFullscreen(true);
   };
+  /**
+   * Steps the view a level in — the grid to the focus wall, then fullscreen —
+   * and from fullscreen goes all the way back to the grid. Where there is no
+   * focus wall it is fullscreen on and off.
+   */
+  const cycleView = () => {
+    if (isFullscreen) {
+      setIsFocused(false);
+      leaveFullscreen();
+    } else if (canFocus && !focusActive) setIsFocused(true);
+    else toggleFullscreen();
+  };
 
   const togglePicker = () => {
     if (!isEditing && !pickerBesideFullscreen) setIsFullscreen(false);
@@ -361,13 +381,11 @@ export const Monitor = () => {
   };
 
   const handleSourceChange = (source: SourceType) => {
-    setSelectedSources(sources => {
-      if (!sources) return sources;
-      if (sources.length < editingSourceIdx + 1) {
-        for (let i = sources.length; i <= editingSourceIdx; i++) {
-          sources[i] = { uuid: uuid() };
-        }
-      }
+    setSelectedSources(current => {
+      if (!current) return current;
+      // Topped up to reach the tile on a copy: the stored list is state, and
+      // writing into it would change the screen behind React's back.
+      const sources = fillSlots(current, editingSourceIdx + 1);
       return sources.map((src, idx) => {
         // A signal key only means something for the source it came from, so a
         // new channel starts on its own default.
@@ -463,6 +481,8 @@ export const Monitor = () => {
   // channel picked lands on it.
   const addTile = () => {
     const at = gridCount;
+    // Everything after it moves along one, the tile marked for a swap too.
+    setSwapSourceIdx(undefined);
     setSelectedSources(sources => [
       ...sources.slice(0, at),
       { sourceSlug: PLACEHOLDER_SOURCE_SLUG, uuid: uuid() },
@@ -484,6 +504,10 @@ export const Monitor = () => {
     setSwapSourceIdx(undefined);
     setIsFullscreen(false);
     setSelectedSources(sources => sources.filter((_, i) => i !== idx));
+    // The tiles after it move back one, and the selection goes with its own
+    // channel: left where it was, it would land on the next one along, and
+    // the next channel picked would replace that one.
+    if (idx < editingSourceIdx) setEditingSourceIdx(editingSourceIdx - 1);
     if (!isExtra && idx < gridCount)
       setDisplayConfig(cfg => ({
         ...cfg,
@@ -563,12 +587,16 @@ export const Monitor = () => {
       '1,2,3,4,5,6,7,8,9',
       'shift+1,shift+2,shift+3,shift+4,shift+5,shift+6,shift+7,shift+8,shift+9'
     ].join(','),
+    // Counted along the tiles on the wall, as their numbers and the deck's
+    // keys are: an off-air tile left out takes no key.
     e => {
-      const idx = getIndexFromKeyEvent(e);
+      const at = getIndexFromKeyEvent(e);
+      const idx = at === undefined ? undefined : drawnTiles[at];
       if (idx === undefined) return;
       pickScreen(idx);
     },
     [
+      drawnTiles,
       canFocus,
       isFullscreen,
       isEditing,
@@ -580,7 +608,10 @@ export const Monitor = () => {
       revealSource
     ]
   );
-  useHotkeys('g', () => toggleFullscreen(), [
+  useHotkeys('g', () => cycleView(), [
+    canFocus,
+    focusActive,
+    activeScreenIndex,
     isLiveMode,
     isFullscreen,
     isEditing,
@@ -772,14 +803,10 @@ export const Monitor = () => {
         const idx = drawnTiles[command.index];
         if (idx === undefined) return;
         if (idx !== editingSourceIdx) return pickScreen(idx);
-        // Pressing the tile that is heard again steps it up a level: the grid
-        // to the focus wall, then fullscreen. From fullscreen it goes all the
-        // way back to the grid, as the deck has no Back key of its own.
-        if (isFullscreen) {
-          setIsFocused(false);
-          leaveFullscreen();
-        } else if (canFocus && !focusActive) setIsFocused(true);
-        else if (hasGridLevel) toggleFullscreen();
+        // Pressing the tile that is heard again steps it up a level, and from
+        // fullscreen all the way back to the grid, as the deck has no Back
+        // key of its own.
+        if (hasGridLevel || isFullscreen) cycleView();
       } else toggleMute();
     }
   });
@@ -820,7 +847,7 @@ export const Monitor = () => {
             <>
               <Shortcut
                 keys="Enter"
-                label={`Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`}
+                label={`Intercambiar con ${getSourceShortcutLabel(drawnTiles.indexOf(swapSourceIdx))}`}
               />
               <Shortcut keys="Esc" label="Cancelar intercambio" />
             </>
@@ -845,7 +872,7 @@ export const Monitor = () => {
             label={
               swapSourceIdx === undefined
                 ? 'Ver pantallas'
-                : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
+                : `Intercambiar con ${getSourceShortcutLabel(drawnTiles.indexOf(swapSourceIdx))}`
             }
           />
           {canSwap && swapSourceIdx === undefined && (
@@ -886,7 +913,9 @@ export const Monitor = () => {
         label={
           isFullscreen
             ? 'Salir de pantalla completa (G)'
-            : 'Pantalla completa (G)'
+            : canFocus && !focusActive
+              ? 'Pantalla completa'
+              : 'Pantalla completa (G)'
         }
       >
         {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
@@ -897,7 +926,7 @@ export const Monitor = () => {
           label={
             focusActive
               ? 'Volver a la grilla (Esc)'
-              : 'Destacar pantalla (Enter)'
+              : 'Destacar pantalla (Enter / G)'
           }
         >
           {focusActive ? <LayoutGrid size={20} /> : <PanelsTopLeft size={20} />}

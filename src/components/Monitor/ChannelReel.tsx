@@ -24,6 +24,7 @@ import { useResolveSource } from '../../hooks/useSourceCatalog';
 import { useMediaQuery } from '../../hooks/useViewport';
 import { useZappingBand, useZappingCursor } from '../../hooks/useZappingCursor';
 import { SourceType } from '../../sources';
+import { placeHolderSources } from '../../sources/placeholder';
 import { SourceNode } from '../../types/Monitor';
 import { SourceImage } from '../SourceImage';
 import { SourceOutput } from './SourceOutput/SourceOutput';
@@ -611,9 +612,19 @@ export function ChannelReel({
   const rememberedIndex = indexBySlug.get(cursors[band] ?? '') ?? -1;
   const index = onAirIndex >= 0 ? onAirIndex : Math.max(rememberedIndex, 0);
 
-  const current = sources[index];
-  const previous = sources[index - 1];
-  const next = sources[index + 1];
+  /** Whether the screen holds a channel at all, rather than an empty slot. */
+  const holdsChannel = !!ownSource && !(ownSource.slug in placeHolderSources);
+  /**
+   * Zapping a screen whose channel the band does not carry: one from another
+   * catalogue, or one the band has just dropped — a live that ended, a
+   * catalogue that went briefly empty. The channel stays on air as it is; the
+   * band is only where the next step goes, at the place it was left.
+   */
+  const foreign = active && onAirIndex < 0 && holdsChannel;
+
+  const current = foreign ? ownSource : sources[index];
+  const previous = foreign ? undefined : sources[index - 1];
+  const next = foreign ? sources[index] : sources[index + 1];
 
   // Held in a ref so the effect below is driven by the channel it should be
   // putting on air, and not by the callback being rebuilt on every render of
@@ -626,16 +637,32 @@ export function ChannelReel({
     selectRef.current?.(source);
   }, []);
 
-  // Switching bands is what brings this about, and so is a reel waking up on a
-  // tile that holds a channel from another catalogue: either way the screen is
-  // left holding something foreign to the band, so the band's remembered
-  // channel goes on air. Guarded on exactly that, which stops being true the
-  // moment this has done its job.
+  // Switching bands while zapping puts the new band's remembered channel on
+  // air, and so does arriving at an empty slot. Nothing else does: a reel
+  // waking up on a channel from another catalogue, or a band dropping the
+  // channel on air from under it — a live ending, YouTube's catalogue emptying
+  // while its sign-in is refreshed — leaves the screen as it is (see
+  // `foreign`). Overwriting it there is putting a channel on a tile nobody
+  // touched. The tab is compared while zapping only, so a reel waking up on
+  // a tab picked before is not a switch either.
+  const zappedCategory = useRef<SelectorCategories | undefined>(undefined);
   useEffect(() => {
+    const switched =
+      zappedCategory.current !== undefined &&
+      zappedCategory.current !== storedCategory;
+    zappedCategory.current = active ? storedCategory : undefined;
     if (!active || onAirIndex >= 0) return;
+    if (holdsChannel && !switched) return;
     const target = sources[Math.max(rememberedIndex, 0)];
     if (target) selectRef.current?.(target);
-  }, [active, onAirIndex, rememberedIndex, sources]);
+  }, [
+    active,
+    storedCategory,
+    onAirIndex,
+    rememberedIndex,
+    sources,
+    holdsChannel
+  ]);
 
   // Wherever the channel on air came from — a swipe, a key, or the picker
   // pointing the screen at it from outside the reel — that is where this band
@@ -651,11 +678,13 @@ export function ChannelReel({
   const step = useCallback(
     (delta: number) => {
       // Stops at the ends rather than wrapping, like every other list here:
-      // holding a key down should settle on the last channel, not cycle.
-      const target = sources[index + delta];
+      // holding a key down should settle on the last channel, not cycle. From
+      // a channel the band does not carry, either way steps into the band, at
+      // the place it was left.
+      const target = sources[onAirIndex < 0 ? index : index + delta];
       if (target) select(target);
     },
-    [sources, index, select]
+    [sources, index, onAirIndex, select]
   );
 
   /** Moves to the next catalogue with anything in it. */
@@ -817,13 +846,12 @@ export function ChannelReel({
   );
   // A remote's channel keys, in the same direction as the arrows. On a tile
   // that is not being zapped with they wake it first: a tile holding a channel
-  // from another catalogue then lands on the band's own, as it would arriving
-  // fullscreen, and the press after that is the one that steps.
+  // from another catalogue then lands on the band's own (see `step`), and the
+  // press after that is the one that steps.
   const channelKey = (delta: number) => {
     if (!active) {
       if (!sources.length) return;
       setWoken(true);
-      if (onAirIndex < 0) return;
     }
     step(delta);
     if (woken) showBanner();
@@ -887,7 +915,7 @@ export function ChannelReel({
    * reload.
    */
   const stageEntries = useMemo(() => {
-    if (!active)
+    if (!active || foreign)
       return ownSource
         ? [
             {
@@ -912,7 +940,7 @@ export function ChannelReel({
         }
       ];
     });
-  }, [active, ownSource, mounted, indexBySlug, sources, index]);
+  }, [active, foreign, ownSource, mounted, indexBySlug, sources, index]);
 
   // ── Drawing ───────────────────────────────────────────────────────────────
 
@@ -978,8 +1006,9 @@ export function ChannelReel({
   );
 
   // Only while it is being walked: an inert reel with nothing in the band is
-  // still showing its own channel perfectly well.
-  if (active && !sources.length)
+  // still showing its own channel perfectly well, and so is one holding a
+  // channel the band does not carry.
+  if (active && !sources.length && !foreign)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-6 text-center text-gray-400">
         <span>No hay canales en {categoryLabels[band]}</span>
@@ -1061,8 +1090,9 @@ export function ChannelReel({
           the banner or the strips above and below. */}
       {active && (
         <span className="sr-only" aria-live="polite">
-          {categoryLabels[band]}: {current?.name} ({index + 1} de{' '}
-          {sources.length})
+          {foreign
+            ? current?.name
+            : `${categoryLabels[band]}: ${current?.name} (${index + 1} de ${sources.length})`}
         </span>
       )}
     </div>

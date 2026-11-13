@@ -48,10 +48,16 @@ type Props = {
   /** Takes the tile off the grid, from the same pill. */
   onRemove?: () => void;
   /**
-   * Written in the corner, as on the tile's Stream Deck key: a preview on
-   * the focus wall is a picture too small to tell apart by its logo alone.
+   * Written in the corner, as on the tile's Stream Deck key, so a tile can be
+   * told apart and picked without opening the picker — a preview on the focus
+   * wall is a picture too small to tell apart by its logo alone.
    */
   number?: number;
+  /**
+   * The tile's place among those drawn, which its shortcut key counts: off
+   * air tiles left out of the wall take none. Its slot, where none are.
+   */
+  position?: number;
 };
 
 /** The picker sidebar's width, in pixels, on a desktop or a TV. */
@@ -73,7 +79,8 @@ export function MonitorSource({
   liveOnly,
   onToggleLiveOnly,
   onRemove,
-  number
+  number,
+  position = idx
 }: Props) {
   const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
     useTeleContext();
@@ -263,7 +270,7 @@ export function MonitorSource({
             type="button"
             onClick={handleChangeClick}
             disabled={!onChangeClick}
-            aria-label={`Seleccionar pantalla ${getSourceShortcutLabel(idx)}`}
+            aria-label={`Seleccionar pantalla ${getSourceShortcutLabel(position)}`}
             aria-pressed={isBeingEdited}
             className="absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5"
           >
@@ -272,7 +279,7 @@ export function MonitorSource({
                 isBeingEdited ? 'bg-white text-black' : 'bg-black/70 text-white'
               }`}
             >
-              {getSourceShortcutLabel(idx)}
+              {getSourceShortcutLabel(position)}
             </span>
             {!!source && <SourceLogo source={source} />}
           </button>

@@ -73,6 +73,7 @@ export function GridDisplay({
         if (hidden?.has(idx))
           return <div key={`${node.uuid}`} className="hidden" />;
         const rect = rects?.get(idx);
+        const position = drawn.indexOf(idx);
         return (
           <div
             key={`${node.uuid}`}
@@ -102,14 +103,19 @@ export function GridDisplay({
                   : undefined
               }
               onRemove={onRemove ? () => onRemove(idx) : undefined}
+              // Every tile on the wall but the one in the middle of it, which
+              // has its own cell naming it, and the one gone fullscreen.
+              position={position}
               number={
-                focus && idx !== focusIdx ? drawn.indexOf(idx) + 1 : undefined
+                idx === focusIdx || idx === fullscreenIdx
+                  ? undefined
+                  : position + 1
               }
             />
           </div>
         );
       })}
-      {/* The enlarged tile's own cell, kept for it: it says where it went,
+      {/* The enlarged tile's own cell, kept for it: it names what went there,
           and the previews around it stay where they are. */}
       {focus && (
         <div key="focus-home" className={glide} style={rectStyle(focus.home)}>
@@ -121,9 +127,11 @@ export function GridDisplay({
                 fallback={focusSource.titleIcons}
               />
             )}
-            <span className="max-w-full truncate text-xs text-white/60">
-              {drawn.indexOf(focusIdx ?? -1) + 1} · En grande
-            </span>
+            {!!focusSource?.name && (
+              <span className="max-w-full truncate text-xs text-white/60">
+                {focusSource.name}
+              </span>
+            )}
           </div>
         </div>
       )}

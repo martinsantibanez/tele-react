@@ -20,6 +20,9 @@ const RETRY_MS = 60 * 1000;
 type CachedSubs = { subscriptions: Subscription[]; fetchedAt: number };
 type CachedLive = { live: YoutubeLiveVideo[]; fetchedAt: number };
 
+/** One empty list, so "nobody is live" does not rebuild everything after it. */
+const NO_LIVE: YoutubeLiveVideo[] = [];
+
 // Module-level so multiple mounting components (and StrictMode's double-mount)
 // don't stampede the API, and don't retry in a tight loop when it's down.
 let subsInFlight: Promise<Subscription[]> | undefined;
@@ -131,9 +134,12 @@ export function useYoutubeLiveSubs() {
       });
   }, [isConnected, channelIds, liveStale, getAccessToken, setLiveCache]);
 
+  // Signed out, nobody is live, whatever the cache last said: decided here,
+  // once, so the off-air check, the picker's band and the wall all agree on
+  // it rather than each gating on the sign-in its own way.
   return {
     subscriptions: subsCache?.subscriptions ?? [],
-    live: liveCache?.live ?? [],
+    live: (isConnected && liveCache?.live) || NO_LIVE,
     isConnected
   };
 }

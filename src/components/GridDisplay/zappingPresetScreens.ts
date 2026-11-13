@@ -39,24 +39,24 @@ const vistaGeneral = (): SourceNode[] => [
     uuid: '49572de6-f374-429a-9847-27b27b29a73d'
   },
   {
-    // Chilevisión
-    sourceSlug: 'custom_zapping_6',
-    uuid: '7f5f691f-c30d-4dcc-b3c8-a7ad454258de'
-  },
-  {
-    // Canal 13
-    sourceSlug: 'custom_zapping_3',
-    uuid: '7a2e6b7d-835d-45b4-b648-2c6e37e79994'
-  },
-  {
     // 24 Horas
     sourceSlug: 'custom_zapping_52',
     uuid: 'bdfc4299-af90-4a2e-838e-3f3d6a8de7f5'
   },
   {
+    // Chilevisión
+    sourceSlug: 'custom_zapping_6',
+    uuid: '7f5f691f-c30d-4dcc-b3c8-a7ad454258de'
+  },
+  {
     // CHV Noticias
     sourceSlug: 'custom_zapping_2391',
     uuid: 'e4e0f24d-f8b7-48f6-9ed9-1957d6dd40f3'
+  },
+  {
+    // Canal 13
+    sourceSlug: 'custom_zapping_3',
+    uuid: '7a2e6b7d-835d-45b4-b648-2c6e37e79994'
   },
   {
     // T13

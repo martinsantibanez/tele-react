@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useSyncExternalStore
+} from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 
 /**
@@ -38,6 +43,30 @@ type TokenResult = {
 // started it.
 let inFlight: Promise<TokenResult> | undefined;
 
+/**
+ * What the backend last said about the session, shared by every instance. Kept
+ * per instance it went wrong: only the instances that happened to await a
+ * token fetch learnt it, so the rest stayed `unknown` and judged the session by
+ * the cached token's clock alone — and for the minutes between its expiry and
+ * the next refresh, YouTube was disconnected in some of the page's hooks and
+ * not in others.
+ */
+let sharedStatus: YoutubeAuthStatus = 'unknown';
+const statusListeners = new Set<() => void>();
+function setSharedStatus(status: YoutubeAuthStatus) {
+  if (status === sharedStatus) return;
+  sharedStatus = status;
+  statusListeners.forEach(listener => listener());
+}
+const subscribeStatus = (listener: () => void) => {
+  statusListeners.add(listener);
+  return () => {
+    statusListeners.delete(listener);
+  };
+};
+const getStatus = () => sharedStatus;
+const getServerStatus = (): YoutubeAuthStatus => 'unknown';
+
 export function useYoutubeAccessToken() {
   return useLocalStorageState<StoredToken | undefined>('youtubeToken', {
     defaultValue: undefined
@@ -46,7 +75,11 @@ export function useYoutubeAccessToken() {
 
 export function useYoutubeAuth() {
   const [token, setToken] = useYoutubeAccessToken();
-  const [status, setStatus] = useState<YoutubeAuthStatus>('unknown');
+  const status = useSyncExternalStore(
+    subscribeStatus,
+    getStatus,
+    getServerStatus
+  );
   const tokenRef = useRef(token);
   tokenRef.current = token;
 
@@ -89,7 +122,7 @@ export function useYoutubeAuth() {
         })();
       try {
         const result = await inFlight;
-        if (result.status) setStatus(result.status);
+        if (result.status) setSharedStatus(result.status);
         return result.accessToken;
       } finally {
         inFlight = undefined;
@@ -118,12 +151,16 @@ export function useYoutubeAuth() {
       console.error('[youtube] logout failed', err);
     }
     setToken(undefined);
-    setStatus('disconnected');
+    setSharedStatus('disconnected');
   }, [setToken]);
 
+  // An expired token is not a lost session: the backend mints the next one
+  // from the refresh token, the next time one is asked for. Only the backend
+  // saying so (a 401, or logging out) disconnects. Not read off the clock
+  // either, which made the answer change between two renders of the same
+  // state.
   const isConnected =
-    status === 'connected' ||
-    Boolean(token && token.expiresAt > Date.now());
+    status === 'connected' || (status === 'unknown' && !!token);
 
   return {
     accessToken:
