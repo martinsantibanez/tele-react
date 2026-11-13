@@ -587,12 +587,16 @@ export const Monitor = () => {
       '1,2,3,4,5,6,7,8,9',
       'shift+1,shift+2,shift+3,shift+4,shift+5,shift+6,shift+7,shift+8,shift+9'
     ].join(','),
+    // Counted along the tiles on the wall, as their numbers and the deck's
+    // keys are: an off-air tile left out takes no key.
     e => {
-      const idx = getIndexFromKeyEvent(e);
+      const at = getIndexFromKeyEvent(e);
+      const idx = at === undefined ? undefined : drawnTiles[at];
       if (idx === undefined) return;
       pickScreen(idx);
     },
     [
+      drawnTiles,
       canFocus,
       isFullscreen,
       isEditing,
@@ -843,7 +847,7 @@ export const Monitor = () => {
             <>
               <Shortcut
                 keys="Enter"
-                label={`Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`}
+                label={`Intercambiar con ${getSourceShortcutLabel(drawnTiles.indexOf(swapSourceIdx))}`}
               />
               <Shortcut keys="Esc" label="Cancelar intercambio" />
             </>
@@ -868,7 +872,7 @@ export const Monitor = () => {
             label={
               swapSourceIdx === undefined
                 ? 'Ver pantallas'
-                : `Intercambiar con ${getSourceShortcutLabel(swapSourceIdx)}`
+                : `Intercambiar con ${getSourceShortcutLabel(drawnTiles.indexOf(swapSourceIdx))}`
             }
           />
           {canSwap && swapSourceIdx === undefined && (

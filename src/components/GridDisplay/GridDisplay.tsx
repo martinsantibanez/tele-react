@@ -73,6 +73,7 @@ export function GridDisplay({
         if (hidden?.has(idx))
           return <div key={`${node.uuid}`} className="hidden" />;
         const rect = rects?.get(idx);
+        const position = drawn.indexOf(idx);
         return (
           <div
             key={`${node.uuid}`}
@@ -104,10 +105,11 @@ export function GridDisplay({
               onRemove={onRemove ? () => onRemove(idx) : undefined}
               // Every tile on the wall but the one in the middle of it, which
               // has its own cell saying so, and the one gone fullscreen.
+              position={position}
               number={
                 idx === focusIdx || idx === fullscreenIdx
                   ? undefined
-                  : drawn.indexOf(idx) + 1
+                  : position + 1
               }
             />
           </div>
