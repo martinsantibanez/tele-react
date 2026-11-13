@@ -47,6 +47,10 @@ type Props = {
   onToggleLiveOnly?: (idx: number) => void;
   /** Takes a tile off the grid. */
   onRemove?: (idx: number) => void;
+  /** Moves a grid tile to another's place, dragged there by its badge. */
+  onMove?: (from: number, to: number) => void;
+  /** Where a grid tile may be moved to. */
+  canMove?: (from: number, to: number) => boolean;
 };
 
 export function Screen({
@@ -61,7 +65,9 @@ export function Screen({
   onSourceChange,
   onFullscreenSourceChange,
   onToggleLiveOnly,
-  onRemove
+  onRemove,
+  onMove,
+  canMove
 }: Props) {
   const isMobile = useIsMobile();
   const isOffAir = useOffAir();
@@ -161,6 +167,8 @@ export function Screen({
           isOffAir={isOffAir}
           onToggleLiveOnly={onToggleLiveOnly}
           onRemove={onRemove}
+          onMove={onMove}
+          canMove={canMove}
         />
       </div>
     );

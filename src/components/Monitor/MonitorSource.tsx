@@ -1,4 +1,5 @@
 'use client';
+import { DraggableSyntheticListeners } from '@dnd-kit/core';
 import { Radio, Replace, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTeleContext } from '../../context/TeleContext';
@@ -14,6 +15,14 @@ import { SourceLogo } from './SourceLogo';
 import { SourceOutput } from './SourceOutput/SourceOutput';
 
 export type OnSwitchCb = (left: number, right: number) => void;
+
+/** What lets a tile be picked up and moved: its badge is the handle. */
+export type TileHandle = {
+  ref: (element: HTMLElement | null) => void;
+  listeners: DraggableSyntheticListeners;
+  /** Picked up right now. */
+  dragging: boolean;
+};
 
 type Props = {
   sourceSlug?: string;
@@ -58,6 +67,8 @@ type Props = {
    * air tiles left out of the wall take none. Its slot, where none are.
    */
   position?: number;
+  /** Set, the tile's badge also drags it to another place on the wall. */
+  handle?: TileHandle;
 };
 
 /** The picker sidebar's width, in pixels, on a desktop or a TV. */
@@ -80,7 +91,8 @@ export function MonitorSource({
   onToggleLiveOnly,
   onRemove,
   number,
-  position = idx
+  position = idx,
+  handle
 }: Props) {
   const { isEditing, swapSourceIdx, editingSourceIdx, isMuted } =
     useTeleContext();
@@ -268,11 +280,19 @@ export function MonitorSource({
         {showTileChrome && (
           <button
             type="button"
+            ref={handle?.ref}
+            {...handle?.listeners}
             onClick={handleChangeClick}
             disabled={!onChangeClick}
             aria-label={`Seleccionar pantalla ${getSourceShortcutLabel(position)}`}
             aria-pressed={isBeingEdited}
-            className="absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5"
+            title={handle ? 'Arrastra para mover la pantalla' : undefined}
+            // A touch on it is a drag to come, not the page scrolling.
+            className={`absolute left-1 top-[1%] z-[2] flex h-[9%] max-h-11 min-h-5 max-w-[45%] items-center gap-1.5 ${
+              handle
+                ? `touch-none ${handle.dragging ? 'cursor-grabbing' : 'cursor-grab'}`
+                : ''
+            }`}
           >
             <span
               className={`shrink-0 rounded px-2 leading-[20px] font-bold ${

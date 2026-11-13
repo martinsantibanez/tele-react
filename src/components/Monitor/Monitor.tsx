@@ -517,6 +517,39 @@ export const Monitor = () => {
 
   const liveOnlyTiles = activeSources.filter(node => node.liveOnly);
 
+  // A grid's tiles are dragged into another order by their badges, on the
+  // grid itself: the focus wall has one of them enlarged, out of its place,
+  // and fullscreen and the live walls have no order of the viewer's own.
+  const canMoveTiles = isGrid && !isLiveMode && !isFullscreen && !focusActive;
+  const canMoveTile = (from: number, to: number) =>
+    from < gridCount === to < gridCount;
+
+  /**
+   * Moves a tile to where another one is on the wall, the ones between making
+   * room. The grid's own tiles stay among themselves, as do the live extras
+   * after them: a channel moved past the grid's end would go out of sight.
+   * Only tiles on the wall move; one kept out of sight keeps its slot.
+   */
+  const moveTile = (from: number, to: number) => {
+    if (!canMoveTile(from, to)) return;
+    const slots = drawnTiles.filter(idx => canMoveTile(from, idx));
+    const at = slots.indexOf(from);
+    const target = slots.indexOf(to);
+    if (at < 0 || target < 0 || at === target) return;
+    // Which slot's channel goes in each slot, in the new order.
+    const order = [...slots];
+    order.splice(target, 0, ...order.splice(at, 1));
+    setSwapSourceIdx(undefined);
+    setSelectedSources(sources => {
+      const moved = [...sources];
+      slots.forEach((slot, n) => (moved[slot] = sources[order[n]]));
+      return moved;
+    });
+    // The selection goes with its channel, as when a tile is taken away.
+    const selected = order.indexOf(editingSourceIdx);
+    if (selected >= 0) setEditingSourceIdx(slots[selected]);
+  };
+
   const handleSwitch: OnSwitchCb = (left: number, right: number) => {
     setSelectedSources(sources => {
       if (!sources) return sources;
@@ -984,6 +1017,8 @@ export const Monitor = () => {
             }
             onToggleLiveOnly={isLiveMode ? undefined : toggleLiveOnly}
             onRemove={canEditTiles ? removeTile : undefined}
+            onMove={canMoveTiles ? moveTile : undefined}
+            canMove={canMoveTile}
           />
         </div>
         {/* Pointer controls: a remote has OK, Back and the picker for all of
