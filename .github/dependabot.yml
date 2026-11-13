@@ -10,3 +10,11 @@ updates:
         dependency-type: "development"
       react-next:
         patterns: ["react", "react-dom", "next", "@types/react*"]
+    ignore:
+      # Keep @types/node on the Node major we run (22); bump it by hand with the runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint (via eslint-config-next) refuses TS 7 ("does not support
+      # TS 7.0"), which breaks pnpm lint. Revisit once it adds support.
+      - dependency-name: "typescript"
+        versions: [">=7"]
