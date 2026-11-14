@@ -51,11 +51,11 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       '@twurple/api':
-        specifier: ^7.2.1
-        version: 7.2.1(@twurple/auth@7.2.1)
+        specifier: ^8.2.0
+        version: 8.2.0(@twurple/auth@8.2.0)
       '@twurple/auth':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^8.2.0
+        version: 8.2.0
       '@types/ramda':
         specifier: ^0.30.2
         version: 0.30.2
@@ -297,21 +297,14 @@ packages:
   '@d-fischer/cache-decorators@4.0.1':
     resolution: {integrity: sha512-HNYLBLWs/t28GFZZeqdIBqq8f37mqDIFO6xNPof94VjpKvuP6ROqCZGafx88dk5zZUlBfViV9jD8iNNlXfc4CA==}
 
-  '@d-fischer/cross-fetch@5.0.5':
-    resolution: {integrity: sha512-symjDUPInTrkfIsZc2n2mo9hiAJLcTJsZkNICjZajEWnWpJ3s3zn50/FY8xpNUAf5w3eFuQii2wxztTGpvG1Xg==}
-
   '@d-fischer/detect-node@3.0.1':
     resolution: {integrity: sha512-0Rf3XwTzuTh8+oPZW9SfxTIiL+26RRJ0BRPwj5oVjZFyFKmsj9RGfN2zuTRjOuA3FCK/jYm06HOhwNK+8Pfv8w==}
 
-  '@d-fischer/logger@4.2.3':
-    resolution: {integrity: sha512-mJUx9OgjrNVLQa4od/+bqnmD164VTCKnK5B4WOW8TX5y/3w2i58p+PMRE45gUuFjk2BVtOZUg55JQM3d619fdw==}
+  '@d-fischer/logger@4.2.4':
+    resolution: {integrity: sha512-TFMZ/SVW8xyQtyJw9Rcuci4betSKy0qbQn2B5+1+72vVXeO8Qb1pYvuwF5qr0vDGundmSWq7W8r19nVPnXXSvA==}
 
-  '@d-fischer/qs@7.0.2':
-    resolution: {integrity: sha512-yAu3xDooiL+ef84Jo8nLjDjWBRk7RXk163Y6aTvRB7FauYd3spQD/dWvgT7R4CrN54Juhrrc3dMY7mc+jZGurQ==}
-    engines: {node: '>=0.6'}
-
-  '@d-fischer/rate-limiter@1.0.1':
-    resolution: {integrity: sha512-Mq+0pAJsx92hP83cjmsrXQZVQJ+/+u1JFT6fjH8pj3yfUrbT3eDBsA+6J63eat+QaC+Mci78HdiBfpsdBkdwog==}
+  '@d-fischer/rate-limiter@1.1.0':
+    resolution: {integrity: sha512-O5HgACwApyCZhp4JTEBEtbv/W3eAwEkrARFvgWnEsDmXgCMWjIHwohWoHre5BW6IYXFSHBGsuZB/EvNL3942kQ==}
 
   '@d-fischer/shared-utils@3.6.4':
     resolution: {integrity: sha512-BPkVLHfn2Lbyo/ENDBwtEB8JVQ+9OzkjJhUunLaxkw4k59YFlQxUUwlDBejVSFcpQT0t+D3CQlX+ySZnQj0wxw==}
@@ -1677,19 +1670,19 @@ packages:
   '@tailwindcss/postcss@4.3.3':
     resolution: {integrity: sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg==}
 
-  '@twurple/api-call@7.2.1':
-    resolution: {integrity: sha512-x+p6fMleFA/pJHVu8tFpkDkARGGt30EAUA+cLc+dEtU1EpH1mv7nv5LLHh9NW9vdZpYp0jk5TyY/TSbHdj7Ggw==}
+  '@twurple/api-call@8.2.0':
+    resolution: {integrity: sha512-N04e4rs2o/XKY3zx+cYk0FTx5spi1DX1cE2xJjuJL2Ti9cdqC1NhJ1f4nSXwSmVtOcAlDkuwIEEmxGr3PTf8Tw==}
 
-  '@twurple/api@7.2.1':
-    resolution: {integrity: sha512-fqoX87GyHRL4pSmgloF5Mfj2XDJMx8fWBbcl4JGG7bgF2jvH5X9p3nzH169zqwSU/etfUdfytyoQ7/r2R+G3cg==}
+  '@twurple/api@8.2.0':
+    resolution: {integrity: sha512-PoECKX/69AAJIkODoDBwNzCyb0FP5aEB+u3CvojI2cTXAtOx/P7Zg7KOJiyVm1zoqoVP/IVnk0BjT/xbwjmLRQ==}
     peerDependencies:
-      '@twurple/auth': 7.2.1
+      '@twurple/auth': 8.2.0
 
-  '@twurple/auth@7.2.1':
-    resolution: {integrity: sha512-IGHsJ/g0RblRSBC59XKA9277rE5w1dAKdhCPQz1QwkWnt6fsUyVoD1ut+qZvjuh7ssX1SBtNzFqohydfmWZytg==}
+  '@twurple/auth@8.2.0':
+    resolution: {integrity: sha512-bWVBpxhcvP8n8M0ZUYXxC7Qsn+hyEC95eLj6mSsxbZluWmjW7tYTJM0pTapal5wY3DEWPqFapikjspRUO4b1NA==}
 
-  '@twurple/common@7.2.1':
-    resolution: {integrity: sha512-veLY5laA00dPuekAcpHN6GDvnr6s1uH7yBDebLC1NhpcLkQgiAlGA50RdNS5YeA3xz7kfE2MOcYSi2S6Qoc7EA==}
+  '@twurple/common@8.2.0':
+    resolution: {integrity: sha512-NZJlxqD3IsixveSQxxp8zfe22Kre3KrDJjM+jencjAhR0XPtrrBR9undqXQWdX32ZWxTE0nurDmyNo4rTw9+tg==}
 
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
@@ -2906,15 +2899,6 @@ packages:
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
-  node-fetch@2.7.0:
-    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
-
   node-releases@2.0.60:
     resolution: {integrity: sha512-OmO8+GM1JUZqXET720VrJCwkjUCXmCMQm0Z3UDDRbfNLHS4NEAvY60j5jiFv0tkKw2PNNlqOLhahVmwJIOLDIQ==}
     engines: {node: '>=18'}
@@ -3318,9 +3302,6 @@ packages:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
 
-  tr46@0.0.3:
-    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
-
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
     engines: {node: '>=18.12'}
@@ -3335,6 +3316,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tslib@2.9.1:
+    resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
 
   tw-animate-css@1.4.0:
     resolution: {integrity: sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==}
@@ -3463,12 +3447,6 @@ packages:
 
   videojs-vtt.js@0.15.5:
     resolution: {integrity: sha512-yZbBxvA7QMYn15Lr/ZfhhLPrNpI/RmCSCqgIff57GC2gIrV5YfyzLfLyZMj0NnZSAz8syB4N0nHXpZg9MyrMOQ==}
-
-  webidl-conversions@3.0.1:
-    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
-
-  whatwg-url@5.0.0:
-    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
@@ -3649,37 +3627,29 @@ snapshots:
   '@d-fischer/cache-decorators@4.0.1':
     dependencies:
       '@d-fischer/shared-utils': 3.6.4
-      tslib: 2.8.1
-
-  '@d-fischer/cross-fetch@5.0.5':
-    dependencies:
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
+      tslib: 2.9.1
 
   '@d-fischer/detect-node@3.0.1': {}
 
-  '@d-fischer/logger@4.2.3':
+  '@d-fischer/logger@4.2.4':
     dependencies:
       '@d-fischer/detect-node': 3.0.1
       '@d-fischer/shared-utils': 3.6.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
-  '@d-fischer/qs@7.0.2': {}
-
-  '@d-fischer/rate-limiter@1.0.1':
+  '@d-fischer/rate-limiter@1.1.0':
     dependencies:
-      '@d-fischer/logger': 4.2.3
+      '@d-fischer/logger': 4.2.4
       '@d-fischer/shared-utils': 3.6.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@d-fischer/shared-utils@3.6.4':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@d-fischer/typed-event-emitter@3.3.3':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@dnd-kit/accessibility@3.1.1(react@19.3.1)':
     dependencies:
@@ -3709,17 +3679,17 @@ snapshots:
   '@emnapi/core@1.4.3':
     dependencies:
       '@emnapi/wasi-threads': 1.0.2
-      tslib: 2.8.1
+      tslib: 2.9.1
     optional: true
 
   '@emnapi/runtime@1.11.3':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
     optional: true
 
   '@emnapi/wasi-threads@1.0.2':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
     optional: true
 
   '@eslint-community/eslint-utils@4.10.1(eslint@10.14.0(jiti@2.7.0))':
@@ -4740,7 +4710,7 @@ snapshots:
 
   '@swc/helpers@0.5.23':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@tailwindcss/node@4.3.3':
     dependencies:
@@ -4811,53 +4781,44 @@ snapshots:
       postcss: 8.5.32
       tailwindcss: 4.3.3
 
-  '@twurple/api-call@7.2.1':
+  '@twurple/api-call@8.2.0':
     dependencies:
-      '@d-fischer/cross-fetch': 5.0.5
-      '@d-fischer/qs': 7.0.2
       '@d-fischer/shared-utils': 3.6.4
-      '@twurple/common': 7.2.1
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - encoding
+      '@twurple/common': 8.2.0
+      tslib: 2.9.1
 
-  '@twurple/api@7.2.1(@twurple/auth@7.2.1)':
+  '@twurple/api@8.2.0(@twurple/auth@8.2.0)':
     dependencies:
       '@d-fischer/cache-decorators': 4.0.1
-      '@d-fischer/cross-fetch': 5.0.5
       '@d-fischer/detect-node': 3.0.1
-      '@d-fischer/logger': 4.2.3
-      '@d-fischer/rate-limiter': 1.0.1
+      '@d-fischer/logger': 4.2.4
+      '@d-fischer/rate-limiter': 1.1.0
       '@d-fischer/shared-utils': 3.6.4
       '@d-fischer/typed-event-emitter': 3.3.3
-      '@twurple/api-call': 7.2.1
-      '@twurple/auth': 7.2.1
-      '@twurple/common': 7.2.1
+      '@twurple/api-call': 8.2.0
+      '@twurple/auth': 8.2.0
+      '@twurple/common': 8.2.0
       retry: 0.13.1
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - encoding
+      tslib: 2.9.1
 
-  '@twurple/auth@7.2.1':
+  '@twurple/auth@8.2.0':
     dependencies:
-      '@d-fischer/logger': 4.2.3
+      '@d-fischer/logger': 4.2.4
       '@d-fischer/shared-utils': 3.6.4
       '@d-fischer/typed-event-emitter': 3.3.3
-      '@twurple/api-call': 7.2.1
-      '@twurple/common': 7.2.1
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - encoding
+      '@twurple/api-call': 8.2.0
+      '@twurple/common': 8.2.0
+      tslib: 2.9.1
 
-  '@twurple/common@7.2.1':
+  '@twurple/common@8.2.0':
     dependencies:
       '@d-fischer/shared-utils': 3.6.4
       klona: 2.0.6
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
     optional: true
 
   '@types/dom-mediacapture-transform@0.1.12':
@@ -5126,7 +5087,7 @@ snapshots:
 
   aria-hidden@1.2.4:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   aria-query@5.3.2: {}
 
@@ -6293,10 +6254,6 @@ snapshots:
   node-addon-api@7.1.1:
     optional: true
 
-  node-fetch@2.7.0:
-    dependencies:
-      whatwg-url: 5.0.0
-
   node-releases@2.0.60: {}
 
   object-assign@4.1.1: {}
@@ -6444,7 +6401,7 @@ snapshots:
     dependencies:
       react: 19.3.1
       react-style-singleton: 2.2.3(@types/react@19.3.0)(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     optionalDependencies:
       '@types/react': 19.3.0
 
@@ -6453,7 +6410,7 @@ snapshots:
       react: 19.3.1
       react-remove-scroll-bar: 2.3.8(@types/react@19.3.0)(react@19.3.1)
       react-style-singleton: 2.2.3(@types/react@19.3.0)(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       use-callback-ref: 1.3.3(@types/react@19.3.0)(react@19.3.1)
       use-sidecar: 1.1.3(@types/react@19.3.0)(react@19.3.1)
     optionalDependencies:
@@ -6464,7 +6421,7 @@ snapshots:
       react: 19.3.1
       react-remove-scroll-bar: 2.3.8(@types/react@19.3.0)(react@19.3.1)
       react-style-singleton: 2.2.3(@types/react@19.3.0)(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       use-callback-ref: 1.3.3(@types/react@19.3.0)(react@19.3.1)
       use-sidecar: 1.1.3(@types/react@19.3.0)(react@19.3.1)
     optionalDependencies:
@@ -6474,7 +6431,7 @@ snapshots:
     dependencies:
       get-nonce: 1.0.1
       react: 19.3.1
-      tslib: 2.8.1
+      tslib: 2.9.1
     optionalDependencies:
       '@types/react': 19.3.0
 
@@ -6759,8 +6716,6 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
-  tr46@0.0.3: {}
-
   ts-api-utils@2.5.0(typescript@5.8.3):
     dependencies:
       typescript: 5.8.3
@@ -6775,6 +6730,8 @@ snapshots:
       strip-bom: 3.0.0
 
   tslib@2.8.1: {}
+
+  tslib@2.9.1: {}
 
   tw-animate-css@1.4.0: {}
 
@@ -6875,7 +6832,7 @@ snapshots:
   use-callback-ref@1.3.3(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       react: 19.3.1
-      tslib: 2.8.1
+      tslib: 2.9.1
     optionalDependencies:
       '@types/react': 19.3.0
 
@@ -6893,7 +6850,7 @@ snapshots:
     dependencies:
       detect-node-es: 1.1.0
       react: 19.3.1
-      tslib: 2.8.1
+      tslib: 2.9.1
     optionalDependencies:
       '@types/react': 19.3.0
 
@@ -6952,13 +6909,6 @@ snapshots:
   videojs-vtt.js@0.15.5:
     dependencies:
       global: 4.4.0
-
-  webidl-conversions@3.0.1: {}
-
-  whatwg-url@5.0.0:
-    dependencies:
-      tr46: 0.0.3
-      webidl-conversions: 3.0.1
 
   which-boxed-primitive@1.1.1:
     dependencies:
