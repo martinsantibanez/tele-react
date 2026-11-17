@@ -42,7 +42,15 @@ one: each key works out what it is from where it sits. On a 5×3 deck:
 ```
 
 A tile that spans several keys is drawn as one picture across all of them,
-with its logo and name scaled up to match. A layout with more than 12 tiles shows the first 12, one key each.
+with its logo and name scaled up to match.
+
+A layout with more tiles than keys (12, on a 5×3) goes in pages, one key per
+tile in reading order. The last key of the first page is a → that turns to the
+next one, which starts with a ← to come back; each arrow says how many tiles lie
+that way. The last page always fills every key: rather than leave keys empty it
+starts a few tiles earlier, showing again some of the page before (the tiles'
+numbers tell them apart). The deck turns to the tile that is heard when it is
+picked from the page, and back to the first page on another screen.
 With no Tele tab connected, a key press flashes an alert.
 
 ## How it connects

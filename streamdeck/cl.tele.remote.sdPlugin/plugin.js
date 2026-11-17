@@ -17,6 +17,9 @@
  *                                   another plugin that leaves this page (in
  *                                   OpenDeck, Starter Pack's Switch Profile).
  *
+ * More tiles than keys go in pages, one key each, with arrow keys at the ends
+ * of the tiles' area to turn them.
+ *
  * The plugin sits between two things that cannot talk to each other directly:
  *
  * - the Stream Deck app, which starts this script and talks to it over a
@@ -110,6 +113,9 @@ const folderOpen = new Set();
 
 /** Which page of saved screens each deck is showing, when they do not fit. */
 const screenPage = new Map();
+
+/** Which page of tiles each deck is showing, when they do not fit. */
+const tilePage = new Map();
 
 /** Open `/events` streams. */
 const clients = new Set();
@@ -223,12 +229,23 @@ function areasOf(device) {
 /** Tiles closer than this to a key boundary count as lined up with it. */
 const ALIGNED = 0.02;
 
+/** The tiles' indexes in reading order: top to bottom, then left to right. */
+function readingOrder(tiles) {
+  const order = tiles.map((_, i) => i);
+  if (tiles.length > 0 && tiles.every(tile => tile.rect))
+    order.sort(
+      (a, b) =>
+        tiles[a].rect[1] - tiles[b].rect[1] || tiles[a].rect[0] - tiles[b].rect[0]
+    );
+  return order;
+}
+
 /**
  * Where each tile goes on an area of keys: the smallest key grid its tiles
  * line up on, so a 2×2 is four keys and the focus wall's big tile takes a
  * block of them. A wall that lines up on none (say thirds over halves) gets the
- * closest fit, and one with more tiles than keys, or no shapes at all, one key
- * per tile in reading order.
+ * closest fit, and one with no shapes at all one key per tile in reading order.
+ * (More tiles than keys go in pages: see `tileSlots`.)
  *
  * Returns `[{ top, left, rows, columns }]`, by tile.
  */
@@ -267,14 +284,8 @@ function placeTiles(tiles, area) {
       }
   if (best) return best.places;
 
-  const order = tiles.map((_, i) => i);
-  if (shaped)
-    order.sort(
-      (a, b) =>
-        tiles[a].rect[1] - tiles[b].rect[1] || tiles[a].rect[0] - tiles[b].rect[0]
-    );
   const places = [];
-  order.slice(0, area.columns * area.rows).forEach((tile, i) => {
+  readingOrder(tiles).slice(0, area.columns * area.rows).forEach((tile, i) => {
     places[tile] = {
       top: Math.floor(i / area.columns),
       left: i % area.columns,
@@ -302,6 +313,66 @@ function screenSlots(device, slotCount) {
   });
 }
 
+/**
+ * Where each page of tiles starts, in reading order, when there are more tiles
+ * than keys: the first page ends with a → key, the last starts with a ← one
+ * and those between have both. The last page reaches back as far as it needs
+ * to fill every key, showing again a few tiles of the one before rather than
+ * leaving keys empty. An area too small for arrows and a tile has one page.
+ */
+function tilePageStarts(count, slots) {
+  if (count <= slots || slots < 3) return [0];
+  const starts = [0];
+  let start = slots - 1;
+  while (count - start > slots - 1) {
+    starts.push(start);
+    start += slots - 2;
+  }
+  starts.push(count - (slots - 1));
+  return starts;
+}
+
+/**
+ * The tiles over the area's keys, one key each, when there are more of them
+ * than keys: `{ tile }` or `{ turn: ±1, hidden }` (an arrow, and how many tiles
+ * lie that way), by key in reading order. Undefined when they all fit.
+ */
+function tileSlots(device, slots, page = tilePage.get(device) ?? 0) {
+  const order = readingOrder(app.tiles);
+  const starts = tilePageStarts(order.length, slots);
+  if (starts.length < 2) return undefined;
+  const last = starts.length - 1;
+  page = Math.min(Math.max(page, 0), last);
+  const tiles = order.slice(starts[page], starts[page] + slots - (page > 0) - (page < last));
+  const end = starts[page] + tiles.length;
+  return [
+    ...(page > 0 ? [{ turn: -1, page, hidden: starts[page] }] : []),
+    ...tiles.map(tile => ({ tile })),
+    ...(page < last ? [{ turn: 1, page, hidden: order.length - end }] : [])
+  ];
+}
+
+/**
+ * Keeps the tile that is heard on show when it changes from the page (or the
+ * deck picks one off its page): each deck turns to the first page that has it.
+ */
+function followTile(tile) {
+  const decks = new Set([...keys.values()].map(key => key.device));
+  for (const device of decks) {
+    const { area } = areasOf(device);
+    const slots = area.columns * area.rows;
+    const shown = page => tileSlots(device, slots, page)?.some(slot => slot.tile === tile);
+    const current = tileSlots(device, slots);
+    if (!current || shown(tilePage.get(device) ?? 0)) continue;
+    const pages = tilePageStarts(app.tiles.length, slots).length;
+    for (let page = 0; page < pages; page++)
+      if (shown(page)) {
+        tilePage.set(device, page);
+        break;
+      }
+  }
+}
+
 /** What the key at a place is. */
 function roleOf(context) {
   const key = keys.get(context);
@@ -317,6 +388,18 @@ function roleOf(context) {
   if (open) {
     const slot = key.row * area.columns + key.column;
     return { kind: 'screen', ...screenSlots(key.device, area.columns * area.rows)[slot] };
+  }
+  const slots = tileSlots(key.device, area.columns * area.rows);
+  if (slots) {
+    const slot = slots[key.row * area.columns + key.column];
+    if (slot.turn) return { kind: 'turn', ...slot };
+    return {
+      kind: 'tile',
+      tile: slot.tile,
+      place: { top: key.row, left: key.column, rows: 1, columns: 1 },
+      row: key.row,
+      column: key.column
+    };
   }
   const places = placeTiles(app.tiles, area);
   const tile = places.findIndex(
@@ -339,6 +422,11 @@ function press(context) {
   if (role.kind === 'folder') {
     if (role.open) folderOpen.delete(device);
     else folderOpen.add(device);
+    renderAll();
+    return;
+  }
+  if (role.kind === 'turn') {
+    tilePage.set(device, role.page + role.turn);
     renderAll();
     return;
   }
@@ -598,6 +686,17 @@ function screenFace({ screen, more, page, pages }) {
   );
 }
 
+/** A key that turns the page of tiles: an arrow, and how many lie that way. */
+function turnFace({ turn, hidden }) {
+  const arrow =
+    turn > 0 ? 'M38 60h64M76 34l26 26-26 26' : 'M106 60H42M68 34L42 60l26 26';
+  return svg(
+    background(COLORS.idle) +
+      `<path fill="none" stroke="${COLORS.text}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="${arrow}"/>` +
+      textBlock([`+${hidden}`], { x: 72, centerY: 114, size: 24, color: COLORS.muted })
+  );
+}
+
 /** The folder key: the saved screens, named after the one on air; ✕ while open. */
 function folderFace({ open }) {
   if (open)
@@ -664,6 +763,8 @@ function faceFor(context) {
   switch (role?.kind) {
     case 'tile':
       return tileFace(role);
+    case 'turn':
+      return turnFace(role);
     case 'screen':
       return screenFace(role);
     case 'folder':
@@ -784,12 +885,17 @@ const server = http.createServer((req, res) => {
       if (body.length > 256 * 1024) req.destroy();
     });
     req.on('end', () => {
+      const before = app;
       try {
         app = readState(JSON.parse(body));
       } catch {
         res.writeHead(400, cors).end();
         return;
       }
+      // Another screen's tiles start from their first page.
+      if (before?.activeScreen !== app.activeScreen) tilePage.clear();
+      if (app.selectedTile >= 0 && before?.selectedTile !== app.selectedTile)
+        followTile(app.selectedTile);
       res.writeHead(204, cors).end();
       renderAll();
     });
