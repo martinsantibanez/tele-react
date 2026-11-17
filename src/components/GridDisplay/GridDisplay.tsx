@@ -21,6 +21,7 @@ import { SourceType } from '../../sources';
 import { SourceNode } from '../../types/Monitor';
 import { MonitorSource, TileHandle } from '../Monitor/MonitorSource';
 import { focusWallRects } from '../Monitor/focusWall';
+import { useFocusTwoDeep } from '../../hooks/useFocusTwoDeep';
 import { parkedWallRects, rectStyle } from '../Monitor/parkedWall';
 import { WallClock } from '../Monitor/WallClock';
 import { SourceImage } from '../SourceImage';
@@ -141,13 +142,16 @@ export function GridDisplay({
   // With tiles parked the grid gives way: each tile is placed by hand instead,
   // inside the same wrapper, so no player is torn down by the switch.
   const parked = useParkedScreens();
+  const [twoDeep] = useFocusTwoDeep();
   const isTv = useIsTv();
   const resolveSource = useResolveSource();
   const drawn = sources.flatMap((_, idx) => (hidden?.has(idx) ? [] : [idx]));
   // The focus wall places every tile by hand too, parked or not: a parked
   // preview is its logo, in its own cell.
   const focus =
-    focusIdx === undefined ? undefined : focusWallRects(drawn, focusIdx);
+    focusIdx === undefined
+      ? undefined
+      : focusWallRects(drawn, focusIdx, twoDeep);
   const rects = focus?.rects ?? parkedWallRects(drawn, parked);
   const focusNode = focusIdx === undefined ? undefined : sources[focusIdx];
   const focusSource = resolveSource(focusNode?.sourceSlug, focusNode?.source);
@@ -298,7 +302,7 @@ export function GridDisplay({
           </div>
         </div>
       )}
-      {/* An even count leaves the focus wall a cell to spare. */}
+      {/* Cells the tiles do not fill; the first one holds the clock. */}
       {focus?.spare.map((rect, n) => (
         <div key={`spare-${n}`} className={glide} style={rectStyle(rect)}>
           {n === 0 && <WallClock />}

@@ -16,7 +16,8 @@ import {
   useActiveScreenIndex,
   useSavedScreens
 } from '../../hooks/useSavedScreens';
-import { isMobileViewport } from '../../hooks/useViewport';
+import { useFocusTwoDeep } from '../../hooks/useFocusTwoDeep';
+import { isMobileViewport, useIsMobile } from '../../hooks/useViewport';
 import { useZappingSources } from '../../hooks/useZappingChannels';
 import {
   useZappingLoginToken,
@@ -29,6 +30,7 @@ import {
   tvZappingPresetScreens,
   zappingPresetScreens
 } from '../GridDisplay/zappingPresetScreens';
+import { FOCUS_TWO_DEEP_MIN_TILES } from '../Monitor/focusWall';
 import { fillSlots } from '../Monitor/screenSlots';
 import {
   findLayoutIndex,
@@ -101,6 +103,9 @@ export function LayoutsPanel() {
   const isTv = useIsTv();
   const [zappingToken] = useZappingToken();
   const defaultScreens = useDefaultScreens(isTv);
+  // The focus wall is not shown on a phone, so neither is its setting.
+  const isMobile = useIsMobile();
+  const [twoDeep, setTwoDeep] = useFocusTwoDeep();
 
   // Resetting throws away every screen and the channels on them, back to the
   // ones the device started with, so it takes a second press; one left hanging
@@ -219,6 +224,37 @@ export function LayoutsPanel() {
           );
         })}
       </div>
+      {!isMobile && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={twoDeep}
+          onClick={() => setTwoDeep(on => !on)}
+          className="mt-1 flex w-full shrink-0 items-center gap-3 rounded-sm p-1 text-left outline-none hover:bg-gray-900 focus-visible:ring-2 focus-visible:ring-white"
+        >
+          <span
+            aria-hidden
+            className={`relative h-5 w-9 flex-none rounded-full transition-colors ${
+              twoDeep ? 'bg-white' : 'bg-gray-700'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full transition-transform ${
+                twoDeep ? 'translate-x-4 bg-gray-900' : 'bg-gray-300'
+              }`}
+            />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold">
+              Vistas previas más grandes
+            </span>
+            <span className="block text-xs text-gray-400">
+              Al ampliar un canal, con {FOCUS_TWO_DEEP_MIN_TILES} pantallas o
+              más, las demás van en dos filas y la principal queda más chica
+            </span>
+          </span>
+        </button>
+      )}
       <Button
         variant={confirmingReset ? 'destructive' : 'outline'}
         size="sm"
