@@ -24,7 +24,7 @@ const LOCK_KEY = '_streamdeck_tab_';
 
 /**
  * What a key press asks for. A tile is pressed to be heard, and pressed again
- * to go fullscreen and back.
+ * to flip between the focus wall and fullscreen.
  */
 export type StreamDeckCommand =
   | { type: 'screen'; index: number }

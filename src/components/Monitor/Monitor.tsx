@@ -362,13 +362,13 @@ export const Monitor = () => {
     setIsFullscreen(true);
   };
   /**
-   * Steps the view a level in — the grid to the focus wall, then fullscreen —
-   * and from fullscreen goes all the way back to the grid. Where there is no
-   * focus wall it is fullscreen on and off.
+   * G and the deck: flips between the focus wall and fullscreen, starting from the grid
+   * on the focus wall. It never goes back to the grid — that is Back's job.
+   * Where there is no focus wall it is fullscreen on and off.
    */
-  const cycleView = () => {
+  const toggleShowcase = () => {
     if (isFullscreen) {
-      setIsFocused(false);
+      if (canFocus) setIsFocused(true);
       leaveFullscreen();
     } else if (canFocus && !focusActive) setIsFocused(true);
     else toggleFullscreen();
@@ -640,7 +640,7 @@ export const Monitor = () => {
       revealSource
     ]
   );
-  useHotkeys('g', () => cycleView(), [
+  useHotkeys('g', () => toggleShowcase(), [
     canFocus,
     focusActive,
     activeScreenIndex,
@@ -835,10 +835,10 @@ export const Monitor = () => {
         const idx = drawnTiles[command.index];
         if (idx === undefined) return;
         if (idx !== editingSourceIdx) return pickScreen(idx);
-        // Pressing the tile that is heard again steps it up a level, and from
-        // fullscreen all the way back to the grid, as the deck has no Back
-        // key of its own.
-        if (hasGridLevel || isFullscreen) cycleView();
+        // Pressing the tile that is heard again flips it between the focus
+        // wall and fullscreen, as G does. The deck has no way back to the
+        // grid; Back on the keyboard or remote is for that.
+        if (hasGridLevel || isFullscreen) toggleShowcase();
       } else toggleMute();
     }
   });
