@@ -645,11 +645,24 @@ export function ChannelReel({
   // `foreign`). Overwriting it there is putting a channel on a tile nobody
   // touched. The tab is compared while zapping only, so a reel waking up on
   // a tab picked before is not a switch either.
+  //
+  // Nor is one made where no tabs are in view — a grid tile fullscreen, or
+  // woken on the wall, with the picker closed — unless the reel made it
+  // itself, with a swipe across. Otherwise there the tab only moves because
+  // another tile was picked, and the picker turned to its channel: never to
+  // zap this one. Taken for a switch, it puts the tab's channel on whichever
+  // tile is still selected for a moment — a live-only YouTube tile left
+  // holding a Zapping channel.
+  const tabsInView = isEditing || (!fullscreen && !woken);
+  /** The tab this reel last switched to on its own, see `stepBand`. */
+  const steppedTo = useRef<SelectorCategories | undefined>(undefined);
   const zappedCategory = useRef<SelectorCategories | undefined>(undefined);
   useEffect(() => {
     const switched =
+      (tabsInView || steppedTo.current === storedCategory) &&
       zappedCategory.current !== undefined &&
       zappedCategory.current !== storedCategory;
+    steppedTo.current = undefined;
     zappedCategory.current = active ? storedCategory : undefined;
     if (!active || onAirIndex >= 0) return;
     if (holdsChannel && !switched) return;
@@ -657,6 +670,7 @@ export function ChannelReel({
     if (target) selectRef.current?.(target);
   }, [
     active,
+    tabsInView,
     storedCategory,
     onAirIndex,
     rememberedIndex,
@@ -696,7 +710,9 @@ export function ChannelReel({
       // where the press should land.
       const from = at === -1 ? (delta > 0 ? -1 : stocked.length) : at;
       const target = stocked[(from + delta + stocked.length) % stocked.length];
-      if (target) setActiveCategory(target);
+      if (!target) return;
+      steppedTo.current = target;
+      setActiveCategory(target);
     },
     [stocked, band, setActiveCategory]
   );

@@ -18,6 +18,7 @@ import {
   useRef,
   useState
 } from 'react';
+import { flushSync } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { nextLiveOnlyView, useTeleContext } from '../../context/TeleContext';
 import {
@@ -568,7 +569,12 @@ export const Monitor = () => {
         if (!(active instanceof HTMLIFrameElement)) return;
 
         const tile = active.closest<HTMLElement>('[data-screen-idx]');
-        if (tile) selectScreenRef.current(Number(tile.dataset.screenIdx));
+        // In one render, as a click would be: from a timer the selection
+        // would land a render after the picker's tab (see `useStreamDeck`).
+        if (tile)
+          flushSync(() =>
+            selectScreenRef.current(Number(tile.dataset.screenIdx))
+          );
         active.blur();
       }, 0);
     };

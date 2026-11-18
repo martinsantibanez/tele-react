@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import useLocalStorageState from 'use-local-storage-state';
 import { useTabLock } from './useTabLock';
 
@@ -125,7 +126,16 @@ export function useStreamDeck({
       } catch {
         return;
       }
-      if (isCommand(command)) commandRef.current(command);
+      // In one render, as a key press would be. A server event is not one
+      // React treats as input, so state kept in React lands a render after
+      // the stores in localStorage (the picker's tab, the screens): a tile
+      // picked from fullscreen would first be drawn with the new tab and the
+      // old tile still fullscreen, and its reel would zap that tile into
+      // the tab's channel.
+      if (isCommand(command)) {
+        const valid = command;
+        flushSync(() => commandRef.current(valid));
+      }
     };
     return () => {
       events.close();
